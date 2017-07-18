@@ -235,7 +235,7 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
-	global $parse_errors, $display_parse_error;
+	global $parse_errors, $display_parse_error, $error_type_func;
 
 	$user_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "-";
 	$text = "------".date("Y-m-d H:i:s").",request=$request,url=$url,user_id=$user_id\n"
@@ -245,18 +245,22 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 		$text .= "Displayed: ".json_encode($displayed_response)."\n";
 
 	// keep writing errors separately but also write them to common logs file
-	if ($displayed_response["code"] && get_type_error($displayed_response["code"]) == "fatal")
-		Debug::trigger_report('ansql_json', $text);
+	if ($displayed_response["code"]) {
+		$code = $displayed_response["code"];
+		if (is_callable("get_type_error") && !isset($error_type_func)) {
+			if (get_type_error($code) == "fatal")
+				Debug::trigger_report('ansql_json', $text);
+		} elseif (isset($error_type_func) && is_callable($error_type_func)) {
+			if (call_user_func_array($error_type_func,array($code)))
+				Debug::trigger_report('ansql_json', $text);
+		} else {
+			Debug::trigger_report('ansql_json', '$error_type_func not set. The received code must be translated into an error type.');
+		}
+	}
 
 	if (isset($parse_errors) && strlen($parse_errors)) {
 		$fh = fopen($parse_errors, "a");
 		if ($fh) {
-/*			$user_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "-";
-			fwrite($fh,"------".date("Y-m-d H:i:s").",request=$request,user_id=$user_id\n");
-			fwrite($fh,"Sent: ".json_encode($out)."\n");
-			fwrite($fh,"Received HTTP CODE=$http_code : ".$ret."\n");
-			if ($displayed_response)
-				fwrite($fh,"Displayed: ".json_encode($displayed_response)."\n");*/
 			fwrite($fh,$text);
 			fclose($fh);
 		}
