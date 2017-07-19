@@ -95,6 +95,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	global $parse_errors;
 	global $json_api_secret;
 	global $func_build_request_url;
+	global $request_timeout;
 
 	if (substr($request,0,7)!="http://" && substr($request,0,8)!="https://") {
 		if (!isset($func_build_request_url) || !$func_build_request_url)
@@ -120,6 +121,11 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		$cookie = $_SESSION["cookie"];
 	}
 
+	$timeout = 20;
+	if (count($request_timeout) && in_array($out["request"], array_keys($request_timeout))) {
+		$timeout = $request_timeout[$out["request"]];
+	}
+
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
 	curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($out));
@@ -131,7 +137,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	));
 	curl_setopt($curl,CURLOPT_RETURNTRANSFER,true);
 	curl_setopt($curl,CURLOPT_CONNECTTIMEOUT,5);
-	curl_setopt($curl,CURLOPT_TIMEOUT,40);
+	curl_setopt($curl,CURLOPT_TIMEOUT,$timeout);
 	curl_setopt($curl,CURLOPT_HEADER, true);
 
 	if (isset($cookie)) 
