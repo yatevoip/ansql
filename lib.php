@@ -535,7 +535,7 @@ function pages($total = NULL, $additional_url_elements=array())
 	if (!$limit)
 		$limit = 20;
 
-	$link = $_SESSION["main"] ? $_SESSION["main"] : "main.php";
+	$link = isset($_SESSION["main"]) ? $_SESSION["main"] : "main.php";
 	$link .= "?";
 	$slink = $link;
 	$page = 0;
