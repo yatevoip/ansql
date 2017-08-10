@@ -137,6 +137,15 @@ class Variable
 
 		return $this->_required;
 	}
+	
+	public function numericType()
+	{
+		if ((substr($this->_type,0,3) == "int" && $this->_type!="interval") || substr($this->_type,-3) == "int" || substr($this->_type,0,5) == "float" || substr($this->_type,0,7)=="tinyint" || $this->_type == "serial" || $this->_type == "bigserial" || substr($this->_type,0,6) == "bigint")
+			return true;
+		if (substr($this->_type,0,4) == "bit(")
+			return true;
+		return false;
+	}
 }
 
 // class that does the operations with the database 
@@ -964,7 +973,7 @@ class Database
 	
 	public static function boolValue($value)
 	{
-		if ($value==="t" || $value==="1" || $value===1)
+		if ($value==="t" || $value==="1" || $value===1 || $value===true)
 			return true;
 		return false;
 	}
@@ -3384,11 +3393,30 @@ class Model
 				    $value = "t";
 				elseif ($value == "0")
 				    $value = "f";
-			}
+			}		
+			Model::setValueType($value, $var);			
 			$this->{$var_name} = $value;
 			if(in_array($var_name, $allow_html))
 				$this->{$var_name} = html_entity_decode($this->{$var_name});
 		}
+	}
+	
+	protected static function setValueType(&$value, $var)
+	{
+		global $enforce_out_types;
+		
+		if (!isset($enforce_out_types) || !$enforce_out_types)
+			return;
+		
+		if ($var->_type == "bool") {
+			$value = Database::boolValue($value);
+		} elseif ($var->numericType()) {
+			if (strlen($value))
+				$value = 1 * $value;
+			else
+				$value = NULL;
+		} else
+			$value = "$value";
 	}
 
 	/**
@@ -3422,6 +3450,7 @@ class Model
 					elseif ($value == "0")
 					    $value = "f";
 				}
+				Model::setValueType($value, $var);
 				$clone->{$var_name} = $value;
 				if(in_array($var_name, $allow_html))
 					$clone->{$var_name} = html_entity_decode($clone->{$var_name});
