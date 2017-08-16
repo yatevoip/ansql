@@ -3387,7 +3387,7 @@ class Model
 		$this->_retrieved = true;
 		$allow_html  = $this->allowHTML();
 		foreach($result[0] as $var_name=>$value) {
-			$var = $this->getVariable(get_class($this),$var_name);
+			$var = $this->variable($var_name);
 			if ($db_type == "postgresql" && $var && $var->_type == "bool") {
 				if ($value == "1")
 				    $value = "t";
@@ -3443,7 +3443,7 @@ class Model
 			$clone = new $class_name;
 			$clone->_model = $this->_model;
 			foreach ($row as $var_name=>$value) {
-				$var = $clone->getVariable($class_name,$var_name);
+				$var = $clone->variable($var_name);
 				if ($db_type == "postgresql" && $var && $var->_type == "bool") {
 					if ($value == "1")
 					    $value = "t";
