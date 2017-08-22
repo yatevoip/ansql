@@ -1190,11 +1190,11 @@ This parameter is applied on reload and is ignored if print_status is 0"
 
 		"ybts" => array(
 			"mode" => array(
-				array("selected"=> "nib", "nib","roaming", "dataroam"),
+				array("selected"=> "nipc", "nipc","roaming", "dataroam"),
 				"display" => "select",
 				"comment" => "BTS mode of operation. This setting will specify which Javascript script 
 to load for the operation. Possible values are:
-    - nib: loads script necessary for Network In a Box mode of operation
+    - nipc: loads script necessary for Network In a PC mode of operation
     - roaming: loads script necessary for the voice roaming mode of operation"
 			),
 			"networkname" => array(

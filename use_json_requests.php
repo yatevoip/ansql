@@ -366,7 +366,7 @@ function logout_from_api()
 function get_working_mode()
 {
 	if (!isset($_SESSION["available_sdr_modes"])) {
-		// nib,roaming,dataroam,enb
+		// nipc,roaming,dataroam,enb
 		$installed_modes = request_api(array(), "get_available_modes", "modes");
 		$modes = clean_sdr_modes($installed_modes);
 		$_SESSION["available_sdr_modes"] = $modes;
@@ -380,6 +380,8 @@ function get_working_mode()
 		if (count($node_types) && isset($node_types[0]["sdr_mode"])) {
 			$_SESSION["node_types"] = $node_types;
 			$sdr_mode = $node_types[0]["sdr_mode"];
+			if ($sdr_mode=="nib")
+				$sdr_mode = "nipc";
 			
 			if (!in_array($sdr_mode, $_SESSION["available_sdr_modes"])) {
 				$sdr_mode = "";
@@ -397,7 +399,7 @@ function get_working_mode()
 function clean_sdr_modes($installed_modes)
 {
 	$modes = array();
-	$accepted_modes = array("nib","roaming","dataroam","enb");
+	$accepted_modes = array("nipc","roaming","dataroam","enb");
 	foreach ($installed_modes as $mode) {
 		if (in_array($mode, $accepted_modes))
 			$modes[] = $mode;
