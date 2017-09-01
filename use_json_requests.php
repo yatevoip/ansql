@@ -430,10 +430,16 @@ function node_status($out=array(), $url="get_node_status")
 	$res = make_request($out,$url);
 
 	if ($res["code"] != 0)
-		return array("state"=>html_entity_decode(nl2br($res["message"])), "color"=>"red", "details"=>false);
+		return array(
+			"state"=>html_entity_decode(nl2br($res["message"])), 
+			"color"=>"red",
+			"details"=>false,
+			"version"=>(isset($res["version"])) ? $res["version"] : null
+		);
 
 	$node_status = array(
 		"details"=>true,
+		"version"=>(isset($res["version"])) ? $res["version"] : null,
 		"state"=> html_entity_decode(nl2br($res["status"]["state"]))
 	);
 
