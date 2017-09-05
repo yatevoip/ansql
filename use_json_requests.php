@@ -149,7 +149,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	if ($ret === false) {
 		$error = curl_error($curl);
 		// if no response from api / request times out this will be received
-		$resp = array("code"=>"-100", "message"=>_("Could not send request. Please try again later. Error: $error."));
+		$resp = array("code"=>"-100", "message"=>_("Could not send request. Please try again later.\n Error: $error."));
 		write_error($request, $out, $ret, "CURL exec error: $error", $url, $resp);
 		curl_close($curl);
 		return $resp;
