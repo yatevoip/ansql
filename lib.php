@@ -4543,14 +4543,18 @@ function display_query_stats($query_stats, $product_name)
 		$stats = $new_stats;
 	}
 
-	$length = 1;
-	foreach ($stats as $stat_name=>$stat_props) {
-		if ($stat_name == "engine") 
+	$max = 0;
+	foreach (array_keys($stats) as $i => $k) {
+		if (!$i)
 			continue;
-
-		if (count($stat_props)>$length)
-			$length = count($stat_props);
+		$max = max($max, count($stats[$k]));
+		if (!($i % 3)) {
+			$length[(int)($i / 3) - 1] = $max;
+			$max = 0;
+		}
 	}
+	if ($max)
+		$length[(int)floor($i / 3)] = $max;
 
 	$display_splitted_count = 8;
 	$table_css = 'query_stats';
@@ -4561,12 +4565,17 @@ function display_query_stats($query_stats, $product_name)
 	print "<table class='container_query_stats' cellspacing='0' cellpadding='0'>";
 	print "<tr>";
 	foreach ($stats as $stat_name=>$stat_props) {
-		print "<td class='$td_css'>";
-		display_stats_format(count($stat_props),$display_splitted_count,$stat_props,$stat_name,$table_css,$length);
+		if ($i==0) {
+			$rowspan = (int)floor(count($stats) / 3) + 1;
+			print "<td class='$td_css' rowspan='".$rowspan."'>";
+		} else
+			print "<td class='$td_css'>";
+		display_stats_format(count($stat_props),$display_splitted_count,$stat_props,$stat_name,$table_css,$length[(int)floor($j / 3)]);
 		print "</td>";
 		$i++;
 		if ($i==(4+$j)) {
-			print "</tr><tr><td></td>";
+			print "</tr><tr>";
+	//		print "</tr><tr><td></td>";
 			$td_css = 'container_right_modif';
 			$j=$j+3;
 		}
@@ -4597,68 +4606,108 @@ function display_splitted_props($stats,$stat_name, $display)
 }
 
 /**
+ * Split HSS query stats into lines using matchin rules
+ */ 
+function split_lines($stats, $match, $default)
+{
+	$ret = array();
+	foreach ($stats as $prop=>$details) {
+		$line = $default;
+		foreach ($match as $preg=>$ls)
+			if (preg_match($preg,$prop)) {
+				$line = $ls;
+				break;
+			}
+		if ($line < 0)
+			continue;
+		if (!isset($ret[$line]))
+			$ret[$line] = array();
+		$ret[$line][$prop] = $details;
+	}
+	return $ret;
+}
+
+/**
  * Display hss node stats
- * The order logic of each line displayed:
- *    line1: engine, match /hss/: hss_cluster, hss_repair, hss_gtt
- *    line2: uptime, match /map/: auc_map, hss_map 
+ * The order logic of each line displayed in table:
+ * LEFT:
+ * 		line1: engine stats,
+ * 		line2: uptime stats
+ * RIGHT:
+ *    line1: match /hss/: hss_cluster, hss_repair, hss_gtt
+ *    line2: match /map/: auc_map, hss_map 
  *    line3: match /diam/: diameter, auc_diam, hss_diam
  *    line4: match /sig/: sig_routers, sig_links, sig_sccp
  *    line5: the rest that don't match any of the above
+ *
+ * Compact the lines if the current line and the next one has less 
+ * than 3 blocks
  */ 
 function display_hlr($stats)
 {
-	// reorder query_stats received from api
-	$max_length = 1;
-	foreach ($stats as $prop=>$details) {
-		if (preg_match("/engine/",$prop)) {
-			$split_stats["line1"]["engine"] = $details;
-		} elseif (preg_match("/uptime/",$prop)) {
-			$split_stats["line2"]["uptime"] = $details;
-		} elseif (preg_match("/map/",$prop)) {
-			$split_stats["line2"][$prop] = $details;
-			$max_length = isset($length["line2"]) ? $length["line2"] : $max_length;
-			if (count($details)>$max_length)
-				$length["line2"] = count($details);
-		} elseif (preg_match("/diam/",$prop)) {
-			$split_stats["line3"][$prop] = $details;
-			$max_length = isset($length["line3"]) ? $length["line3"] : $max_length;
-			if (count($details)>$max_length)
-				$length["line3"] = count($details);
-		} elseif (preg_match("/sig/",$prop)) {
-			$split_stats["line4"][$prop] = $details;
-			$max_length = isset($length["line4"]) ? $length["line4"] : $max_length;
-			if (count($details)>$max_length)
-				$length["line4"] = count($details);
-		} elseif (preg_match("/hss/",$prop)) {
-			$split_stats["line1"][$prop] = $details;
-			$max_length = isset($length["line1"]) ? $length["line1"] : $max_length;
-			if (count($details)>$max_length)
-				$length["line1"] = count($details);
-		} else {
-			$split_stats["line5"][$prop] = $details;
-			$max_length = isset($length["line5"]) ? $length["line5"] : $max_length;
-			if (count($details)>$max_length)
-				$length["line5"] = count($details);
+	$default = 4;
+	$split_stats = array(
+		"left"	=> split_lines($stats, array(
+				"/engine/"	=> 0,
+				"/uptime/"	=> 1,
+			), -1),
+		"right" => split_lines($stats, array(
+				"/engine/"	=> -1,
+				"/uptime/"	=> -1,
+				"/map/"		=> 1,
+				"/diam/"	=> 2,
+				"/sig/"		=> 3,
+				"/hss/"		=> 0,
+			), $default)
+		);
+
+	// compact the lines 
+	$comp = array();
+	if (!isset($split_stats['right'][$default]))
+		$default--;
+	for ($i = 0; $i < $default; $i++) {
+		$curr = $split_stats['right'][$i];
+		$next = $split_stats['right'][$i+1];
+		if (count($curr) + count($next) <= 3) {
+			$split_stats['right'][$i+1] = array_merge($curr, $next);
+			continue;
 		}
+		$comp[] = $curr;
 	}
+	$comp[] = $split_stats['right'][$default];
+	$split_stats['right'] = $comp;
+
+	$length = array();
+	foreach ($split_stats['right'] as $i => $line) {
+		$max = 0;
+		foreach ($line as $prop)
+			$max = max($max, count($prop));
+		$length[$i] = $max;
+	}
+
 	$display_splitted_count = 8;
     $table_css = 'query_stats';
     $td_css = 'container_qs';
-	print "<table class='container_query_stats' cellspacing='0' cellpadding='0'>";
+	print "<table class='holdcontainer_query_stats' cellspacing='0' cellpadding='0'>";
 	print "<tr>";
-	foreach ($split_stats as $line=>$stats) {
-			print "<tr>";
-			if ($line!="line1" || ($line=="line2" && !array_key_exists("uptime", $split_stats[$line])))
-				print "<td class='$td_css'>&nbsp;</td>";
-			foreach ($stats as $stat_name=>$stat_props) {
-				print "<td class='$td_css'>";
-				$lgth = isset($length[$line]) ? $length[$line] : $max_length;
-				display_stats_format(count($stat_props),$display_splitted_count,$stat_props,$stat_name,$table_css,$lgth);
-				print "</td>";
-			}
-			print "</tr>";
+	foreach ($split_stats as $side=>$side_stats) {
+		print "<td class='hold_stats'>";
+		print "<table class='container_query_stats' cellspacing='0' cellpadding='0'>";
+		print "<tr>";
+		foreach ($side_stats as $line=>$stats) {
+				print "<tr>";
+				foreach ($stats as $stat_name=>$stat_props) {
+					print "<td class='$td_css'>";
+					display_stats_format(count($stat_props),$display_splitted_count,$stat_props,$stat_name,$table_css,$length[$line]);
+					print "</td>";
+				}
+				print "</tr>";
+		}
+		print "</tr>";
+		print "</table>";
+		print "</td>";
 	}
-	print "</tr>";
+		print "</tr>";
 	print "</table>";
 }
 
