@@ -4189,13 +4189,16 @@ function generic_tabbed_settings($options,$config,$section_to_open=array(),$show
 	print '</table>';
 }
 
-function load_page($page)
+function load_page($page, $timeout=0)
 {
 	$page = build_link($page);
 
+	if (!is_numeric($timeout))
+		$timeout = 0;
+	
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	if (headers_sent())
-		print "<meta http-equiv=\"REFRESH\" content=\"0;url=$page\">";
+	if (headers_sent() || $timeout)
+		print "<meta http-equiv=\"REFRESH\" content=\"$timeout;url=$page\">";
 	else
 		header("Location: $page");
 }
