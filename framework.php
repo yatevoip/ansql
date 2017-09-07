@@ -3377,6 +3377,7 @@ class Model
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 		global $db_type;
+		global $debug_old_data;
 
 		if(count($result) != 1)
 		{
@@ -3388,12 +3389,18 @@ class Model
 		$allow_html  = $this->allowHTML();
 		foreach($result[0] as $var_name=>$value) {
 			$var = $this->variable($var_name);
+			if (!$var || get_class($var)!="Variable") {
+				if (isset($debug_old_data))
+					Debug::trigger_report ("critical", "populateObject - Class of var '$var_name' is ".get_class($var)." not Variable, value='$value'");
+				continue;
+			}
+			
 			if ($db_type == "postgresql" && $var && $var->_type == "bool") {
 				if ($value == "1")
 				    $value = "t";
 				elseif ($value == "0")
 				    $value = "f";
-			}		
+			}
 			Model::setValueType($value, $var);			
 			$this->{$var_name} = $value;
 			if(in_array($var_name, $allow_html))
@@ -3404,9 +3411,17 @@ class Model
 	protected static function setValueType(&$value, $var)
 	{
 		global $enforce_out_types;
-		
+		global $debug_old_data;
+
 		if (!isset($enforce_out_types) || !$enforce_out_types)
 			return;
+		
+		if (!$var || get_class($var)!="Variable") {
+			if (isset($debug_old_data))
+				Debug::trigger_report ("critical", "setValueType - Class of var is ".get_class($var).", not Variable, value='$value'");
+			$value = NULL;
+			return;
+		}
 		
 		if ($var->_type == "bool") {
 			$value = Database::boolValue($value);
@@ -3428,6 +3443,7 @@ class Model
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 		global $db_type;
+		global $debug_old_data;
 
 		if(!count($result))
 			return array();
@@ -3444,6 +3460,12 @@ class Model
 			$clone->_model = $this->_model;
 			foreach ($row as $var_name=>$value) {
 				$var = $clone->variable($var_name);
+				if (!$var || get_class($var)!="Variable") {
+					if (isset($debug_old_data))
+						Debug::trigger_report ("critical", "buildArrayOfObjects - Class of var '$var_name' is ".get_class($var)." not Variable, value='$value'");
+					continue;
+				}
+				
 				if ($db_type == "postgresql" && $var && $var->_type == "bool") {
 					if ($value == "1")
 					    $value = "t";
