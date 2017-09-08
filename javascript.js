@@ -765,8 +765,11 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 	// see if there are advanced fields (check button -- it's displayed only when there are fields marked as advanced)
 	var show_advanced = document.getElementById("advanced");
 	if (show_advanced!=null) {
-		console.log("innerHTML advanced button:'"+show_advanced.innerHTML+"'");
-		show_advanced = (show_advanced.innerHTML=="Advanced") ? false : true;
+		//	console.log("innerHTML advanced button:'"+show_advanced.innerHTML+"'");
+		//	show_advanced = (show_advanced.innerHTML=="Advanced") ? false : true;
+		console.log("innerHTML advanced button:'"+show_advanced.src+"'");
+		var str = show_advanced.src;
+		show_advanced = (str.indexOf("advanced")!=-1) ? false : true;
 	} else
 		show_advanced = false;
 	console.log("Show advanced: "+show_advanced);
