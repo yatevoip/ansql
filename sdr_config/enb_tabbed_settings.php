@@ -50,7 +50,7 @@ class EnbTabbedSettings extends TabbedSettings
 		//The key is the MENU alias the sections from $fields 
 		//and for each menu is an array that has the submenu data with subsections 
 		$structure = array(
-			"Radio" => array("EnodeB", "Calibration"/*, "Bearers"*/),
+			"Radio" => array("eNodeB", "Calibration"/*, "Bearers"*/),
 			"Core" => array("GTP", "MME"/*, "S1AP"*/),
 			"Access channels" => array("PRACH",/* "PDSCH",*/ "PUSCH", "PUCCH", "PDCCH"),
 

@@ -1615,6 +1615,7 @@ The IP address of receiving Wireshark, if you use it for real time traces.",
 					"comment" => "Expire time for registrations."
 				),
 				"reg_sip" => array(
+					"column_name" => "Reg SIP",
 					"display" => "text",
 					"comment" => "String: ip:port where SIP requests are sent.
 It is REQUIRED to set reg_sip or nodes_sip.
@@ -1622,6 +1623,7 @@ Example: reg_sip=192.168.1.245:5058",
 					"validity" => array("valid_reg_sip","reg_sip")
 				),
 				"nodes_sip" => array(
+					"column_name" => "Nodes SIP",
 					"display" => "text",
 					"comment" => "json object: node => ip:port of each YateUCN server
 node, which is computed based on the TMSI received from the handset.
@@ -1642,6 +1644,7 @@ the Non Access Stratum (NAS) Node Selection Function (NNSF)."
 Associated to each base station by the network operator."
 				),
 				"sos_sip" => array(
+					"column_name" => "SOS SIP",
 					"comment"=>"String: host:port where SIP emergency calls are sent.
 If not set any emergency calls will be delivered to reg_sip or nodes_sip.
 Ex: sos_sip=192.168.1.215:5059",
@@ -1654,6 +1657,7 @@ Ex: sos_sip=192.168.1.215:5059",
 By default the binary type application/vnd.3gpp.sms is used."
 				),
 				"my_sip" => array(
+					"column_name" => "My SIP",
 					"display" => "text",
 					"comment" => "string: ip:port for the local SIP listener.
 Unless otherwise configured, this is the IP of the machine

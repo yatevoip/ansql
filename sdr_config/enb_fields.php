@@ -18,7 +18,7 @@ $enodeb_params = array(
     // they were grouped here because they are unique per enodeb or per enodeb in overlapping coverage area
 
     "enodebId" => array(
-	"column_name" => "eNodeB Id",
+	"column_name" => " eNodeB Id",
 	"comment" =>"eNodeB ID
 Unique to every eNodeB in the network.
 Must be 5 hex digits for a Macro ENB or 7 hex digits for a Home ENB",	
