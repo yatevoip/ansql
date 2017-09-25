@@ -826,7 +826,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 	{
 		print '<tr class="'.$css.'">';
 		print '<td class="'.$css.' left_td advanced">&nbsp;</th>';
-		print '<td class="'.$css.' left_right advanced"><img id="'.$form_identifier.'xadvanced"';
+		print '<td class="'.$css.' left_right advanced"><img class="form_advanced" id="'.$form_identifier.'xadvanced"';
 		if(!$show_advanced)
 			print " src=\"images/advanced.jpg\" title=\"Show advanced fields\"";
 		else
