@@ -3552,13 +3552,17 @@ function send_mail($emailaddress, $fromaddress, $emailsubject, $body, $attachmen
 	# SEND THE EMAIL
 	ini_set('sendmail_from',$fromaddress);  // the INI lines are to force the From Address to be used !
 	if (mail($emailaddress, $emailsubject, $msg, $headers)){
-		if($notice && !$link_with_notice)
+		if(php_sapi_name() == 'cli')
+			print "E-mail message was sent succesfully to ".$emailaddress;
+		elseif($notice && !$link_with_notice)
 			message("E-mail message was sent succesfully to ".$emailaddress,'no');
 		elseif($notice && $link_with_notice)
 			message("E-mail message was sent succesfully to ".$emailaddress);
 		return true;
 	}else{
-		if($notice && !$link_with_notice)
+		if(php_sapi_name() == 'cli')
+			print "Could not send e-mail message to ".$emailaddress;
+		elseif($notice && !$link_with_notice)
 			errormess("Could not send e-mail message to ".$emailaddress,'no');
 		elseif($notice && $link_with_notice)
 			errormess("Could not send e-mail message to ".$emailaddress);
