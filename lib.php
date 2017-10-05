@@ -3468,7 +3468,7 @@ function nbsp($count = null, $print=true)
  * @param $attachments Bool 
  *
  */ 
-function send_mail($emailaddress, $fromaddress, $emailsubject, $body, $attachments = false, $names = null, $notice = true, $link_with_notice = false, $content_type="text/html")
+function send_mail($emailaddress, $fromaddress, $emailsubject, $body, $attachments = false, $names = null, $notice = true, $link_with_notice = false, $content_type="text/html", $transfer_encoding="QUOTED-PRINTABLE")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $path;
@@ -3501,7 +3501,7 @@ function send_mail($emailaddress, $fromaddress, $emailsubject, $body, $attachmen
 	#this is the body of the message
 	$msg .= "--".$mime_boundary.$eol;
 	$msg .= "Content-Type: $content_type; charset=ISO-8859-1".$eol;
-	$msg .= "Content-Transfer-Encoding: QUOTED-PRINTABLE".$eol.$eol;
+	$msg .= "Content-Transfer-Encoding: $transfer_encoding".$eol.$eol;
 	//$msg .= strip_tags(str_replace("<br>", "\n", $body)).$eol.$eol;
 	//$msg .= strip_tags(str_replace("\n", "<br/>", $body)).$eol.$eol;
 	$msg .= $body.$eol.$eol;
