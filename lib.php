@@ -4554,7 +4554,12 @@ function display_query_stats($query_stats, $product_name)
 	foreach (array_keys($stats) as $i => $k) {
 		if (!$i)
 			continue;
-		$max = max($max, count($stats[$k]));
+		// count of rows under property $k
+		$count = count($stats[$k]);
+		// if field has more than 8 properties, display it split in 2
+		if ($count>8)
+			$count = $count/2;
+		$max = max($max, $count);
 		if (!($i % 3)) {
 			$length[(int)($i / 3) - 1] = $max;
 			$max = 0;
@@ -4687,8 +4692,12 @@ function display_hlr($stats)
 	$length = array();
 	foreach ($split_stats['right'] as $i => $line) {
 		$max = 0;
-		foreach ($line as $prop)
-			$max = max($max, count($prop));
+		foreach ($line as $prop) {
+			$count = count($prop);
+			if ($count>8)
+				$count = $count/2;
+			$max = max($max, $count);
+		}
 		$length[$i] = $max;
 	}
 
