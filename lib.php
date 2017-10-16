@@ -4558,10 +4558,13 @@ function display_query_stats($query_stats, $product_name)
 	foreach (array_keys($stats) as $i => $k) {
 		if (!$i)
 			continue;
+		
+		$wide_line = have_wide_line($stats[$k]);
+		
 		// count of rows under property $k
 		$count = count($stats[$k]);
 		// if field has more than 8 properties, display it split in 2
-		if ($count>8)
+		if ($count>8 && !$wide_line)
 			$count = $count/2;
 		$max = max($max, $count);
 		if (!($i % 3)) {
@@ -4600,19 +4603,32 @@ function display_query_stats($query_stats, $product_name)
 	print "</table>";
 }
 
+function have_wide_line($stats)
+{
+	foreach ($stats as $key=>$val) {
+		$line_width = strlen($key) + strlen($val);
+		if ($line_width > 40) {
+			return true;
+		}
+	}
+	return false;
+}
+
 function display_splitted_props($stats,$stat_name, $display)
 {
 	$i=1;
 	print "<table class='$display $stat_name' cellspacing='0' cellpadding='0'>";
 	print "<tr> <td class='prop_lev1' colspan='4'>".$stat_name." </td></tr>";
+	
+	$wide_line = have_wide_line($stats);	
 	foreach ($stats as $prop=>$val) {
 		$val = ($val===false) ? "false" : $val;
 		$val = ($val===true) ? "true" : $val;
-		if ($i%2==1)
+		if ($i%2==1 || $wide_line)
 			print "<tr>";
 		print "<td class='cat_prop2'>".$prop."</td>";
 		print "<td class='cat_prop2_desc'>".$val."</td>";
-		if ($i%2==0)
+		if ($i%2==0 || $wide_line)
 			print "</tr>";
 		$i++;
 	}
