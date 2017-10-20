@@ -1503,11 +1503,16 @@ class Model
 		foreach($params as $param_name=>$param_value) {
 			$var = $this->variable($param_name);
 			if ($var) {
-				if($var->_type=="bool")
+				if($var->_type=="bool") {
 					$param_value = Model::sqlBool($param_value);
-
-				if($this->{$param_name} != $param_value)
-					$this->_modified_col[$param_name] = true;
+					
+					if (Database::boolValue($param_value) !== Database::boolValue($this->{$param_name}))
+						$this->_modified_col[$param_name] = true;
+					
+				} else {
+					if($this->{$param_name} != $param_value)
+						$this->_modified_col[$param_name] = true;
+				}
 				$this->{$param_name} = $param_value;
 			}
 		}
