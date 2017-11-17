@@ -4232,11 +4232,17 @@ function build_link($page)
 	return $page;
 }
 
-function include_javascript($module=null)
+function include_javascript($module=null, $set_version=false)
 {
-	if (is_file("ansql/javascript.js"))
+	if (is_file("ansql/javascript.js")) {
 		// include the ansql javascript functions
-		print '<script language="javascript" type="text/javascript" src="ansql/javascript.js"></script>';
+		if (!$set_version) {
+			print '<script language="javascript" type="text/javascript" src="ansql/javascript.js"></script>';
+		} else { 
+			$src = set_file_version("ansql/javascript.js");
+			print '<script language="javascript" type="text/javascript" src="'.$src.'"></script>';
+		}
+	}
 
 	if (is_file("javascript/generic_js.php"))
 		include("javascript/generic_js.php");
