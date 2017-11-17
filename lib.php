@@ -1038,6 +1038,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		print ucfirst($field_format["column_name"]);
 	if (isset($field_format["required"]))
 		$field_format["compulsory"] = $field_format["required"];
+	if (isset($field_format["object_required"]))
+		$field_format["compulsory"] = $field_format["object_required"];
 	if (isset($field_format["compulsory"]))
 		if($field_format["compulsory"]===true || $field_format["compulsory"]=="yes" || bool_value($field_format["compulsory"]) || $field_format["compulsory"]=="true")
 			print '<font class="compulsory">*</font>';
