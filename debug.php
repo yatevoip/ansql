@@ -57,9 +57,9 @@ $debug_buttons = array(
 );
 
 if(is_file("defaults.php"))
-	include("defaults.php");
+	include_once("defaults.php");
 if(is_file("config.php"))
-	include("config.php");
+	include_once("config.php");
 
 if (!isset($enable_debug_buttons) || $enable_debug_buttons!=true)
 	$debug_buttons = false;
