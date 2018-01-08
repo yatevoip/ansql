@@ -4905,4 +4905,11 @@ function json_format($json)
 	return $result;
 }
 /* vi: set ts=8 sw=4 sts=4 noet: */
+
+// Creates the structure for the popup (container + overlay)
+function create_popup_container()
+{
+	print "<div class='lightbox_overlay' style='display:none;' id='maximize_overlay'></div>";
+	print "<div class='maximized_container' style='display:none;' id='maxedcontainer'></div>";
+}
 ?>

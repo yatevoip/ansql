@@ -489,7 +489,7 @@ function show_hide(element_id)
  * encodeURI function is used on url before using @make_api_request function
  * @param url String. Where to make request to
  * @param cb Callback. If set, call it passing response from HTTP request as argument
- * @param aync Bool. If set, specifies if the request should be handled asynchronously or not. 
+ * @param async Bool. If set, specifies if the request should be handled asynchronously or not. 
  * Default async is true (asynchronous) 
  */
 function make_request(url, cb, async)
@@ -1100,3 +1100,84 @@ function get_rand_int(min, max)
 {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+/**
+ * This function triggers the popup on a javascript event set on the html element (ex: button onclick, link onclick)
+ * It uses make_request to make request to a link and call the js function that displays the popup 
+ * @param popup_request_object Object contains: 
+ * link - where to make request for content
+ * cb_api_response  - this function will be called to display the popup (if not set, default function display_popup will be called)
+ * cb_close_button  - this function will be called when user clicks on close button to close the popup (if not set, default function close_popup will be called)
+ * cb_close_button_params - set the params for the function set in cb_close_button (if not set, function set in cb_close_button will be called with no parameters)
+ * 
+ * Ex: obj = {"link":"pages.php?method=card_scan","cb_api_response":display_popup,"cb_close_button":minimize_success,"cb_close_button_params":{"method":"card_scan"}}
+ */
+function request_popup(popup_request_object)
+{
+	var callback;
+	
+	if (typeof popup_request_object.cb_api_response == 'undefined' || popup_request_object.cb_api_response==null)
+		callback = display_popup;
+	else
+		callback = popup_request_object.cb_api_response;
+	
+	make_request(popup_request_object.link, {name:callback, param:popup_request_object});
+}
+
+/**
+ * Displays the popup
+ * @param html_content - returned content from link request
+ * @param popup_request_object Object . The same object set in request_popup.
+ */
+function display_popup(html_content,popup_request_object)
+{
+	current_y = window.pageYOffset;
+
+	var overlay = document.getElementById('maximize_overlay');
+	var container = document.getElementById('maxedcontainer');
+
+	if (container==null || overlay==null) {
+		alert("Coding error. Please add overlay and container divs to add anon visitor pop up in.");
+		return;
+	}
+	
+	container.innerHTML = html_content;
+	
+	if (typeof popup_request_object.cb_close_button != 'undefined' || popup_request_object.cb_close_button!=null) {
+		if (popup_request_object.cb_close_button == false)
+			document.getElementById("closebut").style.display = "none";
+		if (typeof popup_request_object.cb_close_button_param != 'undefined' || popup_request_object.cb_close_button_param!=null){
+			document.getElementById("closebut").onclick = function() {
+									// params will be an array that contains the object properties
+									var params = Object.values(popup_request_object.cb_close_button_param);
+									var cb = popup_request_object.cb_close_button;
+									//call the function with multiple params
+									cb.apply(null,params);
+								};
+		}
+		else		
+			document.getElementById("closebut").onclick = popup_request_object.cb_close_button;
+	} else
+		document.getElementById("closebut").onclick = close_popup;
+	
+
+	if (container.style.display=="none") {
+		show_hide('maximize_overlay');
+		show_hide('maxedcontainer');
+	}
+	window.scrollTo(0,0);
+	
+	return false;
+}
+
+/**
+ * Close the popup
+ */
+function close_popup()
+{
+	show_hide('maximize_overlay');
+	show_hide('maxedcontainer');
+
+	window.scrollTo(0,current_y);
+}
+
