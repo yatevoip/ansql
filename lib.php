@@ -4288,19 +4288,24 @@ function requiredFieldsJs($form_fields, $excluded_fields)
  * Build generic search box: Dropdown to select option to search by and input for searched value
  * @param $search_options Array. Options to search by
  * @param $custom_fields Array. Custom search fields that will be added before the $search_options.
+ * @param $value_readonly Bool. If true set 'Value' field as readonly, when 'Search by' is not selected.
  * Ex: array("title"=>array("Search1", "Search2"),array("<input type.../>", "<select>..</select>"))
  */
-function generic_search($search_options, $custom_fields=array())
+function generic_search($search_options, $custom_fields=array(), $value_readonly=false)
 {
 	$search_options = format_for_dropdown($search_options);
 	$search_options["selected"] = getparam("col");
 
 	$title = array("Search by", "Value", "&nbsp;");
+	$ro = (!$value_readonly) ? "undefined" : "true";
 	$fields = array(array(
-			build_dropdown($search_options, "col", true, "", "", 'onchange="clean_cols_search()"'),
+			build_dropdown($search_options, "col", true, "", "", 'onchange="clean_cols_search('.$ro.')"'),
 			"<input type=\"text\" value=\"".getparam("col_value")."\" name=\"col_value\" id=\"col_value\" size=\"10\"/>",
 			"<input type=\"submit\" value=\"Search\" />"
 		));
+
+	if ($value_readonly && !getparam("col_value"))
+		$fields[0][1] = "<input type=\"text\" value=\"".getparam("col_value")."\" name=\"col_value\" id=\"col_value\" size=\"10\" readonly/>";
 
 	if (isset($custom_fields["title"]) && isset($custom_fields["fields"])) {
 		$title = array_merge($custom_fields["title"],$title);
@@ -4308,7 +4313,10 @@ function generic_search($search_options, $custom_fields=array())
 	}
 
 	start_form();
-	addHidden(null,array(),false,array("col_value"));
+	if ($value_readonly)
+		addHidden(null,array(),false,array("col_value", "col"));
+	else
+		addHidden(null,array(),false,array("col_value"));
 	formTable($fields,$title);
 	end_form();
 }

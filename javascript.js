@@ -1030,9 +1030,17 @@ function toggle_menu()
 /**
  * Clean columns when php generic_search() function is used
  */
-function clean_cols_search()
+function clean_cols_search(readonly)
 {
 	var col_value = document.getElementById('col_value');
+	if (readonly == true) {
+		var col = document.getElementById('col');
+		if (col.value == "") 
+			col_value.readOnly = true;
+		else
+			col_value.readOnly = false;
+	}
+	
 	if (col_value!=null)
 		col_value.value = null; 
 
