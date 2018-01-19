@@ -21,21 +21,26 @@
 // true/false
 // if true then all debug messages are remembered unless they are set in $debug_tags to be excluded
 // if false then only the tags listed in $debug_tags are included
-$debug_all = true;
+if (!isset($debug_all))
+	$debug_all = true;
 
 // array of tags that should be included or excluded from debug
 // a tag can't contain white spaces
-$debug_tags = array("paranoid","in_framework","in_ansql","ansql","framework");
+if (!isset($debug_tags))
+	$debug_tags = array("paranoid","in_framework","in_ansql","ansql","framework");
 
 // default tag if tag is not specified
-$default_tag = "logic";
+if (!isset($default_tag))
+	$default_tag = "logic";
 
 // tags that should never be truncated
-$critical_tags = array("critical","query","query failed");
+if (!isset($critical_tags))
+	$critical_tags = array("critical","query","query failed");
 
 // maximum xdebug message length
 // set to false or 0 to disable truncking of messages
-$max_xdebug_mess = 50;
+if (!isset($max_xdebug_mess))
+	$max_xdebug_mess = 50;
 
 /*
 // options to notify in case a report was triggered
@@ -44,17 +49,19 @@ $debug_notify = array(
     "web"  => array("notify", "dump")
 );
 */
-$debug_notify = array("web"=>array("notify"));
+if (!isset($debug_notify))
+	$debug_notify = array("web"=>array("notify"));
 
 // if $enable_debug_buttons is true, then several Debug buttons are displayed at the top of the page
 // Ex: Dump $_SESSION, See $_REQUEST
 // you can also add additional buttons if you define the callbacks for them
-$debug_buttons = array(
-	"dump_session"=>'Dump $_SESSION', 
-	"dump_request"=>'Dump $_REQUEST',
-	// 
-	// "custom_debug_opt1" => callback
-);
+if (!isset($debug_buttons))
+	$debug_buttons = array(
+		"dump_session"=>'Dump $_SESSION', 
+		"dump_request"=>'Dump $_REQUEST',
+		// 
+		// "custom_debug_opt1" => callback
+	);
 
 if(is_file("defaults.php"))
 	include_once("defaults.php");
