@@ -1572,6 +1572,9 @@ class Model
 		foreach ($this->_model as $var_name => $var)
 		{
 			$value = $this->$var_name;
+			if (is_array($value) || is_object($value))
+				$value = print_r($value,true);
+			
 			if (!strlen($value) && !$with_serials)
 			{
 				// some types have defaults assigned by DB server so we don't set them

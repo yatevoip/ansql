@@ -78,7 +78,7 @@ class ActionLog extends Model
 			if($performer != '')
 				$performer .= ',';
 			$performer .= $perf;
-			$real_performer_id = (isset($_SESSION[$performing_columns["real_performer_id"]])) ? $_SESSION[$performing_columns["real_performer_id"]] : "";
+			$real_performer_id = ( isset($performing_columns["real_performer_id"]) && strlen($performing_columns["real_performer_id"]) && isset($_SESSION[$performing_columns["real_performer_id"]]) ) ? $_SESSION[$performing_columns["real_performer_id"]] : "";
 		}
 		$actionlog->date = "now()";
 		$actionlog->log = $log;
