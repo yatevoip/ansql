@@ -96,7 +96,7 @@ function hide(element_id)
  */
 function advanced(identifier)
 {
-	var form = document.getElementById(identifier);
+	var form = (identifier!='') ? document.getElementById(identifier) : null;
 
 	var elems = (form!=null) ? form.elements : [];
 	var elem_name;
@@ -128,11 +128,12 @@ function advanced(identifier)
 	if (img!=null && img.tagName=="IMG") {
 		var imgsrc= img.src;
 		var imgarray = imgsrc.split("/");
-		if (imgarray[imgarray.length-1] == "advanced.jpg") {
-			imgarray[imgarray.length-1] = "basic.jpg";
+		var extension = imgarray[imgarray.length-1].substr(-3);
+		if (imgarray[imgarray.length-1] == ("advanced."+extension)) {
+			imgarray[imgarray.length-1] = "basic."+extension ;
 			img.title = "Hide advanced fields";
 		} else {
-			imgarray[imgarray.length-1] = "advanced.jpg";
+			imgarray[imgarray.length-1] = "advanced."+extension ;
 			img.title = "Show advanced fields";
 		}
 

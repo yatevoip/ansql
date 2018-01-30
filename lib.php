@@ -821,16 +821,20 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 			$custom_submit[$field_name] = $field_format;
 	}
 	
-
+	
+	if (is_file("images/advanced.png"))
+		$img_extension = "png";
+	else
+		$img_extension = "jpg";
 	if($have_advanced && !$compulsory_notice)
 	{
 		print '<tr class="'.$css.'">';
 		print '<td class="'.$css.' left_td advanced">&nbsp;</th>';
 		print '<td class="'.$css.' left_right advanced"><img class="form_advanced" id="'.$form_identifier.'xadvanced"';
 		if(!$show_advanced)
-			print " src=\"images/advanced.jpg\" title=\"Show advanced fields\"";
+			print " src=\"images/advanced.$img_extension\" title=\"Show advanced fields\"";
 		else
-			print " src=\"images/basic.jpg\" title=\"Hide advanced fields\"";
+			print " src=\"images/basic.$img_extension\" title=\"Hide advanced fields\"";
 		print ' onClick="advanced(\''.$form_identifier.'\');"/></th></tr>';
 	}
 	if($compulsory_notice && $compulsory_notice !== true)
@@ -840,9 +844,9 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 		print '<td class="'.$css.' left_td" colspan="2">';
 		print '<img class="advanced" id="'.$form_identifier.'advanced" ';
 		if(!$show_advanced)
-			print "src=\"images/advanced.jpg\" title=\"Show advanced fields\"";
+			print "src=\"images/advanced.$img_extension\" title=\"Show advanced fields\"";
 		else
-			print "src=\"images/basic.jpg\" title=\"Hide advanced fields\"";
+			print "src=\"images/basic.$img_extension\" title=\"Hide advanced fields\"";
 		print ' onClick="advanced(\''.$form_identifier.'\');"/>'.$compulsory_notice.'</td>';
 		print '</tr>';
 		}
@@ -852,9 +856,9 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 		if($have_advanced) {
 		print '<img id="'.$form_identifier.'xadvanced"';
 		if(!$show_advanced)
-			print " class=\"advanced\" src=\"images/advanced.jpg\" title=\"Show advanced fields\"";
+			print " class=\"advanced\" src=\"images/advanced.$img_extension\" title=\"Show advanced fields\"";
 		else
-			print " class=\"advanced\" src=\"images/basic.jpg\" title=\"Hide advanced fields\"";
+			print " class=\"advanced\" src=\"images/basic.$img_extension\" title=\"Hide advanced fields\"";
 		print ' onClick="advanced(\''.$form_identifier.'\');"/>';
 		}
 		print 'Fields marked with <font class="compulsory">*</font> are required.</td>';
