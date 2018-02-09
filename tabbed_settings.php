@@ -346,7 +346,9 @@ abstract class TabbedSettings
 									}
 								    } elseif (!in_array($data, $default_fields[$section][$subsection][$param][0]) &&
 									      !in_array("Custom",$default_fields[$section][$subsection][$param][0])) {
-									$def_value = (isset($default_fields[$section][$subsection][$param][0]["selected"])) ? $default_fields[$section][$subsection][$param][0]["selected"] : "Not selected";
+
+									$def_value = $this->setClosestValue($data,$default_fields[$section][$subsection][$param][0]);
+								//	$def_value = (isset($default_fields[$section][$subsection][$param][0]["selected"])) ? $default_fields[$section][$subsection][$param][0]["selected"] : "Not selected";
 									$this->detected_invalidities_message .= "In $section, $subsection, the parameter: $param=$data. Automatically mapped to: ". $def_value ."</br>";
 									$request_fields[$subsection][$param] = $def_value;
 									continue;
@@ -357,6 +359,22 @@ abstract class TabbedSettings
 				}
 			}
 		}
+	}
+	/**
+	 * Get the array value that is closest to a given value
+	 */ 
+	function setClosestValue($val, $fields_values)
+	{
+		Debug::func_start(__METHOD__,func_get_args(),"tabs");
+
+		if ($val < $fields_values[0])
+			return $fields_values[0];
+
+		$last = count($fields_values)-1;
+		if (array_key_exists("selected",$fields_values))
+			$last = count($fields_values)-2;
+
+		return $fields_values[$last];
 	}
 
 	/**
