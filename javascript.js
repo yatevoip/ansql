@@ -726,11 +726,12 @@ function set_html_obj(id, html)
  * @param level_fields Bool. If true, the fields in the FORM are on more levels
  * @param name_obj_title String. Common piece of the name of the objtitle field for this level of objects
  * @param border_elems Object. {"start":"", "end":""}. Name between which we start showing elements. Used when you have more types of objects so _index is not unique  
+ * @param advanced_id String. The ID set in html of the 'Advanced/Basic' button. If undefined the ID set in Advanced/Basic button from class Wizard will be used.
  * Ex: {"end":name_border} // between start of the form and name_border
  * Ex: {"start":name_border} // between name_border and end of form
  * Ex: {"start":border1, "end":border2} // between border1 and border2 
  */
-function fields_another_obj(link_index, link_name, hidden_fields, level_fields, name_obj_title, border_elems, multiple_subtitle)
+function fields_another_obj(link_index, link_name, hidden_fields, level_fields, name_obj_title, border_elems, multiple_subtitle, advanced_id)
 {
 	console.log("Entered fields_another_obj() ", arguments);
 
@@ -764,7 +765,9 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 	elems = parentform.elements;
 
 	// see if there are advanced fields (check button -- it's displayed only when there are fields marked as advanced)
-	var show_advanced = document.getElementById("advanced");
+	if (advanced_id==undefined)
+		advanced_id = "advanced_wiz_button";
+	var show_advanced = document.getElementById(advanced_id);
 	if (show_advanced!=null) {
 		//	console.log("innerHTML advanced button:'"+show_advanced.innerHTML+"'");
 		//	show_advanced = (show_advanced.innerHTML=="Advanced") ? false : true;
