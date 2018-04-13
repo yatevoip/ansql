@@ -201,7 +201,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 			// remove the comment so that the JSON is parsed correctly
 			// and write a warning to the user 
 			// Ex.: "{"code":0,"status":{"operational":false,"level":"MILD","state":"Disconnected"},"version":"unknown"} // Not writeable /var/log/json_api"
-			if (($trail = strrchr($ret, "}")) !== false) {
+			if (($trail = strrchr($ret, "}")) !== false && strlen($trail)>1) {
 				$trail = substr($trail,1);
 				$ret = substr($ret,0,-strlen($trail));
 				$trail = trim($trail);
