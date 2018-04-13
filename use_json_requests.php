@@ -197,6 +197,17 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		$code = curl_getinfo($curl,CURLINFO_HTTP_CODE);
 		$type = curl_getinfo($curl,CURLINFO_CONTENT_TYPE);
 		if ($type == "application/json") {
+			// if there are comments added to the end of a valid JSON
+			// remove the comment so that the JSON is parsed correctly
+			// and write a warning to the user 
+			// Ex.: "{"code":0,"status":{"operational":false,"level":"MILD","state":"Disconnected"},"version":"unknown"} // Not writeable /var/log/json_api"
+			if (($trail = strrchr($ret, "}")) !== false) {
+				$trail = substr($trail,1);
+				$ret = substr($ret,0,-strlen($trail));
+				$trail = trim($trail);
+				if (strlen($trail))
+					print "<div class=\"notice\">Warning! The JSON received was invalid. Please fix the error: ".$trail."</div>";
+			}
 			$inp = json_decode($ret,true);
 			if (!$inp || $inp==$ret) {
 				$resp = array("code"=>"-101", "message"=>_("Could not parse JSON response."));
