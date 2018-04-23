@@ -1060,7 +1060,13 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	switch($display) {
 		case "textarea":
-			print '<textarea class="'.$css.'" id="'.$form_identifier.$field_name.'" name="'.$form_identifier.$field_name.'" cols="20" rows="5" ';
+			$textarea_cols = 20;
+			$textarea_rows = 5;
+			if (isset($field_format["textarea_cols"]))
+				$textarea_cols = $field_format["textarea_cols"];
+			if (isset($field_format["textarea_rows"]))
+				$textarea_rows = $field_format["textarea_rows"];
+			print '<textarea class="'.$css.'" id="'.$form_identifier.$field_name.'" name="'.$form_identifier.$field_name.'" cols="'.$textarea_cols.'" rows="'.$textarea_rows.'" ';
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
 			print '>';
