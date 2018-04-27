@@ -96,6 +96,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	global $json_api_secret;
 	global $func_build_request_url;
 	global $request_timeout;
+	global $displayed_errors;
 
 	if (substr($request,0,7)!="http://" && substr($request,0,8)!="https://") {
 		if (!isset($func_build_request_url) || !$func_build_request_url)
@@ -205,8 +206,15 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 				$trail = substr($trail,1);
 				$ret = substr($ret,0,-strlen($trail));
 				$trail = trim($trail);
-				if (strlen($trail))
-					print "<div class=\"notice\">Warning! The JSON received was invalid. Please fix the error: ".$trail."</div>";
+				if (strlen($trail)) {
+					$err = "<div class=\"notice error\">The JSON received from $url was invalid. Please fix the error: ".$trail."</div>";
+					if (!is_array($displayed_errors))
+						$displayed_errors = array();
+					if (!in_array($err, $displayed_errors)) {
+						print $err;
+						$displayed_errors[] = $err;
+					}
+				}
 			}
 			$inp = json_decode($ret,true);
 			if (!$inp || $inp==$ret) {
