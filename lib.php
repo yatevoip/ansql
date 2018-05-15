@@ -931,7 +931,7 @@ function cancel_params()
  */ 
 function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null)
 {
-	global $allow_code_comment, $use_comments_docs, $method;
+	global $allow_code_comment, $use_comments_docs, $method, $add_selected_to_dropdown_if_missing;
 
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -1077,6 +1077,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "mul_select":
 		case "select_without_non_selected":
 
+			if ($add_selected_to_dropdown_if_missing)
+				$is_selected = false;
+
 			print '<select class="'.$css.'" id="'.$form_identifier.$field_name.'" ';
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
@@ -1143,6 +1146,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 							print ' disabled="disabled"';
 						print $jquery_title;
 						print '>' . $printed . '</option>';
+						if ($add_selected_to_dropdown_if_missing)
+							$is_selected = true;
 					} else {
 						print '<option value=\''.$opt[$optval].'\' '.$css;
 						if($opt[$optval] == "__disabled")
@@ -1151,12 +1156,18 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 						print '>' . $printed . '</option>';
 					}
 				} else {
-					if (($opt == $selected && strlen($opt)==strlen($selected)) ||  (is_array($selected) && in_array($opt,$selected)))
+					if (($opt == $selected && strlen($opt)==strlen($selected)) ||  (is_array($selected) && in_array($opt,$selected))) {
 						print '<option '.$css.' SELECTED >' . $opt . '</option>';
-					else
+						if ($add_selected_to_dropdown_if_missing)
+							$is_selected = true;
+					} else
 						print '<option '.$css.'>' . $opt . '</option>';
 				}
 			}
+
+			if	($add_selected_to_dropdown_if_missing && strlen($selected) && !$is_selected)
+				print '<option '.$css.' SELECTED >' . $selected . '</option>';
+
 			print '</select>'.$field_comment;
 
 			if(isset($field_format["add_custom"]))
