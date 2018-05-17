@@ -20,10 +20,11 @@ require_once ("ansql/debug.php");
 
 class Plugin 
 {
+	static $plugin_classes = array();
 	/**
-	* Includes plugins located in plugins/ directory 
-	* Function should be called between including defaults.php & config.php like Plugin::includePlugins(), because some plugins might modify global variables from defaults.php
-	*/
+  	 * Includes plugins located in plugins/ directory 
+	 * Function should be called between including defaults.php & config.php like Plugin::includePlugins(), because some plugins might modify global variables from defaults.php
+	 */
 	public static function includePlugins()
 	{
 		if (!is_dir("plugins"))
@@ -35,11 +36,10 @@ class Plugin
 			if (substr($file,-4) != '.php')
 				continue;
 			else {
-				$plugin_name = explode("_", $file);
-				$class = $plugin_name[0];
+				$class = ucfirst(str_replace(".php","",$file));
 				require_once("plugins/".$file);
-				//loaded_plugin($plugin_name[0]);
-				if (class_exists($class)) {
+				if (self::checkAncestors($class)) {
+					self::$plugin_classes[] = $class;
 					$obj = new $class;
 					$cb = array($obj,"registerHooks");
 					if (is_callable($cb))
@@ -48,31 +48,36 @@ class Plugin
 			}
 		}
 	}
+
+	/**
+	 * Check class ancestors to see if one of them is Plugin 
+	 * @param $class String
+	 * @return Bool
+	 */
+	public static function checkAncestors($class)
+	{				
+		$parent = get_parent_class($class);
+		if ($parent=="Plugin")
+			return true;
+		elseif (!$parent)
+			return false;
+		return self::checkAncestors($parent);
+	}
 	
 	/**
-	* Includes javascript for plugins located in plugins/ directory 
-	* Function should be called between HTML tags <head> and </head>
-	*/
+	 * Includes javascript for plugins located in plugins/ directory 
+	 * Function should be called between HTML tags <head> and </head>
+	 */
 	public static function includeJSPlugins()
 	{
-		if (!is_dir("plugins"))
+		if (!count(self::$plugin_classes))
 			return;
-	
-		$handle = opendir("plugins");
 
-		while (false !== ($file = readdir($handle))) {
-			if (substr($file,-4) != '.php')
-				continue;
-			else {
-				$full_name = explode("_", $file);
-				$class = $full_name[0];
-				if (class_exists($class)) {
-					$obj = new $class;
-					$cb = array($obj,$obj->_js);
-					if (isset($obj->_js) && is_callable($cb))
-						call_user_func($cb);
-				}
-			}
+		foreach (self::$plugin_classes as $class) {
+			$obj = new $class;
+			$cb = array($obj,$obj->_js);
+			if (isset($obj->_js) && is_callable($cb))
+				call_user_func($cb);
 		}
 	}
 	
@@ -154,7 +159,6 @@ class Plugin
  * Includes plugins located in plugins/ directory 
  * Function should be called between including defaults.php & config.php, because some plugins might modify global variables from defaults.php
  */
-
 function include_plugins()
 {
 	Plugin::includePlugins();
