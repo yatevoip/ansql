@@ -4944,4 +4944,20 @@ function create_popup_container()
 	print "<div class='lightbox_overlay' style='display:none;' id='maximize_overlay'></div>";
 	print "<div class='maximized_container' style='display:none;' id='maxedcontainer'></div>";
 }
+
+// Retrieve HTTP code received when trying to call specific link
+function get_http_code($link)
+{
+	$ch = curl_init($link);
+	if ($ch===false)
+		return false;
+	curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+	$res = curl_exec($ch);
+	if ($res===false)
+		return false;
+	
+	$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE );
+	
+	return $http_code;
+}
 ?>
