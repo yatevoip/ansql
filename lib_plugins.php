@@ -36,15 +36,18 @@ class Plugin
 			if (substr($file,-4) != '.php')
 				continue;
 			else {
-				$class = ucfirst(str_replace(".php","",$file));
-				require_once("plugins/".$file);
-				if (self::checkAncestors($class)) {
-					self::$plugin_classes[] = $class;
-					$obj = new $class;
-					$cb = array($obj,"registerHooks");
-					if (is_callable($cb))
-						call_user_func($cb);
-				}
+				require_once("plugins/".$file);	
+			}
+		}
+		
+		$classes = get_declared_classes();
+		foreach ($classes as $class) {
+			if (self::checkAncestors($class)) {
+				self::$plugin_classes[] = $class;
+				$obj = new $class;
+				$cb = array($obj,"registerHooks");
+				if (is_callable($cb))
+					call_user_func($cb);
 			}
 		}
 	}
@@ -75,8 +78,10 @@ class Plugin
 
 		foreach (self::$plugin_classes as $class) {
 			$obj = new $class;
+			if (!isset($obj->_js))
+				continue;
 			$cb = array($obj,$obj->_js);
-			if (isset($obj->_js) && is_callable($cb))
+			if (is_callable($cb))
 				call_user_func($cb);
 		}
 	}
