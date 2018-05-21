@@ -18,12 +18,29 @@
  */
 require_once ("ansql/debug.php");
 
-class Plugin 
+abstract class Plugin 
 {
 	static $plugin_classes = array();
+	
+	/*
+	 Example of defining $hooks	
+	 protected $_hooks = array(
+		array(
+		    "name"         => "predefined_network_settings", 
+		    "callback"     => "secMccMnc",
+		    "unicity_tags" => array("mcc,mnc")
+		),
+		array(
+		    "name"         => "global_sim_options" ,
+		    "callback"     => "simProgrammerLink"
+		)
+	 );
+	 */
+	
 	/**
   	 * Includes plugins located in plugins/ directory 
 	 * Function should be called between including defaults.php & config.php like Plugin::includePlugins(), because some plugins might modify global variables from defaults.php
+	 * When plugins are included hooks for them are automatically registered, you won't need to register hooks manually
 	 */
 	public static function includePlugins()
 	{
@@ -51,25 +68,11 @@ class Plugin
 			}
 		}
 	}
-
-	/**
-	 * Check class ancestors to see if one of them is Plugin 
-	 * @param $class String
-	 * @return Bool
-	 */
-	public static function checkAncestors($class)
-	{				
-		$parent = get_parent_class($class);
-		if ($parent=="Plugin")
-			return true;
-		elseif (!$parent)
-			return false;
-		return self::checkAncestors($parent);
-	}
 	
 	/**
 	 * Includes javascript for plugins located in plugins/ directory 
 	 * Function should be called between HTML tags <head> and </head>
+	 * A plugin must implement "includeJs" method in which it outputs the desired js
 	 */
 	public static function includeJSPlugins()
 	{
@@ -78,13 +81,11 @@ class Plugin
 
 		foreach (self::$plugin_classes as $class) {
 			$obj = new $class;
-			if (!isset($obj->_js))
-				continue;
-			$cb = array($obj,$obj->_js);
+			$cb = array($obj,"includeJs");
 			if (is_callable($cb))
 				call_user_func($cb);
 		}
-	}
+	}	
 	
 	/**
 	 * Register hook $hook_handler to be called for hook name $hook_name. If unicity tags are specified then system will return an error in case 
@@ -95,7 +96,7 @@ class Plugin
 	 * @param Array $unicity_tags
 	 * @param Bool $class, if is true then $hook_handler will be a method name, else will be a function name
 	 */
-	public static function registerHook($hook_name, $hook_handler, $plugin_name=null, $unicity_tags=array(), $class=false)
+	public static function registerHook($hook_name, $hook_handler, $unicity_tags=array(), $plugin_name=null)
 	{
 		global $plugin_hooks;
 		global $plugin_errors;
@@ -108,35 +109,31 @@ class Plugin
 			    "unique_tags" => array(),
 			    "hooks"       => array()
 			);
+		
+		$obj_class = get_called_class();
+		if (!$plugin_name)
+			$plugin_name = $obj_class;
 
-		foreach ($unicity_tags as $tag) {
-			if (isset($plugin_hooks[$hook_name]["unique_tags"][$tag]))
-				$plugin_errors[] = "Invalid plugin combination '$plugin_name' - '".$plugin_hooks[$hook_name]["unique_tags"][$tag]."' ($tag). Problems registering hook '$hook_handler' on '$hook_name' for plugin '$plugin_name'.";
+		if (is_array($unicity_tags)) {
+			foreach ($unicity_tags as $tag) {
+				if (isset($plugin_hooks[$hook_name]["unique_tags"][$tag]))
+					$plugin_errors[] = "Invalid plugin combination '$plugin_name' - '".$plugin_hooks[$hook_name]["unique_tags"][$tag]."' ($tag). Problems registering hook '$hook_handler' on '$hook_name' for plugin '$plugin_name'.";
+			}
 		}
 		
-		if ($class) {
-			$obj_class = get_called_class();
+		if ($obj_class!="Plugin") {
 			$obj = new $obj_class;
 			$cb = array($obj,$hook_handler);
-		} else
+		} else {
 			$cb = $hook_handler;
-		
+		}
+
 		if (!is_callable($cb)) {
 			$plugin_errors[] = "Hook handler is not callable: $hook_handler.";
 			return;
 		}
 
 		$plugin_hooks[$hook_name]["hooks"][] = $cb;
-	}
-	
-	/**
-	 * Wrapper function for registerHook
-	 * Register hook $hook_handler to be called for hook name $hook_name where $hook_handler will be a class method
-	 */
-	public static function registerHookClass($hook_name, $hook_handler, $unicity_tags=array())
-	{
-		$plugin_name = get_called_class();
-		self::registerHook($hook_name, $hook_handler, $plugin_name, $unicity_tags, true);
 	}
 	
 	/**
@@ -157,6 +154,35 @@ class Plugin
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Register all hooks for the class. This is done automatically when plugins are included, it should not be called individually
+	 */
+	protected function registerHooks()
+	{
+		if (!isset($this->_hooks) || !is_array($this->_hooks))
+			return;
+		
+		foreach($this->_hooks as $hook ) {
+			$unicity_tags = (isset($hook["unicity_tags"])) ? $hook["unicity_tags"] : null;
+			$this->registerHook($hook["name"], $hook["callback"], $unicity_tags);
+		}
+	}
+	
+	/**
+	 * Check class ancestors to see if one of them is Plugin 
+	 * @param $class String
+	 * @return Bool
+	 */
+	protected static function checkAncestors($class)
+	{
+		$parent = get_parent_class($class);
+		if ($parent=="Plugin")
+			return true;
+		elseif (!$parent)
+			return false;
+		return self::checkAncestors($parent);
 	}
 }
 	
@@ -180,7 +206,7 @@ function include_js_plugins()
 
 function register_hook($hook_name, $hook_handler, $plugin_name=NULL, $unicity_tags=array())
 {
-	Plugin::registerHook($hook_name, $hook_handler, $plugin_name, $unicity_tags);
+	Plugin::registerHook($hook_name, $hook_handler, $unicity_tags, $plugin_name);
 }
 
 function call_hooks($hook_name)
