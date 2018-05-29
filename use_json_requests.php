@@ -320,7 +320,7 @@ function not_auth($res)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
-	if ($res["code"]=="43")
+	if (isset($res["code"]) && $res["code"]=="43")
 		return true;
 	return false;
 }
@@ -448,6 +448,16 @@ function node_status($out=array(), $url="get_node_status")
 {
 	$res = make_request($out,$url);
 
+	if (!isset($res["code"])) {
+		$mess = (isset($res["message"])) ? $res["message"] : $res;
+		return array(
+			"state"=>html_entity_decode(nl2br($mess)), 
+			"color"=>"red",
+			"details"=>false,
+			"version"=>(isset($res["version"])) ? $res["version"] : null
+		);
+	}
+	
 	if ($res["code"] != 0)
 		return array(
 			"state"=>html_entity_decode(nl2br($res["message"])), 
