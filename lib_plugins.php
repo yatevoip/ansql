@@ -85,7 +85,26 @@ abstract class Plugin
 			if (is_callable($cb))
 				call_user_func($cb);
 		}
-	}	
+	}
+
+	/**
+	 * Includes css for plugins located in plugins/ directory 
+	 * Function should be called between HTML tags <head> and </head>
+	 * A plugin must implement "includeCSS" method in which it outputs the desired css
+	 */
+	public static function includeCSSPlugins()
+	{
+		if (!count(self::$plugin_classes))
+			return;
+
+		foreach (self::$plugin_classes as $class) {
+			$obj = new $class;
+			$cb = array($obj,"includeCSS");
+			if (is_callable($cb))
+				call_user_func($cb);
+		}
+		
+	}
 	
 	/**
 	 * Register hook $hook_handler to be called for hook name $hook_name. If unicity tags are specified then system will return an error in case 
@@ -166,7 +185,7 @@ abstract class Plugin
 		
 		foreach($this->_hooks as $hook ) {
 			$unicity_tags = (isset($hook["unicity_tags"])) ? $hook["unicity_tags"] : null;
-			$this->registerHook($hook["name"], $hook["callback"], $unicity_tags);
+			self::registerHook($hook["name"], $hook["callback"], $unicity_tags);
 		}
 	}
 	
