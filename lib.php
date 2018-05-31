@@ -741,6 +741,8 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
 		// or $categories = array("Nature", "Movies");
 		"sex"=>array($sex, "display"=>"radio") 
 		// $sex = array("male","female","don't want to answer");
+		"name" => array ("display"=>"text","error_icon"=>true)
+		//adds an error icon to that field, default is set to "display:none"
 	); 
  * instead of "compulsory", "requited" can be also used
  * possible values for "display" are "textarea", "password", "fileselect", "text", "select", "radio", "radios", "checkbox", "fixed"
@@ -932,13 +934,18 @@ function cancel_params()
 function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null)
 {
 	global $allow_code_comment, $use_comments_docs, $method, $add_selected_to_dropdown_if_missing;
-
+	
+	//Set this variable to true in defaults.php to add error icon for each field
+	global $use_error_icon;
+	
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
 	if (!isset($allow_code_comment))
 		$allow_code_comment = true;
 	if (!isset($use_comments_docs))
 		$use_comments_docs = false;
+	if (!isset($use_error_icon))
+		$use_error_icon = false;
 
 	$q_mark = false;
 	if (isset($field_format["advanced"]))
@@ -1047,6 +1054,15 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if (isset($field_format["compulsory"]))
 		if($field_format["compulsory"]===true || $field_format["compulsory"]=="yes" || bool_value($field_format["compulsory"]) || $field_format["compulsory"]=="true")
 			print '<font class="compulsory">*</font>';
+	
+	// check if the error icon is set in fields
+	if (isset($field_format["error_icon"])) {
+		if($field_format["error_icon"]===true || $field_format["error_icon"]=="yes" || bool_value($field_format["error_icon"]) || $field_format["error_icon"]=="true")
+			print "<img src='images/error.png' class='field_error' id='err_$field_name' style='display:none;'>";
+	} else {
+		if ($use_error_icon)
+			print "<img src='images/error.png' class='field_error' id='err_$field_name' style='display:none;'>";
+	}
 	print '&nbsp;</td>';
 	print '<td class="'.$css.' right_td ';
 	if (isset($field_format["custom_css_right"]))
