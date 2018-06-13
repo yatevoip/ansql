@@ -469,14 +469,16 @@ function node_status($out=array(), $url="get_node_status")
 	$node_status = array(
 		"details"=>true,
 		"version"=>(isset($res["version"])) ? $res["version"] : null,
-		"state"=> html_entity_decode(nl2br($res["status"]["state"]))
+		"state"=> html_entity_decode(nl2br($res["status"]["state"])),
+		"color" => "gray"
 	);
 
 	if ($res["status"]["level"]) {
 		$all_colors = array(
 			"green"  => array("NOTE"), 
-			"red"    => array("WARN","FAIL","CRIT"), 
-			"yellow" => array("MILD")
+			"red"    => array("WARN","FAIL","CRIT"),
+			"yellow" => array("MILD"),
+			"blue"   => array("CALL","INFO")
 		);
 		foreach ($all_colors as $color=>$levels) {
 			if (!in_array($res["status"]["level"],$levels))
@@ -484,13 +486,13 @@ function node_status($out=array(), $url="get_node_status")
 			$node_status["color"] = $color;
 		}
 
-	} elseif ($res["status"]["operational"]) {
-		$node_status["color"] = "green";
-	} else {
-		$node_status["color"] = "red";
-		if ($res["status"]["level"] == "MILD")
-			$node_status["color"] = "yellow";
 	}
+	elseif ($res["status"]["operational"])
+		$node_status["color"] = "green";
+	elseif ($res["status"]["level"] == "MILD")
+		$node_status["color"] = "yellow";
+	else
+		$node_status["color"] = "red";
 
 	return $node_status;
 }
