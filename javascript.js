@@ -109,7 +109,9 @@ function advanced(identifier)
 		var elem = document.getElementById("tr_"+elem_name);
 		if (elem == null || elem.style.display == null || elem.style.display == "")
 			continue;
-
+		// don't show / hide elements that were triggered_by other fields
+		if (elem.getAttribute("trigger") == "\\\"true\\\"" || elem.getAttribute("trigger")=="true")
+			continue;
 		show_hide("tr_"+elem_name);
 	}
 
