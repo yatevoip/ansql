@@ -1891,10 +1891,10 @@ function set_cb($methd_name)
 		if (is_callable($methd_name["name"]))
 			call_user_func_array($methd_name["name"], $methd_name["params"]);
 		else
-			Debug::trigger_report("The function '". $methd_name["name"] . "' is not implemented.");
+			Debug::trigger_report("critical", "The function '". $methd_name["name"] . "' is not implemented.");
 	}
 	else 
-		Debug::trigger_report("Incorrect 'cb' - callback set in general actions.");
+		Debug::trigger_report("critical", "Incorrect 'cb' - callback set in general actions.");
 }
 
 /**

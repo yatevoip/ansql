@@ -153,6 +153,11 @@ class Debug
 		global $software_version;
 		global $skip_interfaces;
 
+		if (!$message) {
+			$message = $tag;
+			$tag = "critical";
+		}
+		
 		if ($tag) 
 			self::xdebug($tag,$message);
 
@@ -412,7 +417,7 @@ class Debug
 	public static function dump_xdebug()
 	{
 		$xdebug = "------- XDebug:".self::get_xdebug();
-		Debug::output($xdebug);
+		Debug::output("xdebug",$xdebug,false);
 		// reset debug to make sure we don't dump same information more than once
 		self::reset_xdebug();
 	}
@@ -596,6 +601,46 @@ class Debug
 			self::$_xdebug_log .= $mess;
 		else
 			$_SESSION["xdebug"] .= $mess;
+	}
+	
+	public static function dumpObj($obj, $level="esential", $sep="auto")
+	{
+		$vars = get_object_vars($obj);
+		
+		$basic = '';
+		$internal = '';
+		$full = array("_model");
+		foreach ($vars as $var_name=>$var) {
+			print "$var_name=".print_r($var,true)."<br/>";
+			if (in_array($var_name, $full)) {
+				continue;
+			}
+			if (substr($var_name,0,1) == "_") {
+				$internal .= "$var_name=".print_r($var,true)."__sep";
+				continue;
+			}
+			$basic .= "$var_name=".print_r($var,true)."__sep";
+		}
+		
+		switch ($level) {
+			case "basic":
+				$res = $basic;
+				// the actual values for the specific object variables
+				break;
+			case "all":
+				$res = $basic ."__sep". $internal . "__sep" . "full: TBI";
+				// add _model as well
+				break;
+			case "esential":
+			default:
+				// the actual values for the specific object variables + internal variables prefixed with _
+				$res = $basic ."__sep". $internal;
+		}
+		
+		if ($sep=="auto") 
+			$sep = "<br/>\n";
+		
+		return str_replace("__sep",$sep,$res);
 	}
 }
 
