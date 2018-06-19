@@ -974,7 +974,7 @@ function custom_value_dropdown(custom_value,dropdown_id)
 	var custom_field = document.getElementById(custom_id);
 
 	var selected = get_selected(dropdown_id);
-	if (selected=="Custom") {
+	if (selected=="Custom" || selected.substr(0,6)=="Custom") {
 		var dropdown = document.getElementById(dropdown_id);
 		var parent_td = dropdown.parentNode;
 		if (custom_field==null) {
