@@ -1158,7 +1158,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 					if ($opt[$optval] === $selected || (is_array($selected) && in_array($opt[$optval],$selected))) {
 						print '<option value=\''.$opt[$optval].'\' '.$css.' SELECTED ';
-						if($opt[$optval] == "__disabled")
+						if($opt[$optval] === "__disabled")
 							print ' disabled="disabled"';
 						print $jquery_title;
 						print '>' . $printed . '</option>';
@@ -1166,7 +1166,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 							$is_selected = true;
 					} else {
 						print '<option value=\''.$opt[$optval].'\' '.$css;
-						if($opt[$optval] == "__disabled")
+						if($opt[$optval] === "__disabled")
 							print ' disabled="disabled"';
 						print $jquery_title;
 						print '>' . $printed . '</option>';
