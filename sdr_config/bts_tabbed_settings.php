@@ -157,6 +157,11 @@ This parameters are ignored in Labkit units."
 
 		return $new_data;
 	}
+	
+	// Returns the field names which don't need invalid value detection
+	function skip_detectInvalidFields_dropdown() {
+		return array("my_sip");
+	}
 
 	/**
 	 * Build form fields by applying response fields over default fields
@@ -166,6 +171,7 @@ This parameters are ignored in Labkit units."
 	 */
 	function applyRequestFields($request_fields=null,$exists_in_response = false)
 	{
+		global $openvpn_interface;
 		Debug::func_start(__METHOD__, func_get_args(), "tabs_bts");
 
 		$structure = $this->buildConfSections(); //get_fields_structure_from_menu();
@@ -189,6 +195,19 @@ This parameters are ignored in Labkit units."
 							break 3;
 						}
 					}
+				}
+			}
+		}
+
+		// verify if we have openvpn ip and preset it.
+		if (!isset($request_fields["roaming"]["my_sip"]) && isset($fields["core"]["roaming"]["my_sip"][0]) && $openvpn_interface) {			
+			foreach ($fields["core"]["roaming"]["my_sip"][0] as $key=>$my_sip_ip) {
+				if ($key == "custom")
+					continue;
+				if (strpos($my_sip_ip["my_sip"],$openvpn_interface)!==FALSE && $fields["core"]["roaming"]["my_sip"][0][$key+1]["my_sip_id"] != "__disabled") {
+					$fields["core"]["roaming"]["my_sip"][0]["selected"]=$fields["core"]["roaming"]["my_sip"][0][$key+1]["my_sip"];
+					$fields["core"]["roaming"]["my_sip"]["display"] = "select_without_non_selected";
+					break;
 				}
 			}
 		}
@@ -223,16 +242,28 @@ This parameters are ignored in Labkit units."
 						if (isset($fields[$section][$subsection][$param]["display"]) && ($fields[$section][$subsection][$param]["display"] == "select" || $fields[$section][$subsection][$param]["display"] == "select_without_non_selected")) {
 							if ($data=="" && in_array("Factory calibrated", $fields[$section][$subsection][$param][0]))
 								$data = "Factory calibrated";
+							// if IP address configured for my_sip is not in IPs scaned with 
+							// get_net_addresses add it in dropdown with label "--not available--"
+							if ($subsection == "roaming" && $param == "my_sip") {
+								$add_my_sip = true;
+								foreach ($fields[$section]["roaming"]["my_sip"][0] as $key => $ip) {
+									if ($key == "custom" || $ip["my_sip_id"] == "__disabled")
+										continue;
+									if ($data === $ip["my_sip"])
+										$add_my_sip = false;
+								} 
+								if ($add_my_sip) {
+									$fields[$section][$subsection]["my_sip"][0][] = array("my_sip_id" => "__disabled", "my_sip" => "--not available--");
+									$fields[$section][$subsection]["my_sip"][0][] = array("my_sip_id" => $data, "my_sip" => $data);
+									//move custom value to the end of dropdown
+									$custom = $fields[$section][$subsection]["my_sip"][0]["custom"];
+									unset($fields[$section][$subsection]["my_sip"][0]["custom"]);
+									$fields[$section][$subsection]["my_sip"][0]["custom"] = $custom;									
+								}  
+								$fields["core"]["roaming"]["my_sip"]["display"] = "select_without_non_selected";
+							}
 							$fields[$section][$subsection][$param][0]["selected"] = $data;
 
-							if ($subsection == "roaming") {
-								if (isset($_SESSION["ybts_fields"]["interfaces_ips"]["both"]) && 
-									!in_array($data,$_SESSION["ybts_fields"]["interfaces_ips"]["both"])) {
-									$fields[$section][$subsection][$param][0]["selected"] = "Custom";
-									$fields[$section][$subsection]["custom_".$param]["value"] = $data;
-									$fields[$section][$subsection]["custom_".$param]["column_name"] = "";
-								}
-							}
 						} elseif (isset($fields[$section][$subsection][$param]["display"]) && $fields[$section][$subsection][$param]["display"] == "checkbox") 
 							$fields[$section][$subsection][$param]["value"] = ($data == "yes" || $data=="on" || $data=="1")  ? "on" : "off";
 						else 
@@ -313,7 +344,7 @@ This parameters are ignored in Labkit units."
 		$fields['sgsn']['Debug'] = $fields['sgsn']['sgsn_debug'];
 		unset($fields['sgsn']['sgsn_debug']);
 
-		if (getparam("my_sip")=="Custom")
+		if (strpos(getparam("my_sip"),"Custom")!==FALSE)
 			$fields["roaming"]["my_sip"] = getparam("custom_my_sip");
 
 		$satsite = array();

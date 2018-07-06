@@ -1004,7 +1004,13 @@ Default is yes for all.
 	}
 
 	if (isset($_SESSION["enb_fields"]["interfaces_ips"])) {
+		
+		// initialize seesion for interface_ips, interface_ips2,..., interface_ips5 
+		// for MME local ips dropdowns
 		$interfaces_ips = $_SESSION["enb_fields"]["interfaces_ips"]["both"];
+		for ($i=2; $i<=5; $i++) 
+				${"interfaces_ips".$i} = $_SESSION["enb_fields"]["interfaces_ips".$i]["both"];
+		
 		$ipv4 = $_SESSION["enb_fields"]["interfaces_ips"]["ipv4_gtp"];
 		$ipv6 = $_SESSION["enb_fields"]["interfaces_ips"]["ipv6_gtp"];
 
@@ -1018,12 +1024,18 @@ Default is yes for all.
 
 		if ($res["code"]=="0") {
 
-			$interfaces_ips = build_net_addresses_dropdown($res, true);
+			// initialize $interface_ips, $interface_ips2,..., $interface_ips5 
+			// and seesion variables for MME local ips dropdowns
+			$interfaces_ips = build_net_addresses_dropdown($res, false);
 			$_SESSION["enb_fields"]["interfaces_ips"]["both"] = $interfaces_ips;
-
-			$ipv4 = build_net_addresses_dropdown($res, true, "ipv4");
+			for ($i=2; $i<=5; $i++) {
+				${"interfaces_ips".$i} = build_net_addresses_dropdown($res, false, "both", "local_".$i);
+				$_SESSION["enb_fields"]["interfaces_ips".$i]["both"] = ${"interfaces_ips".$i};
+			}
+			
+			$ipv4 = build_net_addresses_dropdown($res, false, "ipv4", "addr4");
 			$_SESSION["enb_fields"]["interfaces_ips"]["ipv4_gtp"] = $ipv4;
-			$ipv6 = build_net_addresses_dropdown($res, true, "ipv6");
+			$ipv6 = build_net_addresses_dropdown($res, false, "ipv6", "addr6");
 			$_SESSION["enb_fields"]["interfaces_ips"]["ipv6_gtp"] = $ipv6;
 
 			// keep the error message in session if request 'get_net_address' failed
@@ -1036,18 +1048,26 @@ Default is yes for all.
 		$enodeb_params["core"]["gtp"]["error_get_network"] = array("display"=>"message", "value"=> "<div class=\"notice\"><font class=\"error\">Error!! </font><font style=\"font-weight:bold;\">".$_SESSION["enb_fields"]["error_get_net_interfaces"]. " Please fix the error before setting the addresses.</font></div>");
 	} else {
 		$gtp_ipv4 = $ipv4;
-		$gtp_ipv4[] = "0.0.0.0";
+		// add "all interfaces" ipv4 IP and label
+		$gtp_ipv4[] = array ("addr4_id"=>"__disabled", "addr4"=>"------all interfaces------");
+		$gtp_ipv4[] = array ("addr4_id"=>"0.0.0.0", "addr4"=>"0.0.0.0");
+		
 		$enodeb_params["core"]["gtp"]["addr4"] = array($gtp_ipv4,"display"=>"select", "comment" => "IPv4 address to use with the eNodeB tunnel end. <br/>0.0.0.0 - GTP listener on all ipv4 interfaces.");
+
 		$gtp_ipv6 = $ipv6;
-		$gtp_ipv6[] = "::";
+		// add "all interfaces" ipv6 IP and label
+		$gtp_ipv6[] = array ("addr6_id"=>"__disabled", "addr6"=>"------all interfaces------");
+		$gtp_ipv6[] = array ("addr6_id"=>"::", "addr6"=>"::");
+		
 		$enodeb_params["core"]["gtp"]["addr6"] = array($gtp_ipv6,"display"=>"select", "comment" => "IPv6 address to use with the eNodeB tunnel end. <br/>:: - GTP listener on all ipv6 interfaces.");
 
+		
+		// initialize local, local_2 ... local_5 dropdowns from mme section 
 		$enodeb_params["core"]["mme"]["local"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1");
-		$enodeb_params["core"]["mme"]["local_2"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1","column_name"=>"Local", "triggered_by" => "2");
-		$enodeb_params["core"]["mme"]["local_3"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1", "column_name"=>"Local", "triggered_by" => "3");
-		$enodeb_params["core"]["mme"]["local_4"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1", "column_name"=>"Local", "triggered_by" => "4");
-		$enodeb_params["core"]["mme"]["local_5"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1", "column_name"=>"Local", "triggered_by" => "5");
-	}
+		for ($i=2; $i<=5; $i++) {
+			$enodeb_params["core"]["mme"]["local_".$i] = array(${"interfaces_ips".$i},"display"=>"select","comment"=>"Ex: 192.168.56.1","column_name"=>"Local", "triggered_by" => $i);
+		}
+}
 
 	return $enodeb_params;
 }

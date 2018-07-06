@@ -1759,15 +1759,16 @@ If a string is provided it will replace default domain mnc<NNN>.mcc<NNN>.gprs"
 
 	} else {
 		if (!$request_protocol)
-            $request_protocol = "http";
+			$request_protocol = "http";
 
 		$url = "$request_protocol://$server_name/api.php";
 		$out = array("request"=>"get_net_address","node"=>"sdr","params"=>"net_address");
 		$res = make_request($out, $url);
 
 		if ($res["code"]=="0") {
-
-			$interfaces_ips = build_net_addresses_dropdown($res, true);
+			// my_sip is set for ipv4
+			// set third param in bellow function call to "both" if you need ipv6 and ipv4 in my_sip dropdown
+			$interfaces_ips = build_net_addresses_dropdown($res, false, "ipv4", "my_sip");
 			$_SESSION["ybts_fields"]["interfaces_ips"]["both"] = $interfaces_ips;
 
 			// keep the error message in session if request 'get_net_address' failed
@@ -1779,7 +1780,7 @@ If a string is provided it will replace default domain mnc<NNN>.mcc<NNN>.gprs"
 	if (isset($_SESSION["ybts_fields"]["error_get_net_interfaces"])) {
 		$enodeb_params["core"]["roaming"]["error_get_network"] = array("display"=>"message", "value"=> "<div class=\"notice\"><font class=\"error\">Error!! </font><font style=\"font-weight:bold;\">".$_SESSION["ybts_fields"]["error_get_net_interfaces"]. " Please fix the error before setting the addresses.</font></div>");
 	} else {
-		$interfaces_ips["custom"] = "Custom";
+		$interfaces_ips["custom"] = "Custom >>";
 		$fields["core"]["roaming"]["my_sip"][0] = $interfaces_ips;
 
 		$fields["core"]["roaming"]["my_sip"]["display"] = "select";

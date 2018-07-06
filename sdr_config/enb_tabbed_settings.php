@@ -202,7 +202,12 @@ This parameters are ignored in Labkit units."
 	{
 		return $data;
 	}
-
+	
+	// Returns the field names which don't need invalid value detection
+	function skip_detectInvalidFields_dropdown() {
+		return array("addr4","addr6");
+	}
+	
 	/**
 	 * Build form fields by applying response fields over default fields
 	 * @param $request_fields Array. Fields retrived using getApiFields
@@ -211,16 +216,26 @@ This parameters are ignored in Labkit units."
 	 */
 	function applyRequestFields($request_fields=null,$exists_in_response=null)
 	{
-		global $developers_tab;
+		global $developers_tab, $openvpn_interface;
 		Debug::func_start(__METHOD__, func_get_args(), "tabs_enb");
 
 		$structure = $this->buildConfSections();
 		$fields    = $this->getDefaultFields();
-
+	
 		if (!$request_fields)
 			return $fields;
 		if (!$developers_tab)
 			$developers_tab = false;
+		
+		// verify if we have openvpn ip and preset it.
+		if ((!isset($request_fields["gtp"]["addr4"]) && !isset($request_fields["gtp"]["addr6"])) && isset($fields["core"]["gtp"]["addr4"][0]) && $openvpn_interface) {			
+			foreach ($fields["core"]["gtp"]["addr4"][0] as $key=>$addr) {				
+				if (strpos($addr["addr4"],$openvpn_interface)!==FALSE && $fields["core"]["gtp"]["addr4"][0][$key+1]["addr4_id"]!="__disabled") {
+					$fields["core"]["gtp"]["addr4"][0]["selected"]=$fields["core"]["gtp"]["addr4"][0][$key+1]["addr4"];
+					break;
+				}
+			}
+		}
 
 		$custom_site_equipment = "";
 		foreach ($structure as $section=>$data) {
@@ -248,6 +263,21 @@ This parameters are ignored in Labkit units."
 
 							if ($data=="" && in_array("Factory calibrated", $fields[$section][$subsection][$param][0]))
 								$data = "Factory calibrated";
+							
+							// if IP(ipv4/ipv6) address configured for gtp is not in IPs scaned with 
+							// get_net_addresses add it in dropdown with label "--not available--"
+							if (in_array($param, array("addr4","addr6")) && $subsection=="gtp") { 
+								$add_addr = true;
+								foreach ($fields[$section]["gtp"][$param][0] as $addr)
+									if ($data === $addr[$param])
+										$add_addr = false;
+								if ($add_addr ) {
+									$fields[$section]["gtp"][$param][0][] = array($param."_id" => "__disabled", $param => "--not available--");
+									$fields[$section]["gtp"][$param][0][] = array($param."_id" => $data, $param => $data);
+								}
+
+							}
+							
 							$fields[$section][$subsection][$param][0]["selected"] = $data;
 
 						} elseif (isset($fields[$section][$subsection][$param]["display"]) && $fields[$section][$subsection][$param]["display"] == "checkbox")
