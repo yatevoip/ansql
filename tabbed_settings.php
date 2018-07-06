@@ -68,6 +68,11 @@ abstract class TabbedSettings
 	function cleanSession() 
 	{
 	}
+	
+	// Returns the field names which don't need invalid value detection
+	function skip_detectInvalidFields_dropdown() {
+		return array();
+	}
 
 	// Validate form result. Use field definition to do this: select/checkbox/Factory calibrated param/or call function to make callback specified in "validity" in field format
 	// Returns array(true/false, "fields"=>.. (fields to build form), "request_fields"=> .. (fields to be sent to API or written to file)
@@ -327,6 +332,11 @@ abstract class TabbedSettings
 
 								// check if the values of select field were changed from the api ones
 							} elseif ($display == 'select' || $display == 'select_without_non_selected') {
+								// skip this verification for field names returned by skip_detectInvalidFields_dropdown()
+								$skip_detectInvalidFields_dropdown = $this->skip_detectInvalidFields_dropdown();
+								if (in_array($param, $skip_detectInvalidFields_dropdown))
+									continue;
+								
 								//if (isset($default_fields[$section][$subsection][$param][0][0]) && isset($default_fields[$section][$subsection][$param][0][0][$param."_id"])) {
 								if (isset($default_fields[$section][$subsection][$param][0][0]) && 
 								    is_array($default_fields[$section][$subsection][$param][0][0]) && 
