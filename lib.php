@@ -4469,8 +4469,8 @@ function format_comment($text)
  * The types of dropdown are 'select_without_non_selected' || 'select'
  * @param $net_interfaces Array The interfaces with their associated IPs
  * @param $select Bool The type of dropdown, if true 'select' otherwize 'select_without_non_selected'
- * @param $dropdown_key String The name of the dropdown from FORM
  * @param $type_ip String The type of IP: 'ipv4', 'ipv6', 'both' to be displayed in dropdown
+ * @param $dropdown_key String The name of the dropdown from FORM
  * @return $interfaces_ips Array The format used to display the dropdown
  */
 function build_net_addresses_dropdown($net_interfaces, $select=false, $type_ip = "both", $dropdown_key = "local")
