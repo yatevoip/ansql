@@ -89,7 +89,7 @@ function check_broadcast($field_name, $field_value)
 			return array(false, "Field '" . $field_name . "' doesn't contain a port.");
 		}
 
-		if (ctype_digit($port) || strlen($port)>5) {
+		if (ctype_digit(strval($port)) || strlen($port)>5) {
 			return array(false, "Field '" . $field_name . "' doesn't contain a valid port:  '". $port);
 		}
 	}
@@ -100,7 +100,7 @@ function check_broadcast($field_name, $field_value)
 /* validate AuxRoutingTable field */
 function check_auxrouting_table($field_name, $field_value)
 {
-	if (!ctype_digit($field_value)) { 
+	if (!ctype_digit(strval($field_value))) { 
 		$valid = check_field_validity($field_name, $field_value, null, null, "^[a-zA-Z0-9_-]+)$");
 		if (!$valid[0])
 			return $valid;

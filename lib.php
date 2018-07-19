@@ -1340,7 +1340,7 @@ function build_comment_id($field_format, $form_identifier, $field_name, $categor
 
 	$pieces = explode("_", $field_name);
 
-	if (ctype_digit($pieces[count($pieces)-1])) {
+	if (ctype_digit(strval($pieces[count($pieces)-1]))) {
 		$sign = $fld = "";
 		for ($i = 0; $i<count($pieces)-1; $i++) {
 			$fld .= $sign.$pieces[$i];
@@ -1351,9 +1351,9 @@ function build_comment_id($field_format, $form_identifier, $field_name, $categor
 	$last = substr($field_name, -1);
 	$penultimate = substr($field_name, -2, 1);
 	$fld = $field_name;
-	if ($penultimate=="_" && ctype_digit($last))
+	if ($penultimate=="_" && ctype_digit(strval($last)))
 		$fld = substr($field_name,0,strlen($field_name)-2);
-	elseif ((ctype_digit($penultimate) && ctype_digit($last)) ||
+	elseif ((ctype_digit(strval($penultimate)) && ctype_digit(strval($last))) ||
 			$last == "_")
 		$fld = substr($field_name,0,strlen($field_name)-1);	
 

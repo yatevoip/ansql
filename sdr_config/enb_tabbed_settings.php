@@ -290,7 +290,7 @@ This parameters are ignored in Labkit units."
 						// unmark triggered fields if they are set
 						if ((strlen($data) || getparam($param)) && isset($this->trigger_names[$subsection])) {
 							$trigger_name = $this->trigger_names[$subsection];
-							if (isset($fields[$section][$subsection][$param]["triggered_by"]) && ctype_digit($fields[$section][$subsection][$param]["triggered_by"])) {
+							if (isset($fields[$section][$subsection][$param]["triggered_by"]) && ctype_digit(strval($fields[$section][$subsection][$param]["triggered_by"]))) {
 								$triggered_by   = $fields[$section][$subsection][$param]["triggered_by"];
 								$former_trigger = $triggered_by - 1;
 

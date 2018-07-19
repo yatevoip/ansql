@@ -477,7 +477,7 @@ abstract class TabbedSettings
 						
 							$trigger_name = $trigger_names[$m_subsection];
 
-							if (isset($fields[$m_section][$m_subsection][$param_name]["triggered_by"]) && ctype_digit($fields[$m_section][$m_subsection][$param_name]["triggered_by"])) {
+							if (isset($fields[$m_section][$m_subsection][$param_name]["triggered_by"]) && ctype_digit(strval($fields[$m_section][$m_subsection][$param_name]["triggered_by"]))) {
 
 								$triggered_by   = $fields[$m_section][$m_subsection][$param_name]["triggered_by"];
 								$former_trigger = $triggered_by - 1;
