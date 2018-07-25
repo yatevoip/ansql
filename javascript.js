@@ -492,14 +492,20 @@ function show_hide(element_id)
  * encodeURI function is used on url before using @make_api_request function
  * @param url String. Where to make request to
  * @param cb Callback. If set, call it passing response from HTTP request as argument
- * @param async Bool. If set, specifies if the request should be handled asynchronously or not. 
+ * @param async Bool. Default true. If set, specifies if the request should be handled asynchronously or not. 
+ * @param already_encoded Bool. Default false. If true, we assume url was already encoded, otherwise encodeURI will be run on @param url
  * Default async is true (asynchronous) 
  */
-function make_request(url, cb, async)
+function make_request(url, cb, async, already_encoded)
 {
-	url = encodeURI(url);
-	if (typeof async === 'undefined')
+	if (typeof async === "undefined")
 		async = true;
+	if (typeof already_encoded === "undefined")
+		already_encoded = false;
+
+	if (!already_encoded)
+		url = encodeURI(url);
+
 	make_api_request(url, cb, async);
 }
 
@@ -531,8 +537,15 @@ function make_api_request(url, cb, async)
 	};
 	if (typeof async === 'undefined')
 		async = true;
-	xmlhttp.open("GET", url, async);
-	xmlhttp.send(null);
+
+	var pos = url.indexOf('?');
+	var request_fields = url.substr(pos+1);
+	if (pos!=-1)
+		url  = url.substr(0,pos);
+
+	xmlhttp.open("POST", url, async);
+	xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xmlhttp.send(request_fields);
 }
 
 /**
@@ -895,6 +908,8 @@ function link_from_fields(form_name)
 				continue; 
 			if (form_obj.elements[e].type!="select-multiple") {
 				qs += (qs=='')?'?':'&';
+				// some characters will be escaped twice because encodeURI is used from make_request
+				// still, the combination of both ensures that + is not lost
 				qs += form_obj.elements[e].name+'='+encodeURIComponent(form_obj.elements[e].value);
 			} else {
 				for (var i = 0; i < form_obj.elements[e].options.length; i++) {
