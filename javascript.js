@@ -908,9 +908,7 @@ function link_from_fields(form_name)
 				continue; 
 			if (form_obj.elements[e].type!="select-multiple") {
 				qs += (qs=='')?'?':'&';
-				// some characters will be escaped twice because encodeURI is used from make_request
-				// still, the combination of both ensures that + is not lost
-				qs += form_obj.elements[e].name+'='+encodeURIComponent(form_obj.elements[e].value);
+				qs += form_obj.elements[e].name+'='+fixedEncodeURIComponent(form_obj.elements[e].value);
 			} else {
 				for (var i = 0; i < form_obj.elements[e].options.length; i++) {
 					if (form_obj.elements[e].options[i].selected) {
@@ -921,8 +919,18 @@ function link_from_fields(form_name)
 			}
 		}
 	}
+
 	console.log("Result link_from_fields: "+qs);
 	return qs;
+}
+
+// Be more stringent in adhering to RFC 3986 (which reserves !, ', (, ), and *), even though these characters have no formalized URI delimiting uses.
+// Additional info at https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
+function fixedEncodeURIComponent(str) 
+{
+	return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+		return '%' + c.charCodeAt(0).toString(16);
+	});
 }
 
 /**
