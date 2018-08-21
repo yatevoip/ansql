@@ -172,7 +172,7 @@ function end_form()
 function note($note)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	print 'Note!! '.$note.'<br/>';
+	print 'Note!! '.htmlentities($note).'<br/>';
 }
 
 /**
@@ -181,7 +181,7 @@ function note($note)
 function errornote($text)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	print "<br/><font color=\"red\" style=\"font-weight:bold;\" > Error!!</font> <font style=\"font-weight:bold;\">$text</font><br/>";
+	print "<br/><font color=\"red\" style=\"font-weight:bold;\" > Error!!</font> <font style=\"font-weight:bold;\">".htmlentities($text)."</font><br/>";
 }
 
 /**
@@ -196,7 +196,7 @@ function message($text, $path=NULL, $return_text="Go back to application")
 	global $module,$method;
 
 	print '<div class="notice">'."\n";
-	print "$text\n";
+	print htmlentities($text)."\n";
 
 	if ($path == 'no') {
 		print '</div>';
@@ -221,7 +221,7 @@ function errormess($text, $path=NULL, $return_text="Go back to application")
 
 	print '<div class="notice error">'."\n";
 	print "<font class=\"error\"> Error!!</font>"."\n";
-	print "<font style=\"font-weight:bold;\">$text</font>"."\n";
+	print "<font style=\"font-weight:bold;\">".htmlentities($text)."</font>"."\n";
 
 	if ($path == 'no') {
 		print '</div>';
@@ -267,6 +267,7 @@ function notice($message, $next_cb=NULL, $no_error = true)
 	if (!$next_cb)
 		$next_cb = $module;
 
+	$message = htmlentities($message);
 	if ($no_error)
 		print '<div class="notice">'.$message.'</div>';
 	else
@@ -282,7 +283,7 @@ function notice($message, $next_cb=NULL, $no_error = true)
 function plainmessage($text)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	print "<br/><font style=\"font-weight:bold;\">$text</font><br/><br/>";
+	print "<br/><font style=\"font-weight:bold;\">".htmlentities($text)."</font><br/><br/>";
 }
 
 /**
@@ -307,12 +308,17 @@ function notify($res)
 function escape_page_params()
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	foreach ($_POST as $param=>$value)
-		$_POST[$param] =  escape_page_param($value);
-	foreach ($_GET as $param=>$value)
+	foreach ($_POST as $param=>$value) {
+		$value = htmlspecialchars_decode($value, ENT_COMPAT);
+		$_POST[$param] = escape_page_param($value);
+	}
+	
+	foreach ($_GET as $param=>$value) {
 		$_GET[$param] = escape_page_param($value);
-	foreach ($_REQUEST as $param=>$value)
+	}
+	foreach ($_REQUEST as $param=>$value) {
 		$_REQUEST[$param] = escape_page_param($value);
+	}
 }
 
 /**
@@ -322,14 +328,36 @@ function escape_page_params()
  */ 
 function escape_page_param($value)
 {
+	global $htmlentities_onall;
+	global $use_urldecode;
+	
 	Debug::func_start(__FUNCTION__,func_get_args(),"paranoid");
-	if (!is_array($value))
-		return htmlentities($value);
-	else {
-		foreach ($value as $index=>$val)
-			$value[$index] = htmlentities($val);
-		return $value;
+	Debug::xdebug("paranoid","Global in ".__FUNCTION__.": htmlentities_onall=$htmlentities_onall,use_urldecode=$use_urldecode");
+	
+	if (!isset($htmlentities_onall))
+		$htmlentities_onall = true;
+	if (!isset($use_urldecode))
+		$use_urldecode = false;
+	
+	if ($htmlentities_onall) {
+		if (!is_array($value))
+			$value = htmlentities($value);
+		else {
+			foreach ($value as $index=>$val)
+				$value[$index] = htmlentities($val);
+		}
 	}
+	
+	if ($use_urldecode) {
+		if (!is_array($value))
+			$value = urldecode($value);
+		else {
+			foreach ($value as $index=>$val)
+				$value[$index] = urldecode($val);
+		}
+	}
+	
+	return $value;
 }
 
 /**
@@ -702,7 +730,7 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
 	global $method,$module;
 
 	if (($method || $empty_page_params) && !isset($additional["method"]))
-		print "<input type=\"hidden\" name=\"method\" id=\"method\" value=\"$method\" />\n";
+		print "<input type=\"hidden\" name=\"method\" id=\"method\" value=".html_quotes_escape($method)." />\n";
 
 	if (is_array($module) && !isset($additional["module"]))
 		print "<input type=\"hidden\" name=\"module\" id=\"module\" value=\"$module[0]\" />\n";
@@ -713,12 +741,12 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
 
 	if (count($additional))
 		foreach($additional as $key=>$value) 
-			print '<input type="hidden" id="' . $key . '" name="' . $key . '" value="' . $value . '">';
+			print '<input type="hidden" id="' . $key . '" name="' . $key . '" value=' . html_quotes_escape($value) . '>';
 
 	if (isset($_SESSION["previous_page"])) {
 		foreach ($_SESSION["previous_page"] as $param=>$value)
 			if (!isset($additional[$param]) && $param!="module" && $param!="method" && $param!="action" && !in_array($param,$skip_params))
-				print '<input type="hidden" id="'.$param.'" name="' . $param . '" value="' . $value . '">';
+				print '<input type="hidden" id="'.$param.'" name="' . $param . '" value=' . html_quotes_escape ($value) . '>';
 	}
 }
 
@@ -880,10 +908,10 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 			for($i=0; $i<count($submit); $i++)
 			{
 				print '&nbsp;&nbsp;';
-				print '<input class="'.$css.'" type="submit" name="'.$submit[$i].'" value="'.$submit[$i].'"/>';
+				print '<input class="'.$css.'" type="submit" name="'.$submit[$i].'" value='.html_quotes_escape($submit[$i]).'/>';
 			}
 		}else
-			print '<input class="'.$css.'" type="submit" name="'.$submit.'" value="'.$submit.'"/>';
+			print '<input class="'.$css.'" type="submit" name="'.$submit.'" value='.html_quotes_escape($submit).'/>';
 		if(!$no_reset) {
 			print '&nbsp;&nbsp;<input class="'.$css.'" type="reset" value="Reset"/>';
 			$cancel_but = cancel_button($css);
@@ -926,6 +954,11 @@ function cancel_params()
 	foreach ($_SESSION["previous_page"] as $param=>$value)
 		$link.= "$param=".urlencode($value)."&";
 	return $link;
+}
+
+function html_quotes_escape($str)
+{
+	return '"'.htmlspecialchars($str, ENT_COMPAT).'"';
 }
 
 /**
@@ -1026,12 +1059,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	}
 
 	if ($display=="hidden") {
-		print '<input class="'.$css.'" type="'.$display.'" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
-
-		if ($value && strpos('"',$value)!==false)
-			print ' value="'.$value.'"';
-		else
-			print " value='".$value."'";
+		print '<input class="'.$css.'" type="'.$display.'" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';		
+		print " value=".html_quotes_escape($value);
 		print " />";
 		return;
 	}
@@ -1157,7 +1186,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 						$jquery_title = '';
 
 					if ($opt[$optval] === $selected || (is_array($selected) && in_array($opt[$optval],$selected))) {
-						print '<option value=\''.$opt[$optval].'\' '.$css.' SELECTED ';
+						print '<option';
+						print " value=".html_quotes_escape($opt[$optval]);
+						print ' '.$css.' SELECTED ';
 						if($opt[$optval] === "__disabled")
 							print ' disabled="disabled"';
 						print $jquery_title;
@@ -1165,7 +1196,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 						if ($add_selected_to_dropdown_if_missing)
 							$is_selected = true;
 					} else {
-						print '<option value=\''.$opt[$optval].'\' '.$css;
+						print '<option';
+						print " value=".html_quotes_escape($opt[$optval]);
+						print ' '.$css;
 						if($opt[$optval] === "__disabled")
 							print ' disabled="disabled"';
 						print $jquery_title;
@@ -1211,7 +1244,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					$value = $opt;
 					$name = $opt;
 				}
-				print '<input class="'.$css.'" type="radio" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'" value=\''.$value.'\'';
+				print '<input class="'.$css.'" type="radio" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
+				print " value=".html_quotes_escape($value);
 				if ($value == $selected)
 					print ' CHECKED ';
 				if (isset($field_format["javascript"]))
@@ -1238,10 +1272,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print '<input  class="'.$css.'" type="'.($display=="text-nonedit"?"text":$display).'" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
 			if ($display != "file" && $display != "password") {
 				if (!is_array($value)) {
-					if ($value && strpos('"',$value)!==false)
-						print ' value="'.$value.'"';
-					else
-						print " value='".$value."'";
+					print " value=".html_quotes_escape($value);
 				}
 				else {
 					if (isset($field_format["selected"]))
@@ -1251,8 +1282,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					elseif (isset($value["SELECTED"]))
 						$selected = $value["SELECTED"];
 					else
-						$selected = '';
-					print ' value="'.$selected.'"';
+						$selected = '';				
+					print " value=".html_quotes_escape($selected);
 				}
 			}
 			if (isset($field_format["javascript"]))
@@ -4047,7 +4078,8 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 			$res .= '<input class="'.$css.'" type="'.$display.'" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
 			if ($display != "file" && $display != "password") {
 				if (!is_array($value))
-					$res .= ' value="'.$value.'"';
+					$res .= ' value='.html_quotes_escape($value);
+				
 				else {
 					
 					if (isset($field_format["selected"]))
@@ -4058,7 +4090,7 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 						$selected = $value["SELECTED"];
 					else
 						$selected = '';
-					$res .= ' value="'.$selected.'"';
+					$res .= ' value='.html_quotes_escape($selected);
 				}
 			}
 			if(isset($field_format["javascript"]))
@@ -4340,12 +4372,12 @@ function generic_search($search_options, $custom_fields=array(), $value_readonly
 	$ro = (!$value_readonly) ? "undefined" : "true";
 	$fields = array(array(
 			build_dropdown($search_options, "col", true, "", "", 'onchange="clean_cols_search('.$ro.')"'),
-			"<input type=\"text\" value=\"".getparam("col_value")."\" name=\"col_value\" id=\"col_value\" size=\"10\"/>",
+			"<input type=\"text\" value=". html_quotes_escape(getparam("col_value"))." name=\"col_value\" id=\"col_value\" size=\"10\"/>",
 			"<input type=\"submit\" value=\"Search\" />"
 		));
 
 	if ($value_readonly && !getparam("col_value"))
-		$fields[0][1] = "<input type=\"text\" value=\"".getparam("col_value")."\" name=\"col_value\" id=\"col_value\" size=\"10\" readonly/>";
+		$fields[0][1] = "<input type=\"text\" value=". html_quotes_escape(getparam("col_value"))." name=\"col_value\" id=\"col_value\" size=\"10\" readonly/>";
 
 	if (isset($custom_fields["title"]) && isset($custom_fields["fields"])) {
 		$title = array_merge($custom_fields["title"],$title);
