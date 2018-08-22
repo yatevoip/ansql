@@ -309,8 +309,15 @@ function escape_page_params()
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	foreach ($_POST as $param=>$value) {
-		$value = htmlspecialchars_decode($value, ENT_COMPAT);
-		$_POST[$param] = escape_page_param($value);
+		if (is_array($value)) {
+			foreach ($value as $name=>$val) {
+				$val = htmlspecialchars_decode($val, ENT_COMPAT);
+				$_POST[$param] = escape_page_param($val);
+			}
+		} else {
+			$value = htmlspecialchars_decode($value, ENT_COMPAT);
+			$_POST[$param] = escape_page_param($value);
+		}
 	}
 	
 	foreach ($_GET as $param=>$value) {
