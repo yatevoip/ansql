@@ -312,7 +312,7 @@ function escape_page_params()
 		if (is_array($value)) {
 			foreach ($value as $name=>$val) {
 				$val = htmlspecialchars_decode($val, ENT_COMPAT);
-				$_POST[$param] = escape_page_param($val);
+				$_POST[$param][$name] = escape_page_param($val);
 			}
 		} else {
 			$value = htmlspecialchars_decode($value, ENT_COMPAT);
