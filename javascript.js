@@ -96,11 +96,21 @@ function hide(element_id)
  */
 function advanced(identifier)
 {
-	var form = (identifier!='') ? document.getElementById(identifier) : null;
+	var myform;
+	
+	if (identifier!='')
+		myform = document.getElementById(identifier);
+	else if (document.forms[0])
+		myform = document.forms[0];
+	else
+		myform = null;
+		
 
-	var elems = (form!=null) ? form.elements : [];
+	var elems = (myform!=null) ? myform.elements : [];
 	var elem_name;
-
+	
+	console.log("Found "+elems.length+" elements in form.");
+	
 	for (var i=0;i<elems.length;i++) {
 		elem_name = elems[i].name;
 		if (identifier.length>elem_name.length && elem_name.substr(0,identifier.length)!=identifier)
