@@ -113,7 +113,7 @@ function testpath($path)
 
 /**
  * Send a raw HTTP header with 403 Forbidden. Clears the session data. 
- * Displayes a page with Forbidden message.
+ * Displays a page with Forbidden message.
  * Terminates the current script.
  */ 
 function forbidden()
@@ -166,37 +166,47 @@ function end_form()
 }
 
 /**
- * Displayes a given text as a note.
+ * Displays a given text as a note.
  * @param $note String Contains the note text.
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  */ 
-function note($note)
+function note($note, $encode=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	
+	$note = ($encode) ? htmlentities($note) : $note;
 	print 'Note!! '.htmlentities($note).'<br/>';
 }
 
 /**
- * Displayes an error note with a predefined css
+ * Displays an error note with a predefined css
+ * @param $text String The message to be displayed.
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  */ 
-function errornote($text)
+function errornote($text, $encode=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	print "<br/><font color=\"red\" style=\"font-weight:bold;\" > Error!!</font> <font style=\"font-weight:bold;\">".htmlentities($text)."</font><br/>";
+	
+	$text = ($encode) ? htmlentities($text) : $text;
+	print "<br/><font color=\"red\" style=\"font-weight:bold;\" > Error!!</font> <font style=\"font-weight:bold;\">".$text."</font><br/>";
 }
 
 /**
- * Displayes a given text.
+ * Displays a given text.
  * @param $text String The text to be displayed
  * @param $path String The path to use in link 
  * @param $return_text the link to return to requested Path
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  */ 
-function message($text, $path=NULL, $return_text="Go back to application")
+function message($text, $path=NULL, $return_text="Go back to application", $encode=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module,$method;
 
+	$text = ($encode) ? htmlentities($text) : $text;
+	
 	print '<div class="notice">'."\n";
-	print htmlentities($text)."\n";
+	print $text."\n";
 
 	if ($path == 'no') {
 		print '</div>';
@@ -209,19 +219,21 @@ function message($text, $path=NULL, $return_text="Go back to application")
 }
 
 /**
- * Displayes a given text with a specific css for errors
+ * Displays a given text with a specific css for errors
  * @param $text String The text to be displayed
  * @param $path String The path to use in link
  * @param $return_text the link to return to requested Path
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  */ 
-function errormess($text, $path=NULL, $return_text="Go back to application")
+function errormess($text, $path=NULL, $return_text="Go back to application", $encode=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module;
 
+	$text = ($encode) ? htmlentities($text) : $text;
 	print '<div class="notice error">'."\n";
 	print "<font class=\"error\"> Error!!</font>"."\n";
-	print "<font style=\"font-weight:bold;\">".htmlentities($text)."</font>"."\n";
+	print "<font style=\"font-weight:bold;\">". $text ."</font>"."\n";
 
 	if ($path == 'no') {
 		print '</div>';
@@ -234,7 +246,62 @@ function errormess($text, $path=NULL, $return_text="Go back to application")
 }
 
 /**
- * Displayes a specific build link for application
+ * Prints a message as a notice or an error type message and calls a function 
+ * @param $message String The message to be displayed.
+ * @param $next_cb Callable/String. Setting it to 'no' stops the performing of the callback.  
+ * @param $no_error Boolean If is true a message id displayed else an error type message is displayed. Defaults to true.
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
+ */ 
+function notice($message, $next_cb=NULL, $no_error = true, $encode=true)
+{
+	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	global $module;
+
+	if (!$next_cb)
+		$next_cb = $module;
+	
+	$message = ($encode) ? htmlentities($message) : $message;
+
+	if ($no_error)
+		print '<div class="notice">'.$message.'</div>';
+	else
+		print '<div class="notice error"><font class="error">Error!! </font>'.$message.'</div>';
+
+	if ($next_cb != "no")
+		call_user_func($next_cb);
+}
+
+/**
+ * Displays a text with a bold font style set.
+ * @param $text String The message to be displayed.
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
+ */ 
+function plainmessage($text, $encode=true)
+{
+	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	$text = ($encode) ? htmlentities($text) : $text;
+	print "<br/><font style=\"font-weight:bold;\">".$text."</font><br/><br/>";
+}
+
+/**
+ * Displays a message or an error message depending on the data given in array
+ * @param $res Array Contains on key 0:  true/false  
+ * and on key 1: the message to be displayed 
+ */ 
+function notify($res)
+{
+	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	global $path;
+
+	if ($res[0])
+		message($res[1],$path);
+	else
+		errormess($res[1],$path);
+}
+
+
+/**
+ * Displays a specific build link for application
  */ 
 function link_to_main_page($path, $return_text)
 {
@@ -250,56 +317,6 @@ function link_to_main_page($path, $return_text)
 		$link .= "&method=".$path;
 
 	print '<a class="information" href="'.$link.'">'.$return_text.'</a>';
-}
-
-/**
- * Prints a message as a notice or an error type message and calls a function 
- * @param $message String The message to be displayed.
- * @param $next_cb Callable/String. Setting it to 'no' stops the performing of the callback.  
- * @param $no_error Boolean If is true a message id displayed 
- * else an error type message is displayed. Defaults to true.
- */ 
-function notice($message, $next_cb=NULL, $no_error = true)
-{
-	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module;
-
-	if (!$next_cb)
-		$next_cb = $module;
-
-	$message = htmlentities($message);
-	if ($no_error)
-		print '<div class="notice">'.$message.'</div>';
-	else
-		print '<div class="notice error"><font class="error">Error!! </font>'.$message.'</div>';
-
-	if ($next_cb != "no")
-		call_user_func($next_cb);
-}
-
-/**
- * Displayes a text with a bold font style set.
- */ 
-function plainmessage($text)
-{
-	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	print "<br/><font style=\"font-weight:bold;\">".htmlentities($text)."</font><br/><br/>";
-}
-
-/**
- * Displayes a message or an error message depending on the data given in array
- * @param $res Array Contains on key 0:  true/false  
- * and on key 1: the message to be displayed 
- */ 
-function notify($res)
-{
-	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $path;
-
-	if ($res[0])
-		message($res[1],$path);
-	else
-		errormess($res[1],$path);
 }
 
 /**
@@ -1576,8 +1593,11 @@ function tableOfObjects_ord($objects, $formats, $object_name, $object_actions=ar
  * Note!! This parameter is taken into account only if the objects have an id defined
  * @param $css Name of the css to use for this table. Default value is 'content'
  * @param $conditional_css Array ("css_name"=>$conditions) $css is the to be applied on certain rows in the table if the object corresponding to that row complies to the array of $conditions
+ * @param $object_actions_names Array
+ * @param  $select_all Bool
  * @param $order_by_columns Bool/Array Adds buttons to adds links on the fields from the table header. 
  * Defaults to false
+ * @param $add_empty_row Bool
  */
 function tableOfObjects($objects, $formats, $object_name, $object_actions=array(), $general_actions=array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names=array(), $select_all = false, $order_by_columns=false, $add_empty_row=false)
 {
@@ -2000,7 +2020,7 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 		$css = "content";
 	if (!count($array)) {
 		$plural = get_plural_form($element_name);
-		plainmessage("<table class=\"$css\"><tr><td>There aren't any $plural.</td></tr>");
+		plainmessage("<table class=\"$css\"><tr><td>There aren't any $plural.</td></tr>", false);
 		if (!count($general_actions)) {
 			print '</table>';
 			return;
@@ -3033,7 +3053,7 @@ function field_value($field, $array)
 }
 
 /**
- * Displayes a table in a div element.
+ * Displays a table in a div element.
  * The table has 2 rows:
  * first row contains a logo image and a title
  * the second row contains the method / default explanation
