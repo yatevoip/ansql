@@ -3845,26 +3845,38 @@ function mysql_in_file($fh, $formats, $array, $sep)
 		fwrite($fh,"\n");
 	}
 }
-
+/**
+ * Writes the data given in $array in a specific format given in $formats into a given file resource $fh
+ * @param $fh Resource. The file handle opened in write mode
+ * @param $formats Array or String. The format of the columns that will be written in file
+ * Ex: array(":name_column"=>"name_key_from_array"); or "no". If set to "no" $formats will be
+ * build from $array, the name of the columns are the same as the ones that will be written in file
+ * @param $array Array. The data values specific for each column.
+ * @param $sep String. The separator used between the columns in file.
+ * @param $key_val_arr Bool. True if the columns are set directly in $array. 
+ * False to get directly the values from arrays of arrays. 
+ * @param $col_header Bool. True to set header parameters from $formats 
+ * @param $keep_bools Bool. False by default to not keep boolean values.
+ */ 
 function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_header=true, $keep_bools=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	$col_nr = 0;
 	
 	if (!$formats && count($array))
-		foreach($array[0] as $name=>$val)
+		foreach ($array[0] as $name=>$val)
 			$formats[$name] = $name;
 	if ($col_header && $formats!="no") {
-		foreach($formats as $column_name => $var_name)
+		foreach ($formats as $column_name => $var_name)
 		{
 			$exploded = explode(":",$column_name);
-			if(count($exploded)>1)
+			if (count($exploded)>1)
 				$name = $exploded[1];
-			else{
+			else {
 				$name = $column_name;
-				if(substr($column_name, 0, 9) == "function_")
+				if (substr($column_name, 0, 9) == "function_")
 					$name = substr($column_name,9);
-				if(is_numeric($column_name))
+				if (is_numeric($column_name))
 					$name = $var_name;
 			}
 			$val = str_replace("_"," ",ucfirst($name));
@@ -3876,32 +3888,41 @@ function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_head
 		fwrite($fh,"\n");
 	}
 
-	for($i=0; $i<count($array); $i++) 
+	for ($i=0; $i<count($array); $i++) 
 	{
 		$col_nr = 0;
 		if ($key_val_arr) {
-			foreach($formats as $column_name=>$names_in_array)
+			foreach ($formats as $column_name=>$names_in_array)
 			{
 				$use_vars = explode(",", $names_in_array);
 				$exploded_col = explode(":", $column_name);
 				$column_value = '';
 
-				if(substr($exploded_col[0],0,9) == "function_") 
+				if (substr($exploded_col[0],0,9) == "function_") 
 				{
 					$function_name = substr($exploded_col[0],9,strlen($exploded_col[0]));
-					if(count($use_vars)) 
+					if (count($use_vars)) 
 					{
 						$params = array();
-						for($var_nr=0; $var_nr<count($use_vars); $var_nr++)
+						for ($var_nr=0; $var_nr<count($use_vars); $var_nr++)
 							array_push($params, $array[$i][$use_vars[$var_nr]]);
 						$column_value = call_user_func_array($function_name,$params);
 					}
-				}elseif(isset($array[$i][$names_in_array])){
+				} elseif (isset($array[$i][$names_in_array])) {
 					$column_value = $array[$i][$names_in_array];
+				} elseif (substr($names_in_array, 0, 15) == "retrieve_column") {
+					$col = explode(":", $names_in_array);
+					$function_name = $col[0];
+					$params = array($col[1] => array());
+					if (isset($array[$i][$col[1]]))
+						$params = array($array[$i][$col[1]]);
+					for ($no=2; $no < count($col); $no++) 
+						array_push($params,$col[$no]);
+					$column_value = call_user_func_array($function_name,$params);
 				}
 
 				if (!$keep_bools) {
-					if(!strlen($column_value))
+					if (!strlen($column_value))
 						$column_value = "";
 					$column_value = "\"=\"\"".$column_value."\"\"\"";
 				} else {
@@ -3915,11 +3936,11 @@ function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_head
 				$col_nr++;
 			}
 		} else {
-			for ($j=0; $j<count($array[$i]);$j++) {
+			for ($j=0; $j<count($array[$i]); $j++) {
 				$column_value = "\"".$array[$i][$j]."\"";
 				if ($col_nr)
 					$column_value =  $sep.$column_value;
-				fwrite($fh,$column_value);
+				fwrite($fh, $column_value);
 				$col_nr++;
 			}
 		}
