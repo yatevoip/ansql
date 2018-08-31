@@ -1201,6 +1201,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					$optval = $field_name.'_id';
 					$name = $field_name;
 
+					// for extreme debug purposes  you might want to print val/type of each value and the selected value and data type
+					//$printed = trim($opt[$name]).",".$selected.",". gettype($selected).",".$opt[$optval].",".gettype($opt[$optval]);
 					$printed = trim($opt[$name]);
 					if (substr($printed,0,4) == "<img") {
 						$expl = explode(">",$printed);
@@ -1209,7 +1211,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					} else
 						$jquery_title = '';
 
-					if ($opt[$optval] === $selected || (is_array($selected) && in_array($opt[$optval],$selected))) {
+					if ( (string)$opt[$optval] === "$selected" || (is_array($selected) && in_array($opt[$optval],$selected))) {
 						print '<option';
 						print " value=".html_quotes_escape($opt[$optval]);
 						print ' '.$css.' SELECTED ';
@@ -4085,7 +4087,7 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 					} else
 						$jquery_title = '';
 
-					if ($opt[$optval] === $selected || (is_array($selected) && in_array($opt[$optval],$selected))) {
+					if ( (string)$opt[$optval] === "$selected" || (is_array($selected) && in_array($opt[$optval],$selected))) {
 						$res .= '<option value=\''.$opt[$optval].'\' '.$css.' SELECTED ';
 						if($opt[$optval] == "__disabled")
 							print ' disabled="disabled"';
