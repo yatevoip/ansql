@@ -586,11 +586,11 @@ class Debug
 
 	private static function concat_xdebug($mess)
 	{
+		if (!isset($_SESSION["xdebug"]))
+			$_SESSION["xdebug"] = "";
+		
 		if (self::$_xdebug_log===NULL) {
 			if (session_id()!="") {
-				if (!isset($_SESSION["xdebug"])) {
-					$_SESSION["xdebug"] = "";
-				}
 				self::$_xdebug_log = false;
 			} else {
 				self::$_xdebug_log = '';
