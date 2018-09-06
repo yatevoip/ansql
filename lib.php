@@ -65,6 +65,45 @@ if (!function_exists("stripos")) {
 	}
 }
 
+/**
+ * Implementation of array_column function if it does not exist.
+ * Return the values from a single column in the input array
+ */ 
+if (!function_exists("array_column")) {
+	// PHP <5.5 does not define array_column
+	function array_column($input, $column_key, $index_key=null) {
+		Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+
+		$err_mess="";
+		if ($index_key!==null || $column_key===null)
+			$err_mess = "This functionality was not yet implemented for your php version. The function does not support reindexing arrays or returning complete objects or arrays yet.";
+		else if (!is_array($input))
+			$err_mess = "Parameter input must be an array.";
+		else if (!ctype_digit(strval($column_key)) && !is_string($column_key))
+			$err_mess = "Parameter column_key must be either a string or an integer. ";
+
+		if ($err_mess!="") {
+			errormess("array_column(): Please contact an administrator." . $err_mess,"no");
+			Debug::trigger_report ("critical", $err_mess);
+			return array();
+		}
+		
+		$result = array();
+		foreach ($input as $elem) {
+			if (is_object($elem)) {
+				$err_mess = "This functionality was not yet implemented for your php version. The parameter input array must not contain elements of type object.";
+				errormess("array_column(): Please contact an administrator." . $err_mess, "no");
+				Debug::trigger_report ("critical", $err_mess);
+				return array();
+			}
+			if (!isset($elem[$column_key]) || !is_array($elem))
+				continue;
+			$result[] = $elem[$column_key];
+		}
+		return $result;
+	}
+}
+
 escape_page_params();
 
 if (!isset($system_standard_timezone))
