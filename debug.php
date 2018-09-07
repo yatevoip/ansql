@@ -657,7 +657,9 @@ function dump_session()
 		call_user_func($db_dump_session);
 	else {
 		print "<pre>";
-		$copy_session = $_SESSION;
+		$sess = $_SESSION;
+		array_walk_recursive($sess, function (&$value) { $value = htmlentities($value);});
+		$copy_session = $sess;
 		$xdebug = $copy_session["xdebug"];
 		unset($copy_session["xdebug"]);
 		var_dump($copy_session);
