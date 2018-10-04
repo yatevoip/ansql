@@ -1644,7 +1644,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"paranoid");
 
-	global $db_true, $db_false, $module, $method;
+	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities;
 
 	if(!$db_true)
 		$db_true = "yes";
@@ -1666,6 +1666,8 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		$main = (isset($_SESSION["main"])) ? $_SESSION["main"] : "main.php";
 		$base = "$main?module=$module";
 	}
+	
+	$do_not_apply_htmlentities = (!$do_not_apply_htmlentities) ? array() : $do_not_apply_htmlentities;
 
 	$ths = "";
 	print '<table class="'.$css.'" id="'.$css.'_id" cellspacing="0" cellpadding="0">';
@@ -1772,9 +1774,12 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 			array_walk($use_vars, 'trim_value');
 			$exploded_col = explode(":", $column_name);
 			$column_value = '';
-
+			$apply_htmlentities = false;
 			if(substr($exploded_col[0],0,9) == "function_") {
 				$function_name = substr($exploded_col[0],9,strlen($exploded_col[0]));
+				if (in_array($function_name, $do_not_apply_htmlentities)) { 
+					$apply_htmlentities = true;
+				}
 				if(count($use_vars)) {
 					$params = array();
 					for($var_nr=0; $var_nr<count($use_vars); $var_nr++)
@@ -1794,9 +1799,10 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 						$column_value = $db_false;
 				}
 			}
-			if($column_value !== NULL)
+			if($column_value !== NULL) {
+				$column_value = ($apply_htmlentities) ? $column_value : htmlentities($column_value);
 				print $column_value;
-			else
+			} else
 				print "&nbsp;";
 			print '</td>';
 			$j++;
@@ -2055,7 +2061,7 @@ function trim_value(&$value)
 function table($array, $formats, $element_name, $id_name, $element_actions = array(), $general_actions = array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names = array(), $table_id = null, $select_all = false, $order_by_columns = false, $build_link_elements = array(), $add_empty_row=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module;
+	global $module, $do_not_apply_htmlentities;
 
 	if (!$css)
 		$css = "content";
@@ -2073,6 +2079,8 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 		$base = "$main?module=$module";
 	}
 
+	$do_not_apply_htmlentities = (!$do_not_apply_htmlentities) ? array() : $do_not_apply_htmlentities;
+	
 	$lines = count($array);
 	if ($element_actions)
 		$act = count($element_actions);
@@ -2179,9 +2187,12 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 			$use_vars = explode(",", $names_in_array);
 			$exploded_col = explode(":", $column_name);
 			$column_value = '';
-
+			$apply_htmlentities = false;
 			if (substr($exploded_col[0],0,9) == "function_") {
 				$function_name = substr($exploded_col[0],9,strlen($exploded_col[0]));
+				if (in_array($function_name, $do_not_apply_htmlentities)) { 
+					$apply_htmlentities = true;
+				}
 				if (count($use_vars)) {
 					$params = array();
 					for ($var_nr=0; $var_nr<count($use_vars); $var_nr++)
@@ -2194,9 +2205,10 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 			} elseif (isset($array[$i][$names_in_array])) {
 				$column_value = $array[$i][$names_in_array];
 			}
-			if (strlen($column_value))
+			if (strlen($column_value)) {
+				$column_value = ($apply_htmlentities) ? $column_value : htmlentities($column_value);
 				print $column_value;
-			else
+			} else
 				print "&nbsp;";
 			print '</td>';
 		}
