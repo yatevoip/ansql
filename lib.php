@@ -367,11 +367,13 @@ function escape_page_params()
 	foreach ($_POST as $param=>$value) {
 		if (is_array($value)) {
 			foreach ($value as $name=>$val) {
-				$val = htmlspecialchars_decode($val, ENT_COMPAT);
+				// not necesary because implementation of html_quotes_escape was changed
+				//$val = htmlspecialchars_decode($val, ENT_COMPAT);
 				$_POST[$param][$name] = escape_page_param($val);
 			}
 		} else {
-			$value = htmlspecialchars_decode($value, ENT_COMPAT);
+			// not necesary because implementation of html_quotes_escape was changed
+			//$value = htmlspecialchars_decode($value, ENT_COMPAT);
 			$_POST[$param] = escape_page_param($value);
 		}
 	}
@@ -1021,7 +1023,9 @@ function cancel_params()
 
 function html_quotes_escape($str)
 {
-	return '"'.htmlspecialchars($str, ENT_COMPAT).'"';
+	return '"'.str_replace('"',"&quot;",$str).'"';
+	// htmlspecialchars is will run on $value display_pair and display_field
+	//return '"'.htmlspecialchars($str, ENT_COMPAT).'"';
 }
 
 /**
@@ -1033,9 +1037,14 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	
 	//Set this variable to true in defaults.php to add error icon for each field
 	global $use_error_icon;
+	global $htmlentities_onall;
 	
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
+	// if htmlentities wasn't run on all fields retrieved from database
+	// by default we should run it here before printing value
+	$htmlentities_onvalue = (!$htmlentities_onall) ? true : false;
+		
 	if (!isset($allow_code_comment))
 		$allow_code_comment = true;
 	if (!isset($use_comments_docs))
@@ -1065,6 +1074,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			$value = call_user_func_array($field_format["cb_for_value"]["name"],$field_format["cb_for_value"]["params"]);
 		else
 			$value = call_user_func($field_format["cb_for_value"]["name"]);
+		// if $value is resulted by callign a function then that function is responsible for running htmlentities 
+		$htmlentities_onvalue = false;
 	}
 
 	print '<tr id="tr_'.$form_identifier.$field_name.'"';
@@ -1166,6 +1177,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	$field_comment = comment_field($field_format, $form_identifier, $field_name, $category_id, $display);
 
+	if ($htmlentities_onvalue)
+		$value = htmlentities($value);
 	switch($display) {
 		case "textarea":
 			$textarea_cols = 20;
@@ -4083,6 +4096,13 @@ function display_bit_field($val)
 function display_field($field_name,$field_format,$form_identifier='',$css=null)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	
+	global $htmlentities_onall;
+	
+	// if htmlentities wasn't run on all fields retrieved from database
+	// by default we should run it here before printing value
+	$htmlentities_onvalue = (!$htmlentities_onall) ? true : false;
+	
 	$q_mark = false;
 
 	$value = NULL;
@@ -4094,11 +4114,16 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 			$value = call_user_func_array($field_format["cb_for_value"]["name"],$field_format["cb_for_value"]["params"]);
 		else
 			$value = call_user_func($field_format["cb_for_value"]["name"]);
+		// if $value is resulted by callign a function then that function is responsible for running htmlentities 
+		$htmlentities_onvalue = false;
 	}
 
 	$display = (isset($field_format["display"])) ? $field_format["display"] : "text";
 	$var_name = (isset($field_format[0])) ? $field_format[0] : $field_name;
 
+	if ($htmlentities_onvalue)
+		$value = htmlentities($value);
+	
 	$res = "";
 	switch($display)
 	{
