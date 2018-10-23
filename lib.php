@@ -1185,8 +1185,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "mul_select":
 		case "select_without_non_selected":
 
-			if ($add_selected_to_dropdown_if_missing)
+			if ($add_selected_to_dropdown_if_missing) {
 				$is_selected = false;
+				$arr_is_selected = array();
+			}
 
 			print '<select class="'.$css.'" id="'.$form_identifier.$field_name.'" ';
 			if (isset($field_format["javascript"]))
@@ -1250,7 +1252,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					} else
 						$jquery_title = '';
 
-					if ( (string)$opt[$optval] === "$selected" || (is_array($selected) && in_array($opt[$optval],$selected))) {
+					if (is_string($selected) && (string)$opt[$optval] === "$selected" || (is_array($selected) && in_array($opt[$optval],$selected))) {
 						print '<option';
 						print " value=".html_quotes_escape($opt[$optval]);
 						print ' '.$css.' SELECTED ';
@@ -1258,8 +1260,12 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 							print ' disabled="disabled"';
 						print $jquery_title;
 						print '>' . $printed . '</option>';
-						if ($add_selected_to_dropdown_if_missing)
-							$is_selected = true;
+						if ($add_selected_to_dropdown_if_missing) {
+							if (is_string($selected)) 
+								$is_selected = true;
+							elseif (is_array($selected)) 
+								$arr_is_selected[] = $opt[$optval];
+						}
 					} else {
 						print '<option';
 						print " value=".html_quotes_escape($opt[$optval]);
@@ -1270,17 +1276,29 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 						print '>' . $printed . '</option>';
 					}
 				} else {
-					if (($opt == $selected && strlen($opt)==strlen($selected)) ||  (is_array($selected) && in_array($opt,$selected))) {
+					if (($opt == $selected && strlen($opt)==strlen($selected)) || (is_array($selected) && in_array($opt,$selected))) {
 						print '<option '.$css.' SELECTED >' . $opt . '</option>';
-						if ($add_selected_to_dropdown_if_missing)
-							$is_selected = true;
+						if ($add_selected_to_dropdown_if_missing) {
+							if (is_string($selected))
+								$is_selected = true;
+							elseif (is_array($selected))
+								$arr_is_selected[] = $opt;
+						}
 					} else
 						print '<option '.$css.'>' . $opt . '</option>';
 				}
 			}
 
-			if	($add_selected_to_dropdown_if_missing && strlen($selected) && !$is_selected)
-				print '<option '.$css.' SELECTED >' . $selected . '</option>';
+			if ($add_selected_to_dropdown_if_missing && (is_string($selected) && strlen($selected) || is_array($selected) && count($selected))) {
+				if (is_string($selected) && !$is_selected) {
+					print '<option '.$css.' SELECTED >' . $selected . '</option>';
+				} elseif (is_array($selected)) {
+					foreach ($selected as $k=>$selected_val) {
+						if (!in_array($selected_val,$arr_is_selected))
+							print '<option '.$css.' SELECTED >' . $selected_val . '</option>';
+					}
+				}
+			}
 
 			print '</select>'.$field_comment;
 
