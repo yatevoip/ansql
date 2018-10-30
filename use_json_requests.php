@@ -97,6 +97,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	global $func_build_request_url;
 	global $request_timeout;
 	global $displayed_errors;
+	global $func_handle_headers;
 
 	if (substr($request,0,7)!="http://" && substr($request,0,8)!="https://") {
 		if (!isset($func_build_request_url) || !$func_build_request_url)
@@ -136,7 +137,12 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	    "Accept: application/json,text/x-json,application/x-httpd-php",
 	    "Accept-Encoding: gzip, deflate"
 	));
-	curl_setopt($curl,CURLOPT_RETURNTRANSFER,true);
+
+	curl_setopt($curl,CURLOPT_RETURNTRANSFER, 1);
+	// handle_api_headers will be called for each header line and must return number of handled bytes
+	if (is_callable($func_handle_headers))
+		curl_setopt($curl,CURLOPT_HEADERFUNCTION, $func_handle_headers);
+
 	curl_setopt($curl,CURLOPT_CONNECTTIMEOUT,5);
 	curl_setopt($curl,CURLOPT_TIMEOUT,$timeout);
 	curl_setopt($curl,CURLOPT_HEADER, true);
@@ -417,8 +423,12 @@ function get_working_mode()
 
 function clean_sdr_modes($installed_modes)
 {
+	if (!is_array($installed_modes))
+		return array();
+
 	$modes = array();
 	$accepted_modes = array("nipc","roaming","dataroam","enb");
+
 	foreach ($installed_modes as $mode) {
 		if (in_array($mode, $accepted_modes))
 			$modes[] = $mode;
