@@ -61,7 +61,7 @@ Ex: 0000001",
 According to 3GPP 36.413, this parameter is optional. 
 If it is set, the MME may use it as a human readable name of the eNB. 
 See paragraphs 8.7.3.2 and 9.1.8.4 of the above referenced specification.",
-	"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 ]+$")
+	"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 -_]+$")
     ),
 
     "Band" => array(
