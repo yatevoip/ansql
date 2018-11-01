@@ -306,7 +306,7 @@ function notice($message, $next_cb=NULL, $no_error = true, $encode=true)
 	else
 		print '<div class="notice error"><font class="error">Error!! </font>'.$message.'</div>';
 
-	if ($next_cb != "no")
+	if ($next_cb != "no" && is_callable($next_cb))
 		call_user_func($next_cb);
 }
 
@@ -4386,7 +4386,7 @@ function generic_tabbed_settings($options,$config,$section_to_open=array(),$show
 				$names[] = $name;
 			generic_tabbed_settings($names, $sub_sections, array("$first_subsec"=>""), false, "", false, $js_name."_", "subsec");
 		} else {
-			if (isset($tabs_cb))
+			if (isset($tabs_cb) && is_callable($tabs_cb))
 				$tabs_cb($name, $current_fields);
 			editObject(NULL,$current_fields,NULL,"no");
 		}
