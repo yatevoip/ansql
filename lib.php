@@ -1177,7 +1177,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	$field_comment = comment_field($field_format, $form_identifier, $field_name, $category_id, $display);
 
-	if ($htmlentities_onvalue)
+	if ($htmlentities_onvalue && !isset($field_format["no_escape"]))
 		$value = htmlentities($value);
 	switch($display) {
 		case "textarea":
@@ -1307,7 +1307,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					print '<option '.$css.' SELECTED >' . $selected . '</option>';
 				} elseif (is_array($selected)) {
 					foreach ($selected as $k=>$selected_val) {
-						if (!in_array($selected_val,$arr_is_selected))
+						if (!in_array($selected_val,$arr_is_selected) && strlen($selected_val))
 							print '<option '.$css.' SELECTED >' . $selected_val . '</option>';
 					}
 				}
@@ -4121,7 +4121,7 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 	$display = (isset($field_format["display"])) ? $field_format["display"] : "text";
 	$var_name = (isset($field_format[0])) ? $field_format[0] : $field_name;
 
-	if ($htmlentities_onvalue)
+	if ($htmlentities_onvalue && !isset($field_format["no_escape"]))
 		$value = htmlentities($value);
 	
 	$res = "";
