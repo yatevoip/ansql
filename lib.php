@@ -3237,6 +3237,28 @@ function format_for_dropdown($vals)
 }
 
 /**
+ * Builds the format for the dropdown with the posibility
+ * of the option to be different from value displayed 
+ *
+ * @param $vals Array contains the ids and the values of elements
+ * @param $field String the name of the field
+ * @param $set_id Bool if true the option selected is the id of the element
+ * otherwize the option selected is the same as the value
+ * @return $arr Array with the specific format for the dropdown
+ */ 
+function format_opt_for_dropdown($vals, $field="field", $set_id=false)
+{
+	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	$arr = array();
+	foreach ($vals as $id=>$value) {
+		$field_id = $value;
+		if ($set_id)
+			$field_id = $id;
+		array_push($arr, array($field."_id"=>$field_id, $field."_name"=>$value));
+	}
+	return $arr;
+}
+/**
  * Build a table with the rows of a html form data
  * Uses display_pair() to display the rows
  */ 
@@ -4507,7 +4529,7 @@ function requiredFieldsJs($form_fields, $excluded_fields)
  * @param $value_readonly Bool. If true set 'Value' field as readonly, when 'Search by' is not selected.
  * Ex: array("title"=>array("Search1", "Search2"),array("<input type.../>", "<select>..</select>"))
  */
-function generic_search($search_options, $custom_fields=array(), $value_readonly=false)
+function generic_search($search_options, $custom_fields=array(), $value_readonly=false, $custom_order=false)
 {
 	$search_options = format_for_dropdown($search_options);
 	$search_options["selected"] = getparam("col");
@@ -4524,8 +4546,13 @@ function generic_search($search_options, $custom_fields=array(), $value_readonly
 		$fields[0][1] = "<input type=\"text\" value=". html_quotes_escape(getparam("col_value"))." name=\"col_value\" id=\"col_value\" size=\"10\" readonly/>";
 
 	if (isset($custom_fields["title"]) && isset($custom_fields["fields"])) {
-		$title = array_merge($custom_fields["title"],$title);
-		$fields = array(array_merge($custom_fields["fields"],$fields[0]));
+		if (!$custom_order) {
+			$title = array_merge($custom_fields["title"],$title);
+			$fields = array(array_merge($custom_fields["fields"],$fields[0]));
+		} else {
+			$title = array_merge($title, $custom_fields["title"]);
+			$fields = array(array_merge($fields[0], $custom_fields["fields"]));
+		}
 	}
 
 	start_form();
