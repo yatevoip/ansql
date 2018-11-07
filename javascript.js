@@ -1228,3 +1228,12 @@ function close_popup()
 	window.scrollTo(0,current_y);
 }
 
+function jump_to(link, limit, max_page)
+{
+	var no_page = document.getElementById("jump_to").value;
+	if (!no_page || no_page <= 0 || no_page > max_page)
+		return;
+	var page = (no_page-1) * limit;
+	link = link+'&page='+page;
+	window.location.replace(link);
+}

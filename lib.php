@@ -620,7 +620,7 @@ function items_on_page($nrs = array(20,50,100), $additional_url_elements=null)
  * @param $additional_url_elements Array. Additional elements to add in links beside default ones(module, method, page, total)
  * Ex: array("status")
  */ 
-function pages($total = NULL, $additional_url_elements=array())
+function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $limit, $page, $module, $method, $action;
@@ -710,6 +710,10 @@ function pages($total = NULL, $additional_url_elements=array())
 
 		/* jump to last page */
 		print '<a class="pagelink" href="'.$link.'&page='.$last_page.'">>|</a>&nbsp;&nbsp;';
+	}
+	if ($jump_to) {
+		$no_pages = ceil($total/$limit);
+		print '('.$no_pages.')&nbsp;&nbsp;<font class="jump_to_text">Jump to</font> &nbsp;<input class="jump_to_inp" type="text" name="jump_to" id="jump_to" />&nbsp;'. "<input type=\"button\" name=\"go\" value=\"Go\" onclick=\"jump_to('".$link."', $limit, $no_pages);\" />";
 	}
 	print '</div>';
 	print '</center>';
