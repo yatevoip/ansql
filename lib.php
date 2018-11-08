@@ -713,7 +713,7 @@ function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 	}
 	if ($jump_to) {
 		$no_pages = ceil($total/$limit);
-		print '('.$no_pages.')&nbsp;&nbsp;<font class="jump_to_text">Jump to</font> &nbsp;<input class="jump_to_inp" type="text" name="jump_to" id="jump_to" />&nbsp;'. "<input type=\"button\" name=\"go\" value=\"Go\" onclick=\"jump_to('".$link."', $limit, $no_pages);\" />";
+		print '('.$no_pages.')&nbsp;&nbsp;<font class="jump_to_text">Jump to</font> &nbsp;<input class="jump_to_inp" type="text" name="jump_to" id="jump_to" onkeyup="if (event.keyCode==13) '."jump_to('".$link."', $limit, $no_pages);".' "/>&nbsp;'. "<input type=\"button\" name=\"go\" value=\"Go\" onclick=\"jump_to('".$link."', $limit, $no_pages);\" />";
 	}
 	print '</div>';
 	print '</center>';
