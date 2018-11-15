@@ -105,7 +105,7 @@ class Debug
 	 * Calling trigger_report() will register this shutdown_function
 	 * This will then be called just when program 
 	 */
-	public static function shutdown_trigger_report()
+	public static function shutdown_trigger_report($manually_triggered=false)
 	{
 		global $count_triggered;
 		global $log_triggered;
@@ -115,7 +115,7 @@ class Debug
 		else
 			$mess = "There were ".$count_triggered." reports";
 		$mess .= ": $log_triggered";
-		return self::trigger_report("shutdown","$mess",true);
+		return self::trigger_report("shutdown","$mess",true,$manually_triggered);
 	}
 
 	/**
@@ -124,24 +124,35 @@ class Debug
 	 * Current supported methods: mail, web (dump or notify)
 	 * Ex:
 	 * $debug_notify = array(
-	 * 	"mail" => array("email@domain.com", "email2@domain.com"),
+	 * 	"mail" => array("email@domain.com", "email2@domain.com", 
+	 *			"manually_triggered"=>array("email3@domain.com", "email4@domain.com")),
 	 * 	"web"  => array("notify", "dump")
 	 * );
-	 * 'mail' send emails with the log file as attachment or the xdebug log directly if logging to file was not configured
+	 * 'mail' - send emails with the log file as attachment or the xdebug log directly if logging to file was not configured.
+	 *	  - contains default email address to which bug report will be sent		
+	 * 'manually_triggered' - email addresses to which reports triggered by user will be sent. 
+	 *			- if 'manually_triggered' key not defined or is an empty array then bug report will be sent to default addresses
          * 'dump' dumps the xdebug log on the web page
 	 * 'notify' Sets 'triggered_error' in $_SESSION. Calling method button_trigger_report() will print a notice on the page
 	 *
 	 * The report can be triggered by the developper directly when detecting an abnormal situation
 	 * or by the user that uses the 'Send bug report' button
 	 *
+	 * Custom bug report email:   (customize subject and add custom lines in bug report email)
+	 * Inside your project define function "customize_bug_report" to 
+	 * return sequential array with two elements: 
+	 *		0: string, the new email subject.
+	 *		1: string, the line(s) to be inserted after first line from bug report (under username:)
+	 * 
 	 * @param $tag String associated Used only when triggered from code
 	 * @param $message String Used only when triggered from code
 	 * If single parameter is provided and string contains " "(spaces) then it's assumed 
 	 * the default tag is used. Default tag is 'logic'
 	 * @param $shutdown Bool. Default false. If false, it will just register a shutdown function that sends report at the end. 
+	 * @param $manually_triggered Bool. Default false. Changes subject or 
 	 * If true, we assume we are at shutdown and trigger_report is actually performed
 	 */
-	public static function trigger_report($tag,$message=null,$shutdown=false)
+	public static function trigger_report($tag, $message=null, $shutdown=false, $manually_triggered=false)
 	{
 		global $debug_notify;
 		global $server_email_address;
@@ -170,7 +181,7 @@ class Debug
 				$count_triggered = 1;
 				$log_triggered = ($message) ? $message : $tag;
 				self::xdebug("first_trigger","----------------------");
-				register_shutdown_function(array('Debug','shutdown_trigger_report'),array());
+				register_shutdown_function(array('Debug','shutdown_trigger_report'),$manually_triggered);
 			} else {
 				$count_triggered++;
 				$log_triggered .= ($message) ? "; " . $message : "; ".$tag;
@@ -191,12 +202,42 @@ class Debug
 				if (!isset($server_email_address))
 					$server_email_address = "bugreport@localhost.lan";
 
-				$subject = "Bug report for '".$proj_title."'";
-
 				if (!isset($skip_interfaces))
 					$skip_interfaces = 'LOOPBACK|NO-CARRIER';
 				
-				$body = "Application is running on:";
+				if (isset($_SESSION["username"])) {
+					$user = $_SESSION["username"];
+					$reporter = getparam("name");
+					if ($reporter)
+						$user .= "($reporter)";
+				} else {
+					exec('echo "$USER"',$user);
+					$user = implode($user,"\n");
+				}
+				
+				$subject = ($manually_triggered) ? "Manually triggered bug report for '".$proj_title."' by $user" : "Auto triggered bug report for '".$proj_title."'";
+
+				$body = "Username&#58; ".$user."\n";
+				
+				// if "customize_bug_report" function is defined 
+				// replace subject for bug report with first elem from result
+				// concatenate body lines with second element from result
+				if (is_callable("customize_bug_report")) {
+					$res = customize_bug_report($manually_triggered, $user);
+					if ($res[0])
+						$subject = $res[0];
+					if ($res[1])
+						$body .= $res[1];
+				}
+				
+				$body .= "Application: '$proj_title'"."\n";
+				if (isset($software_version))
+					$body .= "Version: $software_version"."\n";
+				
+				if (isset($_SERVER["HOSTNAME"]))
+					$body .= "Hostname: ".$_SERVER["HOSTNAME"]."\n";
+				
+				$body .= "\nApplication is running on:";
 				exec("/sbin/ip addr ls", $info);
 
 				$skip = true;
@@ -227,31 +268,13 @@ class Debug
 					}
 				}
 
-				if (isset($_SERVER["HOSTNAME"]))
-					$body .= "\nHostname: ".$_SERVER["HOSTNAME"];
-				
-				$body .= "\nApplication: '$proj_title'"."\n";
-				if (isset($software_version))
-					$body .= "Version: $software_version"."\n";
-
-				if (isset($_SESSION["username"])) {
-					$user = $_SESSION["username"];
-					$reporter = getparam("name");
-					if ($reporter)
-						$user .= "($reporter)";
-				} else {
-					exec('echo "$USER"',$user);
-					$user = implode($user,"\n");
-				}
-				$body .= "User: ".$user."\n";
-
 				$description = getparam("bug_description");
 				if ($description)
-					$body .= "User description: ".$description."\n";
+					$body .= "\n\n User description: ".$description;
 
 				if ($message)
-					$body .= "Error that triggered report: ".$message."\n";
-
+					$body .= "\n\n Error that triggered report: ".$message;
+		
 				$logs_file = self::get_log_file();
 				if ($logs_file) {
 					$dir_arr = explode("/",$logs_file);
@@ -271,10 +294,19 @@ class Debug
 					// logs are not kept in file, add xdebug to email body
 					$body .= "\n\n$xdebug";
 				$body = str_replace("\n","<br/>",$body);
-
-				for ($i=0; $i<count($notification_options); $i++) {
-					send_mail($notification_options[$i], $server_email_address, $subject, $body, $attachment,null,false);
+							
+				// set where to send triggered reports
+				$to_emails = $notification_options;
+				if (isset($to_emails["manually_triggered"])) {
+					if ($manually_triggered && count($to_emails["manually_triggered"]))
+						$to_emails = $to_emails["manually_triggered"];
+					else
+						unset($to_emails["manually_triggered"]);
 				}
+				
+				foreach ($to_emails as $to)
+					send_mail($to, $server_email_address, $subject, $body, $attachment,null,false);
+
 				exec("rm -f $attach_file");
 
 				break;
@@ -562,7 +594,7 @@ class Debug
 		$report = getparam("bug_description");
 		$from = "From: ".getparam("name");
 		$report = "$from\n\n$report";
-		self::trigger_report("REPORT",$report);
+		self::trigger_report("REPORT",$report,false,true);
 	}
 
 	public static function reset_xdebug()
