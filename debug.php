@@ -217,7 +217,7 @@ class Debug
 				
 				$subject = ($manually_triggered) ? "Manually triggered bug report for '".$proj_title."' by $user" : "Auto triggered bug report for '".$proj_title."'";
 
-				$body = "Username&#58; ".$user."\n";
+				$body = "Username&#58; ". htmlentities($user)."\n";
 				
 				// if "customize_bug_report" function is defined 
 				// replace subject for bug report with first elem from result
@@ -269,12 +269,14 @@ class Debug
 				}
 
 				$description = getparam("bug_description");
+				$description = htmlentities($description);
 				if ($description)
 					$body .= "\n\n User description: ".$description;
 
-				if ($message)
-					$body .= "\n\n Error that triggered report: ".$message;
-		
+				if ($message) {
+					$body .= "\n\n Error that triggered report: ";
+					$body.= ($manually_triggered) ? "See User description\n" : $message;
+				}
 				$logs_file = self::get_log_file();
 				if ($logs_file) {
 					$dir_arr = explode("/",$logs_file);
@@ -592,6 +594,7 @@ class Debug
 	public static function send_bug_report()
 	{
 		$report = getparam("bug_description");
+		$report = htmlentities($report);
 		$from = "From: ".getparam("name");
 		$report = "$from\n\n$report";
 		self::trigger_report("REPORT",$report,false,true);
