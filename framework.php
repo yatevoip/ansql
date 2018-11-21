@@ -3188,9 +3188,9 @@ class Model
 			}
 		}else{
 			if (substr($key,0,6) == "__sql_")
-				$t_k = substr($key,6,strlen($key));
+				$t_k = esc(substr($key,6,strlen($key)));
 			else
-				$t_k = "$key";
+				$t_k = esc($key);
 		}
 
 		return $t_k;
