@@ -1677,7 +1677,7 @@ Default is enabled."
 					"display" => "text",
 					"comment" => "Comma separated list of neighbor SIP addresses.
 Each neighbor will be periodically queried for target handover availability.
-Example: neighbors=10.0.0.1, 10.0.0.2, 10.0.0.3:5065.
+Example: 10.0.0.1, 10.0.0.2, 10.0.0.3:5065.
 Default is empty."
 				),
 				"reason" => array(
