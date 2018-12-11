@@ -1414,12 +1414,12 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 							$description = "";
 						}
 						$elem_id =  "examples_li_".$form_identifier.$field_name.$i;
-						$display = "block"; 
+						$display_type = "block"; 
 						if ($max_show <= $i) {
-							$display = "none";
+							$display_type = "none";
 							$not_displayed_elem_ids[] = $elem_id;
 						}					
-						print '<li style="display:'.$display.'" id="'.$elem_id.'"><a class="'.$css.'" href="example/'.$filename.'">'.$filename . '</a> '.$description.' </li>';
+						print '<li style="display:'.$display_type.'" id="'.$elem_id.'"><a class="'.$css.'" href="example/'.$filename.'">'.$filename . '</a> '.$description.' </li>';
 						$i++;
 					}
 					if (count($not_displayed_elem_ids)) 
