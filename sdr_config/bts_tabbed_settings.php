@@ -247,9 +247,9 @@ This parameters are ignored in Labkit units."
 							if ($subsection == "roaming" && $param == "my_sip") {
 								$add_my_sip = true;
 								foreach ($fields[$section]["roaming"]["my_sip"][0] as $key => $ip) {
-									if ($key == "custom" || $ip["my_sip_id"] == "__disabled")
+									if ($key == "custom" || ( isset($ip["my_sip_id"]) && $ip["my_sip_id"] == "__disabled" ))
 										continue;
-									if ($data === $ip["my_sip"])
+									if (isset($ip["my_sip_id"]) && $data === $ip["my_sip"])
 										$add_my_sip = false;
 								} 
 								if ($add_my_sip) {

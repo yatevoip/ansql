@@ -1552,6 +1552,11 @@ Defaults to yes."
 				"comment"=> "RSSI decrease amount. Decrease the RSSI by this amount to induce more power in the MS each time we fail to receive a response from it.
 Interval allowed: 1..3
 Defaults to 1"
+			),
+			"SMSCB" => array(
+				"display" => "checkbox",
+				"value" => "0",
+				"comment" => "Configure a Cell Broadcast channel instead of SDCCH/4-2."
 			)
 	);
 
