@@ -1237,3 +1237,20 @@ function jump_to(link, limit, max_page)
 	link = link+'&page='+page;
 	window.location.replace(link);
 }
+
+/**
+ * Dislays or hides file exaples when pushing the "Display more examples..."/"Hide examples..." button
+ * @param array elems. Array containing the ids for the elements (options from unordered list) which will be hidded or displayed
+ * @param string button_id. Show/Hide button id
+ */
+function show_hide_file_examples(elems,button_id) {
+	for (var i=0; i<elems.length; i++)
+		show_hide(elems[i]);
+	
+	var button = document.getElementById(button_id);
+	
+	if (button.innerHTML == "Display more examples...")
+		button.innerHTML =  "Hide examples...";
+	else
+		button.innerHTML = "Display more examples...";
+}

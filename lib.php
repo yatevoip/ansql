@@ -1395,8 +1395,48 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 			print '>'.$field_comment;
 
-			if ($display == 'file' && isset($field_format["file_example"]) && $field_format["file_example"] != "__no_example")
-				print '<br/><br/>Example: <a class="'.$css.'" href="example/'.$field_format["file_example"].'">'.$field_format["file_example"].'</a><br/><br/>';
+			if ($display == 'file' && isset($field_format["file_example"]) && $field_format["file_example"] != "__no_example") {
+				if (!is_array($field_format["file_example"]))
+					print '<br/><br/>Example: <a class="'.$css.'" href="example/'.$field_format["file_example"].'">'.$field_format["file_example"].'</a><br/><br/>';
+				else {
+					print '<br/><br/>Examples (click to download):';
+					print '<ul class="'.$css.'" id="examples_'.$form_identifier.$field_name.'">';
+					
+					if (isset($field_format["display_examples"]) && is_numeric($field_format["display_examples"])) 
+						$max_show = $field_format["display_examples"];
+					else 
+						$max_show = count($field_format["file_example"]);
+					$not_displayed_elem_ids = array();
+					$i=1; 
+					foreach ($field_format["file_example"] as $filename => $description) {
+						if (is_numeric($filename)) {
+							$filename = $description;
+							$description = "";
+						}
+						$elem_id =  "examples_li_".$form_identifier.$field_name.$i;
+						$display = "block"; 
+						if ($max_show <= $i) {
+							$display = "none";
+							$not_displayed_elem_ids[] = $elem_id;
+						}					
+						print '<li style="display:'.$display.'" id="'.$elem_id.'"><a class="'.$css.'" href="example/'.$filename.'">'.$filename . '</a> '.$description.' </li>';
+						$i++;
+					}
+					if (count($not_displayed_elem_ids)) 
+						print '<a class="'.$css.'" id="show_hide_file_examples" onclick="show_hide_file_examples([\''. implode("','", $not_displayed_elem_ids).'\'], \'show_hide_file_examples\')" href="#">Display more examples...</a>';
+					print '</ul>';
+				}
+				if (isset($field_format["extra_info"])) {
+					if (!is_array($field_format["extra_info"])) {
+						print 'Note! ' . $field_format["extra_info"];
+					} else {
+						print 'Note! <ul>';
+						foreach ($field_format["extra_info"] as $extra_info)
+							print '<li>' . $extra_info . '</li>';
+						print '</ul>';
+					}
+				}
+			}
 			if ($display == 'file' && !isset($field_format["file_example"])) 
 				Debug::trigger_report('critical', "For input type file a file example must be given as parameter.");
 			break;
