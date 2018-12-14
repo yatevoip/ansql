@@ -1415,7 +1415,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 						}
 						$elem_id =  "examples_li_".$form_identifier.$field_name.$i;
 						$display_type = "block"; 
-						if ($max_show <= $i) {
+						if ($max_show < $i) {
 							$display_type = "none";
 							$not_displayed_elem_ids[] = $elem_id;
 						}					
@@ -5222,5 +5222,31 @@ function get_http_code($link)
 	$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE );
 	
 	return $http_code;
+}
+
+/**
+ * 
+ * @param string $input_name. The name of input type file 
+ * @return false/string. Return false if no error while uploading. Return error message if error occurred while uploading.
+ */
+function file_upload_has_err($input_name) {
+	
+	$err_no = $_FILES[$input_name]['error'];
+
+	$err_codes = array(
+		//0 => 'File uploaded with success',
+		1 => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+		2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+		3 => 'The uploaded file was only partially uploaded.',
+		4 => 'No file was uploaded.',
+		6 => 'Missing a temporary folder.',
+		7 => 'Failed to write file to disk.',
+		8 => 'A PHP extension stopped the file upload.',
+	);
+	
+	if (array_key_exists($err_no, $err_codes))
+		return "Could not upload file. Error code: ". $err_no ." - ". $err_codes[$err_no];
+
+	return false;
 }
 ?>
