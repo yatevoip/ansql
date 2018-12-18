@@ -5249,4 +5249,54 @@ function file_upload_has_err($input_name) {
 
 	return false;
 }
+
+/**
+ * Verifies if error occurred after json encode/decode and 
+ * returns corresponding error message or false if no error occurred
+ */
+function translate_json_err_codes() 
+{
+        switch (json_last_error()) {
+                case JSON_ERROR_NONE:
+                        $msg = ' - No errors';
+                        break;
+                case JSON_ERROR_DEPTH:
+                        $msg = ' - Maximum stack depth exceeded';
+                        break;
+                case JSON_ERROR_STATE_MISMATCH:
+                        $msg = ' - Underflow or the modes mismatch';
+                        break;
+                case JSON_ERROR_CTRL_CHAR:
+                        $msg = ' - Unexpected control character found';
+                        break;
+                case JSON_ERROR_SYNTAX:
+                        $msg = ' - Syntax error, malformed JSON';
+                        break;
+                case JSON_ERROR_UTF8:
+                        $msg = ' - Malformed UTF-8 characters, possibly incorrectly encoded';
+                        break;
+                case JSON_ERROR_RECURSION:
+                        $msg = ' - One or more recursive references in the value to be encoded';
+                        break;
+                case JSON_ERROR_INF_OR_NAN:
+                        $msg = ' - One or more NAN or INF values in the value to be encoded';
+                        break;
+                case JSON_ERROR_UNSUPPORTED_TYPE:
+                        $msg = ' - A value of a type that cannot be encoded was given';
+                        break;
+		case JSON_ERROR_INVALID_PROPERTY_NAME:
+                        $msg = ' - A property name that cannot be encoded was given';
+                        break;
+                case JSON_ERROR_UTF16:
+                        $msg = ' - Malformed UTF-16 characters, possibly incorrectly encoded';
+                        break;
+                default:
+                        $msg = ' - Unknown error';
+        }
+        
+	if ($msg == ' - No errors')
+		return false;
+	
+        return $msg;
+}
 ?>
