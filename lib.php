@@ -5299,4 +5299,20 @@ function translate_json_err_codes()
 	
         return $msg;
 }
+
+/**
+ * Build array for $str by breaking after provided $delimiter. Additionally call $extra on each array item
+ * @param String $str
+ * @param String/Char $delimiter. Default ","
+ * @param Callable $extra. Default "trim"
+ * @return Array
+ */
+function str_to_arr($str, $delimiter=",", $extra="trim")
+{
+	$arr = (strlen($str)) ? explode($delimiter, $str) : array();
+	if ($extra && is_callable($extra))
+		$arr = array_map($extra, $arr);
+	
+	return $arr;
+}
 ?>
