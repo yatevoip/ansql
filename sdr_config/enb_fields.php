@@ -128,7 +128,7 @@ EARFCN 50670, 2467 MHz, Channel 12 (2.4 GHz WiFi)	2456 - 2478 MHz
 EARFCN 50720, 2472 MHz, Channel 13 (2.4 GHz WiFi)	2461 - 2483 MHz
 EARFCN 50840, 2484 MHz, Channel 14 (2.4 GHz WiFi)	2473 - 2495 MHz'),
 	"required" => true,
-	"validity" => array("validate_earfcn_band", "Band"),
+	"validity" => array("validate_earfcn_band", "Band", "Bandwidth"),
     ),
 
     "__" => array(
@@ -1067,8 +1067,61 @@ Default is yes for all.
 		for ($i=2; $i<=5; $i++) {
 			$enodeb_params["core"]["mme"]["local_".$i] = array(${"interfaces_ips".$i},"display"=>"select","comment"=>"Ex: 192.168.56.1","column_name"=>"Local", "triggered_by" => $i);
 		}
+	}
+	
+	$bands = get_available_bands();
+	
+	if ($bands) {
+		$bands_options = array();
+		$band_comment = "";
+		$sep = "</div><div class='sep_fields'>";
+		foreach ($bands as $band) {
+			$bands_options[] = $band["band"];
+			if (strlen($band_comment))
+				$band_comment .= "<br/>";
+			$band_comment .= "<div class='sep_fields'>".implode($sep, $band)."</div>";
+		}
+
+		$title = array("Band", "Frequency<br/>Download", "MinEarcfn<br/>Download", "MaxEarcfn<br/>Download", "Frequency<br/>Upload", "Earcfn</br>Offset");
+		$band_comment = "<div class='sep_fields'>".implode($sep, $title)."</div>" . $band_comment;
+		$enodeb_params["radio"]["enodeb"]["Band"]["comment"] .= "<br/><br/>".$band_comment;
+		$enodeb_params["radio"]["enodeb"]["Band"][0] = $bands_options;
+	} else {
+		$enodeb_params["radio"]["enodeb"]["Band"]["display"] = "fixed";
+		$enodeb_params["radio"]["enodeb"]["Band"]["value"] = $_SESSION["error_get_bands"];
+		unset($enodeb_params["radio"]["enodeb"]["Band"][0]); 
+		$enodeb_params["radio"]["enodeb"]["Band"]["error"] = true;
+	}
+	
+	return $enodeb_params;
 }
 
-	return $enodeb_params;
+function get_available_bands()
+{
+	global $request_protocol, $server_name;
+	
+	if (isset($_SESSION["available_bands"])) {
+		$bands = $_SESSION["available_bands"];
+	} else {
+		if (!$request_protocol)
+			$request_protocol = "http";
+
+		$url = "$request_protocol://$server_name/api.php";
+		$out = array("request"=>"get_bands","node"=>"sdr","params"=>"bands");
+		$res = make_request($out, $url);
+
+		if ($res["code"]=="0") {
+			// my_sip is set for ipv4
+			// set third param in bellow function call to "both" if you need ipv6 and ipv4 in my_sip dropdown
+			$bands = $res["bands"];
+			$_SESSION["available_bands"] = $bands;
+
+		} else {
+			$_SESSION["error_get_bands"] = "[API: ".$res["code"]."] ".$res["message"];
+			return null;
+		}
+	}
+	
+	return $bands;
 }
 ?>

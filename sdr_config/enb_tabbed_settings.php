@@ -284,7 +284,7 @@ This parameters are ignored in Labkit units."
 
 							$fields[$section][$subsection][$param]["value"] = ($data=="yes" || $data=="on" || $data=="1")  ? "on" : "off";
 
-						else 
+						elseif ( !isset($fields[$section][$subsection][$param]["display"]) || $fields[$section][$subsection][$param]["display"]!="fixed" )
 							$fields[$section][$subsection][$param]["value"] = $data; 
 
 						// unmark triggered fields if they are set

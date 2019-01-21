@@ -28,42 +28,43 @@ function validate_cell_identity($field_name, $field_value)
 }
 
 /* validate EARFCN */
-function validate_earfcn_band($field_name, $field_value, $restricted_value)
+// $field_value corresponds to the inserted earfcn
+function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandwidth)
 {
-        // the first value is the band and the array is the range of the permitted EARFCNs for each band
-	$permitted_values = array( 
-		"1"  => array(0, 599), "2" => array(600, 1199),
-        "3"  => array(1200, 1949), "4" => array(1950, 2399),
-		"5"  => array(2400, 2649), "6" => array(2650, 2749), 
-		"7"  => array(2750, 3449), "8" => array(3450, 3799), 
-		"9"  => array(3780, 4149), "10" => array(4150, 4749),
-		"11" => array(4750, 4949), "12" => array(4950, 5179),
-		"13" => array(5180, 5279), "14" => array(5280, 5379),
-		"17" => array(5380, 5849), "18" => array(5850, 5999),
-		"19" => array(6000, 6149), "20" => array(6150, 6449),
-                "21" => array(6450, 6599), "22" => array(6600, 7399),
-                "23" => array(7400, 7699), "24" => array(7700, 8039),
-                "25" => array(8040, 8689), "26" => array(8690, 9039),
-                "27" => array(9040, 9209), "28" => array(9210, 9659),
-		"29" => array(9660, 9769), "30" => array(9770, 9869),
-                "31" => array(9870, 9919), "32" => array(9920, 10359),
-                "33" => array(36000, 36199), "34" => array(36200, 36349),
-		"35" => array(36350, 36949), "36" => array(36950, 37549),
-                "37" => array(37550, 37749), "38" => array(37750, 38249),
-                "39" => array(38250, 38649), "40" => array(38650, 39649),
-		"41" => array(39650, 41589), "42" => array(41590, 43589),
-                "43" => array(43590, 45589), "44" => array(45590, 46589)
+	$bands = get_available_bands();
+	if (!$bands)
+		return array(false, $_SESSION["error_get_bands"]." Please fix error before trying to save new configuration.");
+	
+	$bandwidth_mhz = array(
+	    6 => 1.4,
+	    15 => 3,
+	    25 => 5,
+	    50 => 10,
+	    75 => 15,
+	    100 => 20
 	);
 	
-	if (!$permitted_values[$restricted_value]) 
-		return array(false, "The field Band value: '". $restricted_value . "' is not a permitted");
+	$selected_band = getparam($name_band);
+	$selected_bandwidth = getparam($name_bandwidth);
 	
-	$field_value = (int)$field_value;
-        $earfcn = $permitted_values[$restricted_value];
-	$min = $earfcn[0];
-	$max = $earfcn[1];
-	if ($field_value<$min || $field_value>$max) 
-		return array(false, "Field '". $field_name ."' is not in the right range for the Band chosen.");
+	if (!isset($bandwidth_mhz[$selected_bandwidth]))
+		return array(false, "Invalid selected 'Bandwidth': $selected_bandwidth");
+	
+	$bandwidth = $bandwidth_mhz[$selected_bandwidth];
+	foreach ($bands as $optional_band) {
+		if ($optional_band["band"]==$selected_band)
+			$band = $optional_band;
+	}
+	
+	if (!isset($band))
+		return array(false, "Selected 'Band':$selected_band is not in permitted values.");
+	
+	$min_earfcn = $band["min_earfcn_dl"];
+	$max_earfcn = $band["max_earfcn_dl"];
+	
+	if ( ! ( ($field_value - $min_earfcn) * 0.1 > ($bandwidth/2)  &&
+	         ($max_earfcn - $field_value) * 0.1 > ($bandwidth/2) )  )
+		return array(false, "Invalid combination of 'Band':$selected_band, 'Bandwidth':$selected_bandwidth and 'Earfcn':$field_value.");
 
 	return array(true);
 }
