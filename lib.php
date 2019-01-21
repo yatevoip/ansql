@@ -3471,11 +3471,11 @@ function set_error_fields($error, &$error_fields)
  * Handle the errors by displaing the error using errormess();
  * sets the errors in array fields and then sets the data in form fields
  */ 
-function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_urldecode=false)
+function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_urldecode=false, $encode_error_text=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	if ($error) {
-		errormess($error,"no");
+		errormess($error,"no","Go back to application", $encode_error_text);
 		set_error_fields($error, $error_fields);
 		set_form_fields($fields, $error_fields, $field_prefix, $use_urldecode);
 	}

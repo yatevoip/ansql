@@ -99,7 +99,7 @@ abstract class TabbedSettings
 
 		foreach ($fields[$section][$subsection] as $param_name=>$data) {
 
-			if (isset($data["display"]) && in_array($data["display"],array("objtitle","message")))
+			if (isset($data["display"]) && in_array($data["display"],array("objtitle","message","fixed")))
 				continue;
 
 			// start for default fields
@@ -460,7 +460,7 @@ abstract class TabbedSettings
 						elseif (isset($data["display"]) && $data["display"]=="checkbox")
 							$fields[$m_section][$m_subsection][$param_name]["value"] = (getparam($paramname)=="on") ? "1" : "0";
 
-						elseif (isset($data["display"]) && in_array($data["display"], array("message","objtitle")))
+						elseif (isset($data["display"]) && in_array($data["display"], array("message","objtitle","fixed")))
 							continue;
 
 						else
@@ -508,7 +508,7 @@ abstract class TabbedSettings
 		print "<div id=\"err_$subsection\">";
 		if (!isset($fields[$section][$subsection]))
 			print "Could not find parameters for section '$section', subsection'$subsection'";
-		error_handle($error, $fields[$section][$subsection], $error_fields);
+		error_handle($error, $fields[$section][$subsection], $error_fields, '', false, false);
 		print "</div>";
 		start_form();
 		foreach ($structure as $m_section=>$data) {
