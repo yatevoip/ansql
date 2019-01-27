@@ -13,14 +13,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */ 
-
-set_include_path(get_include_path().":".__DIR__."/../../");
-include_once("classes/equipment.php");
-include_once("ansql/framework.php");
-include_once("ansql/lib.php");
-include_once("config.php");
-include_once("lib_api.php");
-include_once("api_config.php");
+include_once "../../api/api_includes.php";
 
 $response = do_request();
 if ($log_status) {
@@ -35,10 +28,11 @@ if (isset($response["data"])) {
 
 function process_request($req, $params)
 {
-	if (!is_file($req . ".php"))
+	if (!stream_resolve_include_path("api/" . $req . ".php"))
 		return build_error(401, "Request '$req' not implemented!");
+	
 
-	require_once $req . ".php";
+	require_once "api/" . $req . ".php";
 	$res = call_user_func($req, $params);
 	$log_params = array("request"=>$req,"params"=>$params);
 	if ($res[0])
