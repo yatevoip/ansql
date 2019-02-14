@@ -1388,6 +1388,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			}
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
+			if (isset($field_format["maxlength"]))
+				print " maxlength='".$field_format["maxlength"]."'";
 			if ($display == "text-nonedit")
 				print " readonly=''";
 			if (isset($field_format["autocomplete"]))
