@@ -934,7 +934,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 			print " src=\"images/advanced.$img_extension\" title=\"Show advanced fields\"";
 		else
 			print " src=\"images/basic.$img_extension\" title=\"Hide advanced fields\"";
-		print ' onClick="advanced(\''.$form_identifier.'\');"/></th></tr>';
+		print ' onClick="advanced(\''.$form_identifier.'\');"/></td></tr>';
 	}
 	if($compulsory_notice && $compulsory_notice !== true)
 	{
