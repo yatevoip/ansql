@@ -201,16 +201,18 @@ This parameter is applied on reload."
 
 "gtp" => array(
 
-	"error_get_network" => array(
+    "error_get_network" => array(
 		"display" => "message",
 		"column_name"=> "",
-	    "value" => ""
+		"value" => ""
 	),	
     "addr4" => array(
-	    "comment" => "IPv4 address to use with the eNodeB tunnel end",
+		"column_name" => "Local addres IPv4",
+		"comment" => "IPv4 address to use with the eNodeB tunnel end",
 	),
 
     "addr6" => array(
+		"column_name" => "Local address IPv6",
 		"comment" => "IPv6 address to use with the eNodeB tunnel end",
 	),
 ),
@@ -223,10 +225,11 @@ This parameter is applied on reload."
     ),
 
     "mme_address" => array(
-	"column_name" => "Address",
+	"column_name" => "Remote address",
 	"comment" => "Ex: 192.168.56.62",
     ),
     "local" => array(
+	"column_name" => "Local address",
 	"comment" => "Ex: 192.168.56.1",
     ),
     "streams" => array(
@@ -242,12 +245,12 @@ This parameter is applied on reload."
     "objtitle2" => array("display"=>"objtitle", "triggered_by"=>"2", "value"=>"2<sup>nd</sup> MME"),
 
     "mme_address_2" => array(
-	"column_name" => "Address",
+	"column_name" => "Remote address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "2",
     ),
     "local_2" => array(
-	"column_name" => "Local",
+	"column_name" => "Local address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "2",
     ),
@@ -266,12 +269,12 @@ This parameter is applied on reload."
     "objtitle3" => array("display"=>"objtitle", "triggered_by"=>"3", "value"=>"3<sup>rd</sup> MME"),
 
     "mme_address_3" => array(
-	"column_name" => "Address",
+	"column_name" => "Remote address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "3",
     ),
     "local_3" => array(
-	"column_name" => "Local",
+	"column_name" => "Local address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "3",
     ),
@@ -290,12 +293,12 @@ This parameter is applied on reload."
     "objtitle4" => array("display"=>"objtitle", "triggered_by"=>"4", "value"=>"4<sup>th</sup> MME"),
 
     "mme_address_4" => array(
-	"column_name" => "Address",
+	"column_name" => "Remote address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "4",
     ),
     "local_4" => array(
-	"column_name" => "Local",
+	"column_name" => "Local address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "4",
     ),
@@ -314,12 +317,12 @@ This parameter is applied on reload."
     "objtitle5" => array("display"=>"objtitle", "triggered_by"=>"5", "value"=>"5<sup>th</sup> MME"),
 
     "mme_address_5" => array(
-	"column_name" => "Address",
+	"column_name" => "Remote address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "5",
     ),
     "local_5" => array(
-	"column_name" => "Local",
+	"column_name" => "Local address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "5",
     ),
@@ -1052,20 +1055,20 @@ Default is yes for all.
 		$gtp_ipv4[] = array ("addr4_id"=>"__disabled", "addr4"=>"------all interfaces------");
 		$gtp_ipv4[] = array ("addr4_id"=>"0.0.0.0", "addr4"=>"0.0.0.0");
 		
-		$enodeb_params["core"]["gtp"]["addr4"] = array($gtp_ipv4,"display"=>"select", "comment" => "IPv4 address to use with the eNodeB tunnel end. <br/>0.0.0.0 - GTP listener on all ipv4 interfaces.");
+		$enodeb_params["core"]["gtp"]["addr4"] = array($gtp_ipv4,"display"=>"select", "comment" => "IPv4 address to use with the eNodeB tunnel end. <br/>0.0.0.0 - GTP listener on all ipv4 interfaces.", "column_name"=>"Local address IPv4");
 
 		$gtp_ipv6 = $ipv6;
 		// add "all interfaces" ipv6 IP and label
 		$gtp_ipv6[] = array ("addr6_id"=>"__disabled", "addr6"=>"------all interfaces------");
 		$gtp_ipv6[] = array ("addr6_id"=>"::", "addr6"=>"::");
 		
-		$enodeb_params["core"]["gtp"]["addr6"] = array($gtp_ipv6,"display"=>"select", "comment" => "IPv6 address to use with the eNodeB tunnel end. <br/>:: - GTP listener on all ipv6 interfaces.");
+		$enodeb_params["core"]["gtp"]["addr6"] = array($gtp_ipv6,"display"=>"select", "comment" => "IPv6 address to use with the eNodeB tunnel end. <br/>:: - GTP listener on all ipv6 interfaces.", "column_name"=>"Local address IPv6");
 
 		
 		// initialize local, local_2 ... local_5 dropdowns from mme section 
-		$enodeb_params["core"]["mme"]["local"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1");
+		$enodeb_params["core"]["mme"]["local"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1", "column_name"=>"Local address");
 		for ($i=2; $i<=5; $i++) {
-			$enodeb_params["core"]["mme"]["local_".$i] = array(${"interfaces_ips".$i},"display"=>"select","comment"=>"Ex: 192.168.56.1","column_name"=>"Local", "triggered_by" => $i);
+			$enodeb_params["core"]["mme"]["local_".$i] = array(${"interfaces_ips".$i},"display"=>"select","comment"=>"Ex: 192.168.56.1","column_name"=>"Local address", "triggered_by" => $i);
 		}
 	}
 	
