@@ -78,7 +78,8 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 			$zipped_ret = substr($ret,$info['header_size']);
 			$ret = gzinflate(substr($zipped_ret,10));
 		} else*/
-		$message = explode(' ', trim(strtok($ret, "\n")),3)[2];
+		$message = explode(' ', trim(strtok($ret, "\n")),3);
+		$message= $message[2];
 		$ret = substr($ret,$info['header_size']);
 
 		$code = curl_getinfo($curl,CURLINFO_HTTP_CODE);
