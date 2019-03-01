@@ -528,6 +528,9 @@ class Debug
 	/**
 	 * Displays buttons to trigger bug report, dump_request, dump_session + custom callbacks
 	 * This must be called from outside ansql. Ex: get_content() located in menu.php
+	 * -- to use this function, remember to:
+	 *	define array $general_exceptions_to_save and  add in it form_bug_report
+	 *      don't call save_page_info() if  method is in $general_exceptions_to_save
 	 */
 	public static function button_trigger_report()
 	{
