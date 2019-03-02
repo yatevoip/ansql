@@ -39,9 +39,11 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 	elseif ($method == 'post')
 		curl_setopt($curl, CURLOPT_POST, true);
 
-	if (!empty($content)) {
+	if (!empty($content)) 
 		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($content));
-	}
+	elseif ($method == 'post')
+		curl_setopt($curl, CURLOPT_POSTFIELDS, "");
+
 	$hdr = array(
 		"X-Authentication: mmi_secret",
 		"Accept: application/json,text/x-json,application/x-httpd-php",
