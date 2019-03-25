@@ -18,7 +18,7 @@ $enodeb_params = array(
     // they were grouped here because they are unique per enodeb or per enodeb in overlapping coverage area
 
     "enodebId" => array(
-	"column_name" => " eNodeB Id",
+	"column_name" => " eNodeB ID",
 	"comment" =>"eNodeB ID
 Unique to every eNodeB in the network.
 Must be 5 hex digits for a Macro ENB or 7 hex digits for a Home ENB",	
@@ -225,11 +225,11 @@ This parameter is applied on reload."
     ),
 
     "mme_address" => array(
-	"column_name" => "Remote address",
+	"column_name" => "MME remote IPv4 address",
 	"comment" => "Ex: 192.168.56.62",
     ),
     "local" => array(
-	"column_name" => "Local address",
+	"column_name" => "eNodeB local IPv4 address",
 	"comment" => "Ex: 192.168.56.1",
     ),
     "streams" => array(
@@ -245,12 +245,12 @@ This parameter is applied on reload."
     "objtitle2" => array("display"=>"objtitle", "triggered_by"=>"2", "value"=>"2<sup>nd</sup> MME"),
 
     "mme_address_2" => array(
-	"column_name" => "Remote address",
+	"column_name" => "MME remote IPv4 address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "2",
     ),
     "local_2" => array(
-	"column_name" => "Local address",
+	"column_name" => "eNodeB local IPv4 address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "2",
     ),
@@ -269,12 +269,12 @@ This parameter is applied on reload."
     "objtitle3" => array("display"=>"objtitle", "triggered_by"=>"3", "value"=>"3<sup>rd</sup> MME"),
 
     "mme_address_3" => array(
-	"column_name" => "Remote address",
+	"column_name" => "MME remote IPv4 address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "3",
     ),
     "local_3" => array(
-	"column_name" => "Local address",
+	"column_name" => "eNodeB local IPv4 address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "3",
     ),
@@ -293,12 +293,12 @@ This parameter is applied on reload."
     "objtitle4" => array("display"=>"objtitle", "triggered_by"=>"4", "value"=>"4<sup>th</sup> MME"),
 
     "mme_address_4" => array(
-	"column_name" => "Remote address",
+	"column_name" => "MME remote IPv4 address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "4",
     ),
     "local_4" => array(
-	"column_name" => "Local address",
+	"column_name" => "eNodeB local IPv4 address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "4",
     ),
@@ -317,12 +317,12 @@ This parameter is applied on reload."
     "objtitle5" => array("display"=>"objtitle", "triggered_by"=>"5", "value"=>"5<sup>th</sup> MME"),
 
     "mme_address_5" => array(
-	"column_name" => "Remote address",
+	"column_name" => "MME remote IPv4 address",
 	"comment" => "Ex: 192.168.56.62",
 	"triggered_by" => "5",
     ),
     "local_5" => array(
-	"column_name" => "Local address",
+	"column_name" => "eNodeB local IPv4 address",
 	"comment" => "Ex: 192.168.56.1",
 	"triggered_by" => "5",
     ),
@@ -1051,18 +1051,18 @@ Default is yes for all.
 		$enodeb_params["core"]["gtp"]["error_get_network"] = array("display"=>"message", "value"=> "<div class=\"notice\"><font class=\"error\">Error!! </font><font style=\"font-weight:bold;\">".$_SESSION["enb_fields"]["error_get_net_interfaces"]. " Please fix the error before setting the addresses.</font></div>");
 	} else {
 		$gtp_ipv4 = $ipv4;
-		// add "all interfaces" ipv4 IP and label
+		// add "all interfaces" IPv4 IP and label
 		$gtp_ipv4[] = array ("addr4_id"=>"__disabled", "addr4"=>"------all interfaces------");
 		$gtp_ipv4[] = array ("addr4_id"=>"0.0.0.0", "addr4"=>"0.0.0.0");
 		
-		$enodeb_params["core"]["gtp"]["addr4"] = array($gtp_ipv4,"display"=>"select", "comment" => "IPv4 address to use with the eNodeB tunnel end. <br/>0.0.0.0 - GTP listener on all ipv4 interfaces.", "column_name"=>"Local address IPv4");
+		$enodeb_params["core"]["gtp"]["addr4"] = array($gtp_ipv4,"display"=>"select", "comment" => "IPv4 address to use with the eNodeB tunnel end. <br/>0.0.0.0 - GTP listener on all IPv4 interfaces.", "column_name"=>"Local address IPv4");
 
 		$gtp_ipv6 = $ipv6;
 		// add "all interfaces" ipv6 IP and label
 		$gtp_ipv6[] = array ("addr6_id"=>"__disabled", "addr6"=>"------all interfaces------");
 		$gtp_ipv6[] = array ("addr6_id"=>"::", "addr6"=>"::");
 		
-		$enodeb_params["core"]["gtp"]["addr6"] = array($gtp_ipv6,"display"=>"select", "comment" => "IPv6 address to use with the eNodeB tunnel end. <br/>:: - GTP listener on all ipv6 interfaces.", "column_name"=>"Local address IPv6");
+		$enodeb_params["core"]["gtp"]["addr6"] = array($gtp_ipv6,"display"=>"select", "comment" => "IPv6 address to use with the eNodeB tunnel end. <br/>:: - GTP listener on all IPv6 interfaces.", "column_name"=>"Local address IPv6");
 
 		
 		// initialize local, local_2 ... local_5 dropdowns from mme section 
@@ -1114,8 +1114,8 @@ function get_available_bands()
 		$res = make_request($out, $url);
 
 		if ($res["code"]=="0") {
-			// my_sip is set for ipv4
-			// set third param in bellow function call to "both" if you need ipv6 and ipv4 in my_sip dropdown
+			// my_sip is set for IPv4
+			// set third param in bellow function call to "both" if you need IPv6 and IPv4 in my_sip dropdown
 			$bands = $res["bands"];
 			$_SESSION["available_bands"] = $bands;
 
