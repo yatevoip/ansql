@@ -1185,6 +1185,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		$value = htmlentities($value);
 	switch($display) {
 		case "textarea":
+		case "textarea-nonedit":
 			$textarea_cols = 20;
 			$textarea_rows = 5;
 			if (isset($field_format["textarea_cols"]))
@@ -1194,6 +1195,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print '<textarea class="'.$css.'" id="'.$form_identifier.$field_name.'" name="'.$form_identifier.$field_name.'" cols="'.$textarea_cols.'" rows="'.$textarea_rows.'" ';
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
+			if ($display == "textarea-nonedit")
+				print " readonly=''";
 			print '>';
 			print $value;
 			print '</textarea>'.$field_comment;
