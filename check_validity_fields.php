@@ -76,7 +76,7 @@ function check_valid_values_for_select_field($field_name, $field_value, $select_
 	}
 
 	if (!in_array($field_value, $selectable_data, true)) 
-		return array(false, "The field $field_name is not valid, is different from the allowed values.");
+		return array(false, "The field $field_name: '$field_value' is not valid, is different from the allowed values.".implode("/",$selectable_data));
 
 	return array(true);
 }

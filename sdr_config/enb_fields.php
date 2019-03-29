@@ -1116,7 +1116,7 @@ function get_available_bands()
 		if ($res["code"]=="0") {
 			// my_sip is set for IPv4
 			// set third param in bellow function call to "both" if you need IPv6 and IPv4 in my_sip dropdown
-			$bands = $res["bands"];
+			$bands = string_bands($res["bands"]);
 			$_SESSION["available_bands"] = $bands;
 
 		} else {
@@ -1126,5 +1126,16 @@ function get_available_bands()
 	}
 	
 	return $bands;
+}
+
+function string_bands($bands)
+{
+	$bnd = array();
+	foreach ($bands as $band) {
+		//var_dump($band);
+		$band["band"] = strval($band["band"]);
+		$bnd[] = $band;
+	}
+	return $bnd;
 }
 ?>
