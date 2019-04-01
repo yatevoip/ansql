@@ -257,6 +257,34 @@ function message($text, $path=NULL, $return_text="Go back to application", $enco
 	print '</div>';
 }
 
+
+/**
+ * Displays a given text.
+ * @param $text String The text to be displayed
+ * @param $path String The path to use in link 
+ * @param $return_text the link to return to requested Path
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
+ */ 
+function warning_mess($text, $path=NULL, $return_text="Go back to application", $encode=true)
+{
+	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	global $module,$method;
+
+	$text = ($encode) ? htmlentities($text) : $text;
+	
+	print '<div class="warning">'."\n";
+	print $text."\n";
+
+	if ($path == 'no') {
+		print '</div>';
+		return;
+	}
+
+	link_to_main_page($path, $return_text);
+
+	print '</div>';
+}
+
 /**
  * Displays a given text with a specific css for errors
  * @param $text String The text to be displayed
