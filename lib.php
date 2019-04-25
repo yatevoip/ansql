@@ -674,8 +674,8 @@ function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 
 	if (!$total)
 		$total = 0;
-	if ($total <= $limit)
-		return;
+	if ($total <= $limit)  
+		return; 
 
 	$pages = floor($total/$limit);
 	print '<center>';
@@ -1102,9 +1102,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		$value = $field_format["value"];
 
 	if (!is_array($value) && !strlen($value) && isset($field_format["cb_for_value"]) && isset($field_format["cb_for_value"]["name"]) && is_callable($field_format["cb_for_value"]["name"])) {
-		if (count($field_format["cb_for_value"])==2) {
-			$value = call_user_func_array($field_format["cb_for_value"]["name"],$field_format["cb_for_value"]["params"]);		var_dump($value);	var_dump($field_format["cb_for_value"]["name"]);
-		} else
+		if (count($field_format["cb_for_value"])==2) 
+			$value = call_user_func_array($field_format["cb_for_value"]["name"],$field_format["cb_for_value"]["params"]);
+		else
 			$value = call_user_func($field_format["cb_for_value"]["name"]);
 		// if $value is resulted by callign a function then that function is responsible for running htmlentities 
 		$htmlentities_onvalue = false;
