@@ -435,12 +435,14 @@ class Debug
 				print "<br/>\n<br/>\n$msg<br/>\n<br/>\n";
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
-				if (!is_file($arr[$i]))
-					$fh = fopen($arr[$i], "w");
-				else
-					$fh = fopen($arr[$i], "a");
-				fwrite($fh, $date.strtoupper($tag).": ".$msg."\n");
-				fclose($fh);
+				if (is_writable($arr[$i])) {
+					if (!is_file($arr[$i]))
+						$fh = fopen($arr[$i], "w");
+					else
+						$fh = fopen($arr[$i], "a");
+					fwrite($fh, $date.strtoupper($tag).": ".$msg."\n");
+					fclose($fh);
+				}
 			}
 		}
 	}
