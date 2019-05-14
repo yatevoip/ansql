@@ -2683,7 +2683,7 @@ class Model
 
 	/**
 	 * Default function that will be reimplemented from objects that will not be in the default database
-	 * @return Array empty from here, Array with identier keys from the derivated classes
+	 * @return Array empty from here, Array with identifier keys from the derivated classes
 	 */ 
 	public function getDbIdentifier()
 	{
@@ -2692,6 +2692,33 @@ class Model
 		return array();
 	}
 
+	/**
+	 * 
+	 * @return array. Returns an array containing all db_identifiers defined in configuration files
+	 */
+	public function getAllDbIdentifiers()
+	{
+		Debug::func_start(__METHOD__,func_get_args(),"framework");
+		
+		$all_db_identifiers = array();
+		
+		$i = 1;
+		while(true) {
+			$index = ($i == 1) ? "" : $i;
+			
+			global ${"db_identifier".$index};
+			if (!isset(${"db_identifier".$index}))
+				break;
+			
+			$all_db_identifiers[] = ${"db_identifier".$index};
+			$i++;
+		}
+		
+		if (!count($all_db_identifiers)) 
+			return array(NULL);
+		
+		return $all_db_identifiers;
+	}
 	/**
 	 * Update the database to match all the models
 	 * @param $skip_default_objects Bool. Default false. If true, just tables will be updated, without calling defaultObject
@@ -2707,62 +2734,80 @@ class Model
 		// We assume there are no changes
 		$error_sql_update = false;
 
-		if (!Database::connect())
-			return false;
-		self::init();
-
 		Debug::Output("------- "._("Entered")." updateAll()");
+	
+		// if no db identifier defined will return array(null)
+		$all_db_identifiers = self::getAllDbIdentifiers();
+		
+		foreach ($all_db_identifiers as $key => $ident) {
 
-		$db_identifier = self::getCurrentDbIdentifier();
-		$default_identifier = self::getDefaultDbIdentifier();
+			if ($key == 0 && !Database::connect())
+				return false;
+			else if ($key > 0 && !Database::switchDatabase($key+1))
+				return false;
+			
+			self::init();
 
-		foreach (self::$_models as $class => $vars)
-		{
-			$object = new $class;
-
-			$identifier = call_user_func(array($object,"getDbIdentifier"));
-			// if object doesn't have identifier and current identier if different than the default => skip
-			// if object has identifier but current identier is not in the object identifiers => skip
-			// even if classes are loaded, they won't be updated
-			// because it would build all tables on call connections
-
-			if ( (!in_array($db_identifier, $identifier) && count($identifier)) || ($default_identifier!=$db_identifier  && !count($identifier)) )
-				continue;
-
-			$table = $object->getTableName();
-			if (!Database::updateTable($table,$vars))
+			$db_identifier = self::getCurrentDbIdentifier();
+			$default_identifier = self::getDefaultDbIdentifier();
+			
+			foreach (self::$_models as $class => $vars)
 			{
-				Debug::xdebug('critical',_("Could not update table of class")." $class");
-				//return false;
-				$error_sql_update = true;
-			}
-			else
-				self::$_modified = true;
-
-			if (!method_exists($object,"index"))
-				continue;
-			if ($index = call_user_func(array($object,"index")))
-				Database::createIndex($table,$index);
-		}
-
-		if ($error_sql_update) {
-			Debug::trigger_report('critical',_("There were errors when updating your sql structure. Please check above logs for more details."));
-			return false;
-		}
-
-		if(self::$_modified && !$skip_default_objects)
-			foreach(self::$_models as $class => $vars) {
 				$object = new $class;
 
-				$identifier = (method_exists($object,"getDbIdentifier")) ? call_user_func(array($object,"getDbIdentifier")) : null;
+				$identifier = call_user_func(array($object,"getDbIdentifier"));
+				//if object doesn't have identifier consider identifier to be the first one defined in config.php (or null if not in config.php)
+				if (!count($identifier) && $all_db_identifiers[0])
+					$identifier = array($all_db_identifiers[0]);
+				
+				// if object doesn't have identifier and current identier is different than the default => skip
+				// if object has identifier but current identier is not in the object identifiers => skip
+				// even if classes are loaded, they won't be updated
+				// because it would build all tables on call connections
 
-				if ( (!in_array($db_identifier, $identifier) && count($identifier)) || ($default_identifier!=$db_identifier  && !count($identifier)))
+				if ( (!in_array($db_identifier, $identifier) && count($identifier)) || ($default_identifier!=$db_identifier  && !count($identifier)) )
 					continue;
-				if(method_exists($object, "defaultObject"))
-					$res = call_user_func(array($object,"defaultObject"));
+
+				$table = $object->getTableName();
+				if (!Database::updateTable($table,$vars))
+				{
+					Debug::xdebug('critical',_("Could not update table of class")." $class");
+					//return false;
+					$error_sql_update = true;
+				}
+				else
+					self::$_modified = true;
+
+				if (!method_exists($object,"index"))
+					continue;
+				if ($index = call_user_func(array($object,"index")))
+					Database::createIndex($table,$index);
 			}
 
+			if ($error_sql_update) {
+				Debug::trigger_report('critical',_("There were errors when updating your sql structure. Please check above logs for more details."));
+				return false;
+			}
 
+			if(self::$_modified && !$skip_default_objects)
+				foreach(self::$_models as $class => $vars) {
+					$object = new $class;
+
+					$identifier = (method_exists($object,"getDbIdentifier")) ? call_user_func(array($object,"getDbIdentifier")) : null;
+					//if object doesn't have identifier consider identifier to be the first one defined in config.php (or null if not in config.php)
+					if (!count($identifier) && $all_db_identifiers[0])
+						$identifier = array($all_db_identifiers[0]);
+					
+					if ((!in_array($db_identifier, $identifier) && count($identifier)) || ($default_identifier!=$db_identifier  && !count($identifier)))
+						continue;
+					if(method_exists($object, "defaultObject"))
+						$res = call_user_func(array($object,"defaultObject"));
+				}
+		}
+
+		if ($db_identifier != $all_db_identifiers[0])
+			Database::switchDatabase();
+		
 		return true;
 	}
 
