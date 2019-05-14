@@ -435,7 +435,8 @@ class Debug
 				print "<br/>\n<br/>\n$msg<br/>\n<br/>\n";
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
-				if (is_writable($arr[$i])) {
+				// check that file is writtable or if output would be stdout (force_update in cli mode)
+				if (is_writable($arr[$i]) || $arr[$i]=="php://stdout") {
 					if (!is_file($arr[$i]))
 						$fh = fopen($arr[$i], "w");
 					else
