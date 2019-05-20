@@ -214,7 +214,7 @@ function note($note, $encode=true)
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	
 	$note = ($encode) ? htmlentities($note) : $note;
-	print 'Note!! '.htmlentities($note).'<br/>';
+	print 'Note! '.htmlentities($note).'<br/>';
 }
 
 /**
@@ -227,7 +227,7 @@ function errornote($text, $encode=true)
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	
 	$text = ($encode) ? htmlentities($text) : $text;
-	print "<br/><font color=\"red\" style=\"font-weight:bold;\" > Error!!</font> <font style=\"font-weight:bold;\">".$text."</font><br/>";
+	print "<br/><font color=\"red\" style=\"font-weight:bold;\" > Error!</font> <font style=\"font-weight:bold;\">".$text."</font><br/>";
 }
 
 /**
@@ -299,7 +299,7 @@ function errormess($text, $path=NULL, $return_text="Go back to application", $en
 
 	$text = ($encode) ? htmlentities($text) : $text;
 	print '<div class="notice error">'."\n";
-	print "<font class=\"error\"> Error!!</font>"."\n";
+	print "<font class=\"error\"> Error!</font>"."\n";
 	print "<font style=\"font-weight:bold;\">". $text ."</font>"."\n";
 
 	if ($path == 'no') {
@@ -332,7 +332,7 @@ function notice($message, $next_cb=NULL, $no_error = true, $encode=true)
 	if ($no_error)
 		print '<div class="notice">'.$message.'</div>';
 	else
-		print '<div class="notice error"><font class="error">Error!! </font>'.$message.'</div>';
+		print '<div class="notice error"><font class="error">Error! </font>'.$message.'</div>';
 
 	if ($next_cb != "no" && is_callable($next_cb))
 		call_user_func($next_cb);
@@ -1163,7 +1163,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		print '</tr>';
 		return;
 	}
-
+	// this is used for fields that must always remian hidden (ex: module, method ..)
+	// use trigger_by and not display:hidden - if you need to make a field hidden and then to use show/hide() JS functions to display/hide it
 	if ($display=="hidden") {
 		print '<input class="'.$css.'" type="'.$display.'" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';		
 		print " value=".html_quotes_escape($value);

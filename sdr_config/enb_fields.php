@@ -1048,7 +1048,7 @@ Default is yes for all.
 	}						
 
 	if (isset($_SESSION["enb_fields"]["error_get_net_interfaces"])) {
-		$enodeb_params["core"]["gtp"]["error_get_network"] = array("display"=>"message", "value"=> "<div class=\"notice\"><font class=\"error\">Error!! </font><font style=\"font-weight:bold;\">".$_SESSION["enb_fields"]["error_get_net_interfaces"]. " Please fix the error before setting the addresses.</font></div>");
+		$enodeb_params["core"]["gtp"]["error_get_network"] = array("display"=>"message", "value"=> "<div class=\"notice\"><font class=\"error\">Error! </font><font style=\"font-weight:bold;\">".$_SESSION["enb_fields"]["error_get_net_interfaces"]. " Please fix the error before setting the addresses.</font></div>");
 	} else {
 		$gtp_ipv4 = $ipv4;
 		// add "all interfaces" IPv4 IP and label

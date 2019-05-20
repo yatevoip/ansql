@@ -1783,7 +1783,7 @@ If a string is provided it will replace default domain mnc<NNN>.mcc<NNN>.gprs"
 	}						
 
 	if (isset($_SESSION["ybts_fields"]["error_get_net_interfaces"])) {
-		$enodeb_params["core"]["roaming"]["error_get_network"] = array("display"=>"message", "value"=> "<div class=\"notice\"><font class=\"error\">Error!! </font><font style=\"font-weight:bold;\">".$_SESSION["ybts_fields"]["error_get_net_interfaces"]. " Please fix the error before setting the addresses.</font></div>");
+		$enodeb_params["core"]["roaming"]["error_get_network"] = array("display"=>"message", "value"=> "<div class=\"notice\"><font class=\"error\">Error! </font><font style=\"font-weight:bold;\">".$_SESSION["ybts_fields"]["error_get_net_interfaces"]. " Please fix the error before setting the addresses.</font></div>");
 	} else {
 		$interfaces_ips["custom"] = "Custom >>";
 		$fields["core"]["roaming"]["my_sip"][0] = $interfaces_ips;
