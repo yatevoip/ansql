@@ -5343,7 +5343,10 @@ function translate_json_err_codes()
  */
 function str_to_arr($str, $delimiter=",", $extra="trim")
 {
-	$arr = (strlen($str)) ? explode($delimiter, $str) : array();
+	if (!is_array($str))
+		$arr = (strlen($str)) ? explode($delimiter, $str) : array();
+	else
+		$arr = $str;
 	if ($extra && is_callable($extra))
 		$arr = array_map($extra, $arr);
 	
