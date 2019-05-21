@@ -2696,7 +2696,7 @@ class Model
 	 * 
 	 * @return array. Returns an array containing all db_identifiers defined in configuration files
 	 */
-	public function getAllDbIdentifiers()
+	static function getAllDbIdentifiers()
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 		
