@@ -17,7 +17,7 @@
 
 require_once("debug.php");
 
-function make_request($out, $request=null, $response_is_array=true, $recursive=true)
+function make_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -36,10 +36,10 @@ function make_request($out, $request=null, $response_is_array=true, $recursive=t
 	if (isset($out["params"]) && is_callable("transform_request_params"))
 		transform_request_params($out["params"]);
 
-	return $func($out,$request,$response_is_array,$recursive);
+	return $func($out,$request,$response_is_array,$recursive,$wrap_printed_error);
 }
 
-function make_direct_request($out, $request=null, $response_is_array=true, $recursive=true)
+function make_direct_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -86,7 +86,7 @@ function build_request_url(&$out,&$request)
 	return $url;
 }
 
-function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true)
+function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -207,13 +207,18 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 			// if there are comments added to the end of a valid JSON
 			// remove the comment so that the JSON is parsed correctly
 			// and write a warning to the user 
-			// Ex.: "{"code":0,"status":{"operational":false,"level":"MILD","state":"Disconnected"},"version":"unknown"} // Not writeable /var/log/json_api"
+			// Ex.: '{"code":0,"status":{"operational":false,"level":"MILD","state":"Disconnected"},"version":"unknown"} // Not writeable /var/log/json_api'
+			//	or
+			//	'{"code":0,"locked":[]} // Not writeable /var/log/json_api'
 			if (($trail = strrchr($ret, "}")) !== false && strlen($trail)>1) {
 				$trail = substr($trail,1);
 				$ret = substr($ret,0,-strlen($trail));
 				$trail = trim($trail);
 				if (strlen($trail)) {
-					$err = "<div class=\"notice error\">The JSON received from $url was invalid. Please fix the error: ".$trail."</div>";
+					$pref = ($wrap_printed_error) ? "<div class=\"notice error\">" : "";
+					$suf  = ($wrap_printed_error) ? "</div>" : "";
+					
+					$err  = $pref . "The JSON received from $url was invalid. Please fix the error: ".$trail . $suf;
 					if (!is_array($displayed_errors))
 						$displayed_errors = array();
 					if (!in_array($err, $displayed_errors)) {
