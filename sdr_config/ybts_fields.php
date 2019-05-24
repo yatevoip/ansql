@@ -1358,13 +1358,13 @@ Defaults to 5000",
 			),
 			"sms.timeout" => array(
 				"display" => "text",
-				"value" => "300000",
+				"value" => "30000",
 				"comment" => "Interval, in milliseconds, to wait for a MT SMS to complete
 This interval includes paging if needed.
 This parameter can be overridden in the msg.execute message by a 'timeout' parameter.
 This parameter is applied on reload.
 Interval allowed: 5000..600000
-Defaults to 300000",
+Defaults to 30000",
 				"validity"=> array("check_field_validity",5000, 600000)
 			),
 			"ussd.session_timeout" => array(
