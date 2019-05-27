@@ -26,17 +26,17 @@ require_once("check_validity_fields.php");
  */
 abstract class TabbedSettings 
 {
-	protected $error                = "";
-	protected $warnings             = "";
-	protected $current_section      = "";
-	protected $current_subsection   = "";
-	protected $open_tabs            = 1;
-	protected $subsections_advanced = array();
-	protected $menu_css             = "menu";
-	protected $skip_special_params = array();
+	protected $error                         = "";
+	protected $warnings                      = "";
+	protected $current_section               = "";
+	protected $current_subsection            = "";
+	protected $open_tabs                     = 1;
+	protected $subsections_advanced          = array();
+	protected $menu_css                      = "menu";
+	protected $skip_special_params           = array();
 	protected $detected_invalidities_message = "";
-	protected $validated_fields = false;
-
+	protected $validated_fields              = false;
+	protected $return_to_page                = false;
 	protected $title;
 
 	function __construct()
@@ -529,6 +529,40 @@ abstract class TabbedSettings
 		end_form();
 	}
 
+	/**
+	 * View form fields with their values.
+	 */
+	function viewForm($section, $subsection, $error=null, $error_fields=array())
+	{
+		Debug::func_start(__METHOD__, func_get_args(), "tabs");
+
+		$structure       = $this->buildConfSections();
+
+		$response_fields = $this->getApiFields();
+		$default_fields  = $this->getDefaultFields();
+
+		//if the params are not set in ybts get the default values to be displayed
+		if (!$response_fields) { 
+			$fields = $default_fields;
+		} else {
+			$fields = $this->applyRequestFields($response_fields);
+		}
+		
+		foreach ($structure as $m_section=>$data) {
+			foreach ($data as $key=>$m_subsection) {
+				$style = ($m_subsection==$subsection) ? "" : "style='display:none;'";
+				
+				print "<div id=\"$m_subsection\" $style>";
+				if (!isset($fields[$m_section][$m_subsection])) {
+					print "Could not retrieve parameters for $m_subsection. Looking for section $m_section, subsection $m_subsection";
+					print "</div>";
+					continue;
+				}
+				editObject(null, $fields[$m_section][$m_subsection], "Set parameters values for section [$m_subsection].","only_cancel");
+				print "</div>";
+			}
+		}
+	}
 
 	/**
 	 * Displayes the explanation of each subsection. 
@@ -562,7 +596,7 @@ abstract class TabbedSettings
 		foreach ($structure as $section_name=>$subsections) {
 			if ($i>=$this->open_tabs)
 				break;
-			$first_sections[] = strtolower($section_name);
+			$first_sections[] = strtolower(str_replace(" ","_",$section_name));
 			$i++;
 		}
 
@@ -710,6 +744,24 @@ abstract class TabbedSettings
 		<?php
 	}
 
+	// Main method to call to display View form organized in tabs and subtabs
+	function viewTabbedSettings()
+	{
+		Debug::func_start(__METHOD__, func_get_args(), "tabs");
+
+		?>
+		<table class="page" cellspacing="0" cellpadding="0">
+		<tr>
+		    <td class="menu" colspan="2"><?php $this->tabbedMenu();?></td>
+		<tr>
+		    <td class="content_form"><?php $this->viewForm($this->current_section, $this->current_subsection); ?></td>
+		    <td class="content_info"><?php $this->sectionDescriptions(); ?></td>
+		</tr>
+		<tr><td class="page_space" colspan="2"> &nbsp;</td></tr>
+		</table>
+		<?php
+	}
+
 	// Apply form result and display form with succes message or error/warnings
 	function applyFormResults()
 	{
@@ -768,6 +820,15 @@ abstract class TabbedSettings
 				if (!$res[0])
 					$this->error = $res[1];
 			}
+		}
+
+		// for succefully form results return to specific given page
+		// don't display the TAB form in this case 
+		if (!strlen($this->error) && $this->return_to_page) {
+			$this->cleanSession();
+			$message = (!$fields_modified) ? "Finished editing sections. Nothing to update." : "Finished applying configuration.";
+			notice($message, $this->return_to_page);
+			return;
 		}
 
 		?>
