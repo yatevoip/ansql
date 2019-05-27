@@ -35,8 +35,10 @@ require_once("create_radio_band_select_array.php");
  * - a generic function called "check_field_validity" that will test if a field_value is in a specific interval OR if a value respects a regex OR if is a fixed value
  * - a specific function name that will have the last parameter that is the name field that restricts the value of the field checked
  * - a specific function name that has no parameters. This function will implement only the field specific restrictions.
+ * @param $without_working_mode Bool. Default false. If true returns the default fields without the sections that use working mode that is taken from API request
+ * @return $fields Array. Returns the BTS default fields with the specific format
  */
-function get_default_fields_ybts()
+function get_default_fields_ybts($without_working_mode = false)
 {
 	global $request_protocol, $server_name;
 
@@ -1605,6 +1607,8 @@ The IP address of receiving Wireshark, if you use it for real time traces.",
 			)
 		)
 	);
+	if ($without_working_mode)
+		return $fields;
 
 	$sdr_mode = get_working_mode();
 	if ($sdr_mode=="roaming" ||  $sdr_mode=="dataroam") {

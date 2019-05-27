@@ -1,102 +1,132 @@
 <?php
 
-function get_default_fields_enb()
+/**
+ * ybts_fields.php
+ * This file is part of the Yate-BTS Project http://www.yatebts.com
+ *
+ * Copyright (C) 2014-2019 Null Team
+ *
+ * This software is distributed under multiple licenses;
+ * see the COPYING file in the main directory for licensing
+ * information for this specific distribution.
+ *
+ * This use of this software may be subject to additional restrictions.
+ * See the LEGAL file in the main directory for details.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
+/**
+ * This returns the $fields array that consists of the SECTION and SUBSECTIONS for "ENB configuration" module (TAB). The subsections are the actual sections (their name) in enb.conf.
+ * Each of this sections contains an array with each parameter name that can be configured.
+ * Each parameter name has the following caracteristics:
+ * - "display" : select, text, checkbox etc. (the specific type for FORM parameter)
+ * -  array with selected value and all the values allowed
+ * - "comment" the text explaining the field 
+ * - "validity" is an array with the name of the callback function that tests the field validity and arguments of the function
+ * the $enodeb_params will be used in display_pair() from ansql
+ *
+ * @param $without_working_mode Bool. Default false. If true returns the default fields without the sections that use working mode that is taken from API request
+ * @return $fields Array. Returns the BTS default fields with the specific format
+ */ 
+function get_default_fields_enb($without_api_request = false)
 {
 	global $server_name, $request_protocol;
 
-$enodeb_params = array(
-/* "section" => array(
-	"param" => array(  // value to be used in display_pair()
-		$value,
-		"display"  =>"", 
-		"comment"  =>
-		"validity" => ""
-    )*/
-"radio" => array(
-"enodeb" => array(
-    // this configurations will be sent in the 'basic' section when actually sending request to API
-    // they were grouped here because they are unique per enodeb or per enodeb in overlapping coverage area
+	$enodeb_params = array(
+		/* "section" => array(
+				"param" => array(  // value to be used in display_pair()
+					$value,
+					"display"  =>"", 
+					"comment"  =>
+					"validity" => ""
+		)*/
+		"radio" => array(
+			"enodeb" => array(
+				// this configurations will be sent in the 'basic' section when actually sending request to API
+				// they were grouped here because they are unique per enodeb or per enodeb in overlapping coverage area
 
-    "enodebId" => array(
-	"column_name" => " eNodeB ID",
-	"comment" =>"eNodeB ID
+			    "enodebId" => array(
+					"column_name" => " eNodeB ID",
+					"comment" =>"eNodeB ID
 Unique to every eNodeB in the network.
 Must be 5 hex digits for a Macro ENB or 7 hex digits for a Home ENB",	
-	"required" => true,
-	"validity"=> array("check_valid_enodebid")
-	),
+					"required" => true,
+					"validity"=> array("check_valid_enodebid")
+				),
 
-    "MCC" => array(
-	"comment" => "Mobile Country Code part of the PLMN Identity.
+				"MCC" => array(
+					"comment" => "Mobile Country Code part of the PLMN Identity.
 The same for every eNodeB in the network.",
-	"required" => true,
-	"validity" => array("check_field_validity", false, false,"^[0-9]{3}$")
-    ),
+					"required" => true,
+					"validity" => array("check_field_validity", false, false,"^[0-9]{3}$")
+				),
 
-    "MNC" => array(
-	"comment" => "Mobile Network Code part of the PLMN Identity.
+				"MNC" => array(
+					"comment" => "Mobile Network Code part of the PLMN Identity.
 The same for every eNodeB in the network.",
-	"required" => true,
-	"validity" => array("check_field_validity", false, false,"^[0-9]{2,3}$")
-    ),
+					"required" => true,
+					"validity" => array("check_field_validity", false, false,"^[0-9]{2,3}$")
+				),
 
-    "TAC" => array(
-	"comment" => "Tracking Area Code
+				"TAC" => array(
+					"comment" => "Tracking Area Code
 4 digit hex value. Ex: 2A9F
 This value must be set. There is no default.",
-	"required" => true,
-	"validity" => array("check_valid_tac") //array("check_field_validity", 0, 65535)
-    ),
+					"required" => true,
+					"validity" => array("check_valid_tac") //array("check_field_validity", 0, 65535)
+				),
 
-    "CellIdentity" => array(
-	"column_name" => "Cell Identity",
-	"comment" => "Must be 7 hex digits
+				"CellIdentity" => array(
+					"column_name" => "Cell Identity",
+					"comment" => "Must be 7 hex digits
 Ex: 0000001",
-	"required" => true,
-	"validity" => array("validate_cell_identity")
-    ),
+					"required" => true,
+					"validity" => array("validate_cell_identity")
+				),
 
-    "Name" => array(
-	"comment" =>"Human readable eNB Name that is sent to the MME during S1-MME setup.
+				"Name" => array(
+					"comment" =>"Human readable eNB Name that is sent to the MME during S1-MME setup.
 According to 3GPP 36.413, this parameter is optional. 
 If it is set, the MME may use it as a human readable name of the eNB. 
 See paragraphs 8.7.3.2 and 9.1.8.4 of the above referenced specification.",
-	"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 -_]+$")
-    ),
+					"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 -_]+$")
+				),
 
-    "Band" => array(
-	array("1","2","3","4","5","6","7","8","9","10","11","12","13","14","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","selected"=> "1"),
-	"display" => "select_without_non_selected",
-	"required" => true,	
-	"comment" => 'Band selection ("freqBandIndicator" in SIB1)
+				"Band" => array(
+					array("1","2","3","4","5","6","7","8","9","10","11","12","13","14","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","selected"=> "1"),
+					"display" => "select_without_non_selected",
+					"required" => true,	
+					"comment" => 'Band selection ("freqBandIndicator" in SIB1)
 In most systems, this is set by the hardware type and should not be changed.'
-    ),
+				),
 
-    "Bandwidth" => array(
-	array("selected"=>"25", "6","15","25","50","75","100"),
-	"display" => "select_without_non_selected",
-	"comment" => format_comment("
+				"Bandwidth" => array(
+					array("selected"=>"25", "6","15","25","50","75","100"),
+					"display" => "select_without_non_selected",
+					"comment" => format_comment("
 Bandwidth is the LTE radio channel BW, in number of resource blocks
 (in the frequency domain). The allowed values and the corresponding
 bandwidth (in MHz) is listed in the following table:
-   Value (N RBs)  Bandwidth (MHz)
-   -------------  ---------------
-   6              1.4
-   15             3
-   25             5
-   50             10
-   75             15
-   100            20
- A simple formula for calculating the bandwidth in MHz for a given
- number of RBs is: MHz BW = (N_RB * 2) / 10, except for 6 RBs.
- Probably the same for all eNodeBs in a network that are operating in the same band.
-
+Value (N RBs)  Bandwidth (MHz)
+-------------  ---------------
+6              1.4
+15             3
+25             5
+50             10
+75             15
+100            20
+A simple formula for calculating the bandwidth in MHz for a given
+number of RBs is: MHz BW = (N_RB * 2) / 10, except for 6 RBs.
+Probably the same for all eNodeBs in a network that are operating in the same band.
 Example: Bandwidth = 25"),
-	"required" => true
-    ),
+					"required" => true
+				),
 
-    "EARFCN" => array(
-	"comment" => format_comment('Downlink ARFCN
+				"EARFCN" => array(
+					"comment" => format_comment('Downlink ARFCN
 Uplink ARFCN selected automatically based on this downlink.
 Must be compatible with the band selection.
 Probably the same for all eNodeBs in a network that are operating in the same band.
@@ -127,13 +157,13 @@ EARFCN 50620, 2462 MHz, Channel 11 (2.4 GHz WiFi)	2451 - 2473 MHz
 EARFCN 50670, 2467 MHz, Channel 12 (2.4 GHz WiFi)	2456 - 2478 MHz
 EARFCN 50720, 2472 MHz, Channel 13 (2.4 GHz WiFi)	2461 - 2483 MHz
 EARFCN 50840, 2484 MHz, Channel 14 (2.4 GHz WiFi)	2473 - 2495 MHz'),
-	"required" => true,
-	"validity" => array("validate_earfcn_band", "Band", "Bandwidth"),
-    ),
+					"required" => true,
+					"validity" => array("validate_earfcn_band", "Band", "Bandwidth"),
+				),
 
-    "__" => array(
-	"display" => "objtitle",
-	"value" => format_comment("Physical Layer Cell ID 
+				"__" => array(
+					"display" => "objtitle",
+					"value" => format_comment("Physical Layer Cell ID 
 Phy Cell ID = 3*NID1 + NID2,
 NID1 is 0..167
 NID2 is 0..2
@@ -145,565 +175,564 @@ On Access Channels in PRACH screen: RootSequenceIndex
 On Access Channels in PUSCH screen: groupAssignmentPUSCH
 On Access Channels in PUSCH screen: cyclicShift
 On Access Channels in PUCCH screen: n1Pucch-An
-")
-    ),
+					")
+				),
 
-    "NID1" => array(
-	"required" => true,
-	"comment"  => "NID1 is between 0 and 167",
-	"required" => true,
-	"validity" => array("check_field_validity", 0, 167),
-	"javascript" => "onchange='set_cellid_dependencies();'" 
-    ),
-    "NID2" => array(
-	array("0", "1", "2"),
-	"display" => "select_without_non_selected",
-	"required" => true,
-	"javascript" => "onchange='set_cellid_dependencies();'"
-    ),
+				"NID1" => array(
+					"required" => true,
+					"comment"  => "NID1 is between 0 and 167",
+					"required" => true,
+					"validity" => array("check_field_validity", 0, 167),
+					"javascript" => "onchange='set_cellid_dependencies();'" 
+				),
+				"NID2" => array(
+					array("0", "1", "2"),
+					"display" => "select_without_non_selected",
+					"required" => true,
+					"javascript" => "onchange='set_cellid_dependencies();'"
+				),
 
-    "CrestFactor" => array(
-	array("5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20", "selected"=>"12"),
-	"display" => "select_without_non_selected",
-	"comment" => "Estimated crest factor in dB, 5 to 20, default 12.
-Larger value gives higher power output at risk of more interference to adjacent channels."
-    ),
+				"CrestFactor" => array(
+					array("5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20", "selected"=>"12"),
+					"display" => "select_without_non_selected",
+					"comment" => "Estimated crest factor in dB, 5 to 20, default 12.
+					Larger value gives higher power output at risk of more interference to adjacent channels."
+				),
 
-    "DistributedVrbs" => array(
-	"value" => false,
-	"column_name" => "Distributed Virtual Resource Blocks",
-	"display" => "checkbox",
-	"comment" => "Distributed Virtual Resource Blocks
+				"DistributedVrbs" => array(
+					"value" => false,
+					"column_name" => "Distributed Virtual Resource Blocks",
+					"display" => "checkbox",
+					"comment" => "Distributed Virtual Resource Blocks
 Allowed values: false for localized or true for distributed type.
 This option improves multipath performance,
 but limits resource allocations to 16 RBs (2.88 MHz) in systems
 with LTE bandwidth of > 5 MHz.
 Default is false.",
-    )
-),
-"calibration" => array(
-	"auto_calibration" => array(
-	"display" => "checkbox",
-	"value" => "off",
-	"comment" => "Enable auto calibration.
+				)
+			),
+			"calibration" => array(
+				"auto_calibration" => array(
+					"display" => "checkbox",
+					"value" => false,
+					"comment" => "Enable auto calibration.
 This parameter is applied on reload."
-    ),
-	"freqoffs_calibration" => array(
-	"display" => "checkbox",
-	"value" => "off",
-	"comment" => "Enable frequency offset calibration.
+				),
+				"freqoffs_calibration" => array(
+					"display" => "checkbox",
+					"value" => false,
+					"comment" => "Enable frequency offset calibration.
 This parameter is applied on reload."
-    )
-)
-),
+				)
+			)
+		),
 
-"core" => array(
+		"core" => array(
 
-"gtp" => array(
+			"gtp" => array(
 
-    "error_get_network" => array(
-		"display" => "message",
-		"column_name"=> "",
-		"value" => ""
-	),	
-    "addr4" => array(
-		"column_name" => "Local addres IPv4",
-		"comment" => "IPv4 address to use with the eNodeB tunnel end",
-	),
+				"error_get_network" => array(
+					"display" => "message",
+					"column_name"=> "",
+					"value" => ""
+				),	
+				"addr4" => array(
+					"column_name" => "Local addres IPv4",
+					"comment" => "IPv4 address to use with the eNodeB tunnel end",
+				),
 
-    "addr6" => array(
-		"column_name" => "Local address IPv6",
-		"comment" => "IPv6 address to use with the eNodeB tunnel end",
-	),
-),
+				"addr6" => array(
+					"column_name" => "Local address IPv6",
+					"comment" => "IPv6 address to use with the eNodeB tunnel end",
+				),
+			),
 
-"mme" => array(
+			"mme" => array(
 
-    "__" => array(
-	"value" => "Hand-configured MME",
-	"display" => "objtitle"
-    ),
+				"__" => array(
+					"value" => "Hand-configured MME",
+					"display" => "objtitle"
+				),
 
-    "mme_address" => array(
-	"column_name" => "MME remote IPv4 address",
-	"comment" => "Ex: 192.168.56.62",
-    ),
-    "local" => array(
-	"column_name" => "eNodeB local IPv4 address",
-	"comment" => "Ex: 192.168.56.1",
-    ),
-    "streams" => array(
-	"comment" => "Ex: 5",
-    ),
-    "dscp" => array(
-	"column_name" => "DSCP",
-	"comment" => "Ex: expedited"
-    ),
-    "add_mme_1" => array("value"=>"<a id=\"add_mme_1\" class='llink' onclick=\"fields_another_obj(2, 'add_mme_');\">Add another MME</a>", "display"=>"message"),
+   				"mme_address" => array(
+					"column_name" => "MME remote IPv4 address",
+					"comment" => "Ex: 192.168.56.62",
+    			),
+				"local" => array(
+					"column_name" => "eNodeB local IPv4 address",
+					"comment" => "Ex: 192.168.56.1",
+    			),
+				"streams" => array(
+					"comment" => "Ex: 5",
+    			),
+    			"dscp" => array(
+					"column_name" => "DSCP",
+					"comment" => "Ex: expedited"
+    			),
+    			"add_mme_1" => array("value"=>"<a id=\"add_mme_1\" class='llink' onclick=\"fields_another_obj(2, 'add_mme_');\">Add another MME</a>", "display"=>"message"),
 
+				"objtitle2" => array("display"=>"objtitle", "triggered_by"=>"2", "value"=>"2<sup>nd</sup> MME"),
 
-    "objtitle2" => array("display"=>"objtitle", "triggered_by"=>"2", "value"=>"2<sup>nd</sup> MME"),
+				"mme_address_2" => array(
+					"column_name" => "MME remote IPv4 address",
+					"comment" => "Ex: 192.168.56.62",
+					"triggered_by" => "2",
+    			),
+    			"local_2" => array(
+					"column_name" => "eNodeB local IPv4 address",
+					"comment" => "Ex: 192.168.56.1",
+					"triggered_by" => "2",
+    			),
+    			"streams_2" => array(
+					"column_name" => "Streams",
+					"comment" => "Ex: 5",
+					"triggered_by" => "2",
+				),
+    			"dscp_2" => array(
+					"column_name" => "DSCP",
+					"comment" => "Ex: expedited",
+					"triggered_by" => "2"
+    			),
+    			"add_mme_2" => array("value"=>"<a id=\"add_mme_2\" class='llink' onclick=\"fields_another_obj(3, 'add_mme_');\">Add another MME</a>", "display"=>"message", "triggered_by" => "2"),
 
-    "mme_address_2" => array(
-	"column_name" => "MME remote IPv4 address",
-	"comment" => "Ex: 192.168.56.62",
-	"triggered_by" => "2",
-    ),
-    "local_2" => array(
-	"column_name" => "eNodeB local IPv4 address",
-	"comment" => "Ex: 192.168.56.1",
-	"triggered_by" => "2",
-    ),
-    "streams_2" => array(
-	"column_name" => "Streams",
-	"comment" => "Ex: 5",
-	"triggered_by" => "2",
-    ),
-    "dscp_2" => array(
-	"column_name" => "DSCP",
-	"comment" => "Ex: expedited",
-	"triggered_by" => "2"
-    ),
-    "add_mme_2" => array("value"=>"<a id=\"add_mme_2\" class='llink' onclick=\"fields_another_obj(3, 'add_mme_');\">Add another MME</a>", "display"=>"message", "triggered_by" => "2"),
+				"objtitle3" => array("display"=>"objtitle", "triggered_by"=>"3", "value"=>"3<sup>rd</sup> MME"),
 
-    "objtitle3" => array("display"=>"objtitle", "triggered_by"=>"3", "value"=>"3<sup>rd</sup> MME"),
+			    "mme_address_3" => array(
+					"column_name" => "MME remote IPv4 address",
+					"comment" => "Ex: 192.168.56.62",
+					"triggered_by" => "3",
+    			),
+				"local_3" => array(
+					"column_name" => "eNodeB local IPv4 address",
+					"comment" => "Ex: 192.168.56.1",
+					"triggered_by" => "3",
+				),
+				"streams_3" => array(
+					"column_name" => "Streams",
+					"comment" => "Ex: 5",
+					"triggered_by" => "3",
+				),
+				"dscp_3" => array(
+					"column_name" => "DSCP",
+					"comment" => "Ex: expedited",
+					"triggered_by" => "3"
+				),
+				"add_mme_3" => array("value"=>"<a id=\"add_mme_3\" class='llink' onclick=\"fields_another_obj(4, 'add_mme_');\">Add another MME</a>", "display"=>"message", "triggered_by" => "3"),
 
-    "mme_address_3" => array(
-	"column_name" => "MME remote IPv4 address",
-	"comment" => "Ex: 192.168.56.62",
-	"triggered_by" => "3",
-    ),
-    "local_3" => array(
-	"column_name" => "eNodeB local IPv4 address",
-	"comment" => "Ex: 192.168.56.1",
-	"triggered_by" => "3",
-    ),
-    "streams_3" => array(
-	"column_name" => "Streams",
-	"comment" => "Ex: 5",
-	"triggered_by" => "3",
-    ),
-    "dscp_3" => array(
-	"column_name" => "DSCP",
-	"comment" => "Ex: expedited",
-	"triggered_by" => "3"
-    ),
-    "add_mme_3" => array("value"=>"<a id=\"add_mme_3\" class='llink' onclick=\"fields_another_obj(4, 'add_mme_');\">Add another MME</a>", "display"=>"message", "triggered_by" => "3"),
+				"objtitle4" => array("display"=>"objtitle", "triggered_by"=>"4", "value"=>"4<sup>th</sup> MME"),
 
-    "objtitle4" => array("display"=>"objtitle", "triggered_by"=>"4", "value"=>"4<sup>th</sup> MME"),
+			    "mme_address_4" => array(
+					"column_name" => "MME remote IPv4 address",
+					"comment" => "Ex: 192.168.56.62",
+					"triggered_by" => "4",
+				),
+				"local_4" => array(
+					"column_name" => "eNodeB local IPv4 address",
+					"comment" => "Ex: 192.168.56.1",
+					"triggered_by" => "4",
+				),
+				"streams_4" => array(
+					"column_name" => "Streams",
+					"comment" => "Ex: 5",
+					"triggered_by" => "4",
+			    ),
+				"dscp_4" => array(
+					"column_name" => "DSCP",
+					"comment" => "Ex: expedited",
+					"triggered_by" => "4"
+				),
+				"add_mme_4" => array("value"=>"<a id=\"add_mme_4\" class='llink' onclick=\"fields_another_obj(5, 'add_mme_');\">Add another MME</a>", "display"=>"message", "triggered_by" => "4"),
 
-    "mme_address_4" => array(
-	"column_name" => "MME remote IPv4 address",
-	"comment" => "Ex: 192.168.56.62",
-	"triggered_by" => "4",
-    ),
-    "local_4" => array(
-	"column_name" => "eNodeB local IPv4 address",
-	"comment" => "Ex: 192.168.56.1",
-	"triggered_by" => "4",
-    ),
-    "streams_4" => array(
-	"column_name" => "Streams",
-	"comment" => "Ex: 5",
-	"triggered_by" => "4",
-    ),
-    "dscp_4" => array(
-	"column_name" => "DSCP",
-	"comment" => "Ex: expedited",
-	"triggered_by" => "4"
-    ),
-    "add_mme_4" => array("value"=>"<a id=\"add_mme_4\" class='llink' onclick=\"fields_another_obj(5, 'add_mme_');\">Add another MME</a>", "display"=>"message", "triggered_by" => "4"),
+				"objtitle5" => array("display"=>"objtitle", "triggered_by"=>"5", "value"=>"5<sup>th</sup> MME"),
 
-    "objtitle5" => array("display"=>"objtitle", "triggered_by"=>"5", "value"=>"5<sup>th</sup> MME"),
+				"mme_address_5" => array(
+				"column_name" => "MME remote IPv4 address",
+					"comment" => "Ex: 192.168.56.62",
+					"triggered_by" => "5",
+			    ),
+			    "local_5" => array(
+					"column_name" => "eNodeB local IPv4 address",
+					"comment" => "Ex: 192.168.56.1",
+					"triggered_by" => "5",
+			    ),
+			    "streams_5" => array(
+					"column_name" => "Streams",
+					"comment" => "Ex: 5",
+					"triggered_by" => "5",
+				),
+				"dscp_5" => array(
+					"column_name" => "DSCP",
+					"comment" => "Ex: expedited",
+					"triggered_by" => "5"
+    			)
+			),
 
-    "mme_address_5" => array(
-	"column_name" => "MME remote IPv4 address",
-	"comment" => "Ex: 192.168.56.62",
-	"triggered_by" => "5",
-    ),
-    "local_5" => array(
-	"column_name" => "eNodeB local IPv4 address",
-	"comment" => "Ex: 192.168.56.1",
-	"triggered_by" => "5",
-    ),
-    "streams_5" => array(
-	"column_name" => "Streams",
-	"comment" => "Ex: 5",
-	"triggered_by" => "5",
-    ),
-    "dscp_5" => array(
-	"column_name" => "DSCP",
-	"comment" => "Ex: expedited",
-	"triggered_by" => "5"
-    )
-),
+			"s1ap" => array(
+			)
 
-"s1ap" => array(
-)
+		),
 
-),
-
-"hardware" => array(
-"site_info" => array(
-    "location" => array(
-	"column_name" => "Site location",
-	"comment" => "No default is provided
+		"hardware" => array(
+			"site_info" => array(
+				"location" => array(
+					"column_name" => "Site location",
+					"comment" => "No default is provided
 Latitude, longitude
 ddd.dddddd,ddd.dddddd format",
-	"validity" => array("check_valid_geolocation")
-    ),
-    "siteName" => array(
-	"column_name" => "Site name"
-    ),
-    "antennaDirection" => array(
-	"column_name" => "Antenna direction",
-	"comment" => "The direction the antenna is pointed, in degrees from true north.
+					"validity" => array("check_valid_geolocation")
+				),
+				"siteName" => array(
+					"column_name" => "Site name"
+				),
+				"antennaDirection" => array(
+					"column_name" => "Antenna direction",
+					"comment" => "The direction the antenna is pointed, in degrees from true north.
 No default is provided",
-	"validity" => array("check_valid_float")
-    ),
-    "antennaBeamwidth" => array(
-	"value" => "360",
-	"column_name" => "Antenna beam width",
-	"comment" => "Default is omni, 360 degrees",
-	"validity" => array("check_field_validity", 1, 360)
-    ),
-    "reportingPeriod" => array(
-	"value" => 15,
-	"column_name" => "Reporting period",
-	"comment" => "Reporting period in minutes for HW status. 
+					"validity" => array("check_valid_float")
+				),
+				"antennaBeamwidth" => array(
+					"value" => "360",
+					"column_name" => "Antenna beam width",
+					"comment" => "Default is omni, 360 degrees",
+					"validity" => array("check_field_validity", 1, 360)
+				),
+				"reportingPeriod" => array(
+					"value" => 15,
+					"column_name" => "Reporting period",
+					"comment" => "Reporting period in minutes for HW status. 
 Default is 15 minutes",
-	"validity" => array("check_valid_integer")
-    ),
-),
-"site_equipment" => array(
-    "antenna_type"=> array(
-	"comment" => "String"
-    ),
-    "antenna_serial_number"=> array(
-	"comment" => "String"
-    ),
-    "antenna_cable_type"=> array(
-	"comment" => "String"
-    ),
-    "antenna_cable_length"=> array(
-	"comment" => "String"
-    ),
-    "power_suply_type"=> array(
-	"comment" => "String"
-    ),
-    "power_suply_serial_number"=> array(
-	"comment" => "String"
-    ),
-    "custom_parameters" => array(
-	"display" => "textarea",
-	"comment" => "Custom parameters that will be stored on the equipment. 
+					"validity" => array("check_valid_integer")
+				),
+			),
+			"site_equipment" => array(
+				"antenna_type"=> array(
+					"comment" => "String"
+				),
+				"antenna_serial_number"=> array(
+					"comment" => "String"
+				),
+				"antenna_cable_type"=> array(
+					"comment" => "String"
+				),
+				"antenna_cable_length"=> array(
+					"comment" => "String"
+				),
+				"power_suply_type"=> array(
+					"comment" => "String"
+				),
+				"power_suply_serial_number"=> array(
+					"comment" => "String"
+				),
+				"custom_parameters" => array(
+					"display" => "textarea",
+					"comment" => "Custom parameters that will be stored on the equipment. 
 They are not used in configuration but are kept for informative purpose.
 They are stored in key=value form. The keys should not match any of the above keys.
 Ex:
 antenna_serial_number2=342134
 antenna_cable_length2=0.5
 "
-    ),
-),
-"shutdown" => array(
-    "maxVswr" => array(
-	"value" => "1.5",
-	"comment" => "VSWR level for automatic shutdown of the power amplifier if the RF feed is damaged.
+				),
+			),
+			"shutdown" => array(
+				"maxVswr" => array(
+					"value" => "1.5",
+					"comment" => "VSWR level for automatic shutdown of the power amplifier if the RF feed is damaged.
 Default is 1.5",
-	"validity" => array("check_valid_float")
-    ),
-    "amplifierShutdownTemp" => array(
-	"value" => 80,
-	"comment" => "Transistor temperature in deg C for safety shutdown of the power amplifier. 
+					"validity" => array("check_valid_float")
+				),
+				"amplifierShutdownTemp" => array(
+					"value" => 80,
+					"comment" => "Transistor temperature in deg C for safety shutdown of the power amplifier. 
 Default is 80.",
-	"validity" => array("check_field_validity", 1, 85)
-    ),
-    "amplifierRestartTemp" => array(
-	"value" => 70,
-	"comment" => "Default is 70.",
-	"validity" => array("check_field_validity", 1, 85)
-    ),
-    "powerSupplyShutdownTemp" => array(
-	"value" => 85,
-	"comment" => "Transformer temperature in deg C for safety shutdown of power supply sections.
+					"validity" => array("check_field_validity", 1, 85)
+				),
+				"amplifierRestartTemp" => array(
+					"value" => 70,
+					"comment" => "Default is 70.",
+					"validity" => array("check_field_validity", 1, 85)
+				),
+				"powerSupplyShutdownTemp" => array(
+					"value" => 85,
+					"comment" => "Transformer temperature in deg C for safety shutdown of power supply sections.
 Default is 85",
-	"validity" => array("check_field_validity", 1, 85)
-    ),
-    "powerSupplyRestartTemp" => array(
-	"value" => 75,
-	"comment" => "Default 75.",
-	"validity" => array("check_field_validity", 1, 85)
-    ),
-    "softwareShutdownTemp" => array(
-	"value" => 100,
-	"comment" => "CPU core temperature for shutdown of the SatSite
+					"validity" => array("check_field_validity", 1, 85)
+				),
+				"powerSupplyRestartTemp" => array(
+					"value" => 75,
+					"comment" => "Default 75.",
+					"validity" => array("check_field_validity", 1, 85)
+				),
+				"softwareShutdownTemp" => array(
+					"value" => 100,
+					"comment" => "CPU core temperature for shutdown of the SatSite
 If the temperature exceeds this level, all digital radio processing functions are suspended. Default 100.",
-	"validity" => array("check_field_validity", 1, 100)
-    ),
-    "softwareRestartTemp" => array(
-	"value" => 80,
-	"comment" => "Default 80",
-	"validity" => array("check_field_validity", 1, 85)
-    )
-),
-),
+					"validity" => array("check_field_validity", 1, 100)
+				),
+				"softwareRestartTemp" => array(
+					"value" => 80,
+					"comment" => "Default 80",
+					"validity" => array("check_field_validity", 1, 85)
+				)
+			),
+		),
 
-"system" => array(
-"system_information" => array(
-    // System Information repetition parameters and Paging parameters
-    // This params will be sent in "basic" section when sending request to API
+		"system" => array(
+			"system_information" => array(
+				// System Information repetition parameters and Paging parameters
+				// This params will be sent in "basic" section when sending request to API
 
-    "SiWindowLength" => array(
-	array("1","2","5","10","15","20","40", "selected"=>"20"),
-	"display" => "select_without_non_selected",
-	"comment" => "RRC System Information Window Length in milliseconds (subframes)."
-    ),
+				"SiWindowLength" => array(
+					array("1","2","5","10","15","20","40", "selected"=>"20"),
+					"display" => "select_without_non_selected",
+					"comment" => "RRC System Information Window Length in milliseconds (subframes)."
+				),
 
-    "SiPeriodicity" => array(
-	array("8","16","32","64","128","256","512", "selected"=>"8"),
-	"display" => "select_without_non_selected",
-	"comment" => "Scheduler System Information Periodicity in frames."
-    ),
+				"SiPeriodicity" => array(
+					array("8","16","32","64","128","256","512", "selected"=>"8"),
+					"display" => "select_without_non_selected",
+					"comment" => "Scheduler System Information Periodicity in frames."
+				),
 
-    "SiRedundancy" => array(
-	array("1","2","3","4","5","6","7","8", "selected"=> "2"),
-	"display" => "select_without_non_selected",
-	"comment" => "Scheduler SI Redundancy. Should be larger for cell with large coverage area."
-    ),
+				"SiRedundancy" => array(
+					array("1","2","3","4","5","6","7","8", "selected"=> "2"),
+					"display" => "select_without_non_selected",
+					"comment" => "Scheduler SI Redundancy. Should be larger for cell with large coverage area."
+				),
 
-    "defaultPagingCycle" => array(
-	array("32","64","126","256","selected"=>"32"),
-	"display" => "select_without_non_selected",
-	"comment" => "RRC default paging cycle",
-    ),
-    
-    "nB" => array(
-	array("0", "32", "64", "128", "256", "512", "1024", "2048", "4096", "selected"=>"512"),
-	"display" => "select_without_non_selected",
-	"comment" => "RRC paging nB parameter x1000"
-    ),
-		
-    "TxGain2" => array(
-	array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"25"),
-	"display" => "select_without_non_selected",
-	"comment" => "TX post-mixer gain in dB.
+				"defaultPagingCycle" => array(
+					array("32","64","126","256","selected"=>"32"),
+					"display" => "select_without_non_selected",
+					"comment" => "RRC default paging cycle",
+				),
+
+				"nB" => array(
+					array("0", "32", "64", "128", "256", "512", "1024", "2048", "4096", "selected"=>"512"),
+					"display" => "select_without_non_selected",
+					"comment" => "RRC paging nB parameter x1000"
+				),
+
+				"TxGain2" => array(
+					array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"25"),
+					"display" => "select_without_non_selected",
+					"comment" => "TX post-mixer gain in dB.
 \"Naked\" BladeRFor Lab Kit: 25 dB.
-SatSite: 11 dB"
-    ),
-    
-    "RxGain1" => array(
-	array("5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"5"),
-	"display" => "select_without_non_selected",
-	"comment" => "Rx pre-mixer gain in dB.
+					SatSite: 11 dB"
+				),
+
+				"RxGain1" => array(
+					array("5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"5"),
+					"display" => "select_without_non_selected",
+					"comment" => "Rx pre-mixer gain in dB.
 \"Naked\" BladeRF or Lab Kit: 5 dB"
-    ),
-    
-    "RxGain2" => array(
-	array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"5"),
-	"display" => "select_without_non_selected",
-	"comment" => "Rx post-mixer gain in dB.
+				),
+
+				"RxGain2" => array(
+					array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"5"),
+					"display" => "select_without_non_selected",
+					"comment" => "Rx post-mixer gain in dB.
 \"Naked\" BladeRF or Lab Kit: 5 dB"
-    ),
-    
-    'referenceSignalPower' => array(
-	"value" => -20,
-	"comment" => 'Total power transmitted in CSRS.
+				),
+
+				'referenceSignalPower' => array(
+					"value" => -20,
+					"comment" => 'Total power transmitted in CSRS.
 Actual value in dBm, range -50 to +60
 Depends on hardware, crest factor adjustment and TX gain settings
 "Naked" BladeRF, default settings: -34
 LabKit: -20
 SatSite: 20',
-	"validity" => array("check_field_validity",-60,50)
-    ),
-    
-    "activity_timeout" => array(
-	"value" => 10000,
-	"comment" => "Timeout interval (in milliseconds) for detecting user inactivity on radio connection 
+					"validity" => array("check_field_validity",-60,50)
+				),
+
+				"activity_timeout" => array(
+					"value" => 10000,
+					"comment" => "Timeout interval (in milliseconds) for detecting user inactivity on radio connection 
 Defaults to 10 seconds.",
-	// tried to guess possible validation. No validation in code
-	"validity" => array("check_field_validity", 500, 500000)
-    ),
-    
-    "T302" => array(
-	"value" => 5,
-	"comment" => "T302: integer: Value of RRC T302 timer in seconds
+					// tried to guess possible validation. No validation in code
+					"validity" => array("check_field_validity", 500, 500000)
+				),
+
+				"T302" => array(
+					"value" => 5,
+					"comment" => "T302: integer: Value of RRC T302 timer in seconds
 Provided by the enodeB to the UE in a RRC connection reject
 Defaults to 5 seconds.",
-	"validity" => array("check_valid_integer")
-    )
-),
+					"validity" => array("check_valid_integer")
+				)
+			),
 
-"scheduler" => array(
+			"scheduler" => array(
 
-	"SpecialRntiCodeEfficiency" => array(
-		 "value" => "0.0625",
-		 "comment" => "SpecialRntiCodeEfficiency: float: The bits/element for DL special RNTI messages (SIBs, paging, RAR).
+				"SpecialRntiCodeEfficiency" => array(
+					"value" => "0.0625",
+					"comment" => "SpecialRntiCodeEfficiency: float: The bits/element for DL special RNTI messages (SIBs, paging, RAR).
 Default 0.0652.
 NOTE: This value will be increased automatically if a message can not be scheduled.",
-	 	 "validity" => array("check_SpecialRntiCodingEfficiency")
-	 ),
-	"SpecialDCI" => array(
-		array("dci1a","dci1c","selected"=>"dci1c"),
-		"display" => "select_without_non_selected",
-		"comment" => "The DCI format for special RNTI's RA-RNTI, P-RNTI, SI-RNTI",
-		"column_name" => "DCI for S-RNTI"
-	),
-    
-	"retxBSR-Timer" => array(
-		array("sf320", "sf640", "sf1280", "sf2560", "sf5120", "sf10240", "selected"=>"sf1280"),
-		"display" => "select_without_non_selected",
-		"comment" => "Retransmission BSR timer
+					"validity" => array("check_SpecialRntiCodingEfficiency")
+				),
+				"SpecialDCI" => array(
+					array("dci1a","dci1c","selected"=>"dci1c"),
+					"display" => "select_without_non_selected",
+					"comment" => "The DCI format for special RNTI's RA-RNTI, P-RNTI, SI-RNTI",
+					"column_name" => "DCI for S-RNTI"
+				),
+
+				"retxBSR-Timer" => array(
+					array("sf320", "sf640", "sf1280", "sf2560", "sf5120", "sf10240", "selected"=>"sf1280"),
+					"display" => "select_without_non_selected",
+					"comment" => "Retransmission BSR timer
 After how many subframes the UE should send a new BSR should it receive no allocation.
 Value in subframes.
 Default is sf1280."
-	),
+				),
 
-	"periodicBSR-Timer" => array(
-		array("sf5", "sf10", "sf16", "sf20", "sf32", "sf40", "sf64", "sf80", "sf128", "sf160", "sf320", "sf640", "sf1280", "sf2560", "infinity", "selected"=>"infinity"),
-		"display" => "select_without_non_selected",
-		"comment" => "Periodic BSR timer
+				"periodicBSR-Timer" => array(
+					array("sf5", "sf10", "sf16", "sf20", "sf32", "sf40", "sf64", "sf80", "sf128", "sf160", "sf320", "sf640", "sf1280", "sf2560", "infinity", "selected"=>"infinity"),
+					"display" => "select_without_non_selected",
+					"comment" => "Periodic BSR timer
 At which interval UE should send BSR even if it has no new data.
 Value is in subframes.
 Default is infinity."
-	),
-    
-	"GapType" => array(
-		array("1","2","selected"=>"1"),
-		"display" => "select_without_non_selected",
-		"comment" => "Parameter Ngap from DCI, currently set as system wide configuration; corresponds to Ngap,1/Ngap,2"
-	),
-)
-),
+				),
+
+				"GapType" => array(
+					array("1","2","selected"=>"1"),
+					"display" => "select_without_non_selected",
+					"comment" => "Parameter Ngap from DCI, currently set as system wide configuration; corresponds to Ngap,1/Ngap,2"
+				),
+			)
+		),
 
 
-"access_channels" => array(
+		"access_channels" => array(
 
-"pusch" => array(
-    // This params will be sent in "basic" section when sending request to API
+			"pusch" => array(
+				// This params will be sent in "basic" section when sending request to API
 
-    "groupAssignmentPUSCH"  => array(
-	array("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29", "selected" => "0"),
-	"display" => "select_without_non_selected",
-	"comment" => 'PUSCH group assignment, delta-SS in 36.211 5.5.2.1.1
+				"groupAssignmentPUSCH"  => array(
+					array("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29", "selected" => "0"),
+					"display" => "select_without_non_selected",
+					"comment" => 'PUSCH group assignment, delta-SS in 36.211 5.5.2.1.1
 Cells with overlapping coverage should have different values.
 Default 0.
 Derived from physical CellID: physical cellid % 30'
-    ),
-    
-    "cyclicShift" => array(
-	array("0","1","2","3","4","5","6","7","selected"=>"0"),
-	"display" => "select_without_non_selected",
-	"comment" => 'Base cyclic shift for PUSCH DMRS, 36.211 5.5.2.1.1.
+				),
+
+				"cyclicShift" => array(
+					array("0","1","2","3","4","5","6","7","selected"=>"0"),
+					"display" => "select_without_non_selected",
+					"comment" => 'Base cyclic shift for PUSCH DMRS, 36.211 5.5.2.1.1.
 Default 0. 
 Derived from physical CellID: physical cellid % 8 '
-    ),
-    
-    "p0_NominalPUSCH" => array(
-	"value" => -70,
-	"comment" => "Expected UL RSSI power on PUSCH in dBm. 
+				),
+
+				"p0_NominalPUSCH" => array(
+					"value" => -70,
+					"comment" => "Expected UL RSSI power on PUSCH in dBm. 
 Range: -126,24. 
 Default -70. ",
-	"validity" => array("check_field_validity",-126,24)
-    )
-),
+					"validity" => array("check_field_validity",-126,24)
+				)
+			),
 
-"pucch" => array(
-    // This params will be sent in "basic" section when sending request to API
+			"pucch" => array(
+				// This params will be sent in "basic" section when sending request to API
 
-    "deltaPUCCH-Shift" => array(
-	array("1","2","3","selected"=>"1"),
-	"display" => "select_without_non_selected",
-	"comment" => 'Delta Shift ("deltaPUCCH_Shift" in SIB2). Default 1.'
-    ),
+				"deltaPUCCH-Shift" => array(
+					array("1","2","3","selected"=>"1"),
+					"display" => "select_without_non_selected",
+					"comment" => 'Delta Shift ("deltaPUCCH_Shift" in SIB2). Default 1.'
+				),
 
-    "nRB-CQI" => array(
-	"value" => 3,
-	"comment" => 'PUCCH resource for CQI reporting
+				"nRB-CQI" => array(
+					"value" => 3,
+					"comment" => 'PUCCH resource for CQI reporting
 Allowed values: 1 .. (number of RB - 2)
 Default 3.',
-	"validity" => array("check_field_validity",0,98)
-    ),
+					"validity" => array("check_field_validity",0,98)
+				),
 
-    "nCS-An" => array(
-	array("0","1","2","3","4","5","6","7","selected"=>"5"),
-	"display" => "select_without_non_selected",
-	"comment" => 'PUCCH cycle shift.
+				"nCS-An" => array(
+					array("0","1","2","3","4","5","6","7","selected"=>"5"),
+					"display" => "select_without_non_selected",
+					"comment" => 'PUCCH cycle shift.
 Allowed values: 0..7, but must also be a multiple of deltaPUCCH-Shift.
 Default is 5.'
-    ),
+				),
 
-    "srPeriodicity" => array(
-	array("5", "10", "20", "40", "80", "2", "1","selected"=>"10"),
-	"display" => "select_without_non_selected",
-	"comment" => "PUCCH Scheduling Request Periodicity in subframes. 
+				"srPeriodicity" => array(
+					array("5", "10", "20", "40", "80", "2", "1","selected"=>"10"),
+					"display" => "select_without_non_selected",
+					"comment" => "PUCCH Scheduling Request Periodicity in subframes. 
 Default 10."
-    ),
+				),
 
-    "p0_NominalPUCCH" => array(
-	"value" => -96,
-	"comment" => "Expected UL RSSI power in PUCCH in dBm.
+				"p0_NominalPUCCH" => array(
+					"value" => -96,
+					"comment" => "Expected UL RSSI power in PUCCH in dBm.
 Range -127 to -96.
 Default -96",
-	"validity" => array("check_field_validity",-127,-96)
-    ),
-    
-    "n1Pucch-An" => array(
-	"value" => 0,
-	"comment" => "Pucch resource allocation offset.
+					"validity" => array("check_field_validity",-127,-96)
+				),
+
+				"n1Pucch-An" => array(
+					"value" => 0,
+					"comment" => "Pucch resource allocation offset.
 Valid range is 0 .. (2047 * number of UL resource blocks / 110)
 Where number of UL resource blocks = Bandwitdh
-",
-	"validity" => array("check_n1PucchAn", "Bandwidth")
-    )
-),
-"prach" => array(
-    // This params will be sent in "basic" section when sending request to API
-    
-    "rootSequenceIndex" => array(
-	"value" => "0",
-	"comment" => 'PRACH Root Sequence Index
+					",
+					"validity" => array("check_n1PucchAn", "Bandwidth")
+				)
+			),
+			"prach" => array(
+				// This params will be sent in "basic" section when sending request to API
+
+				"rootSequenceIndex" => array(
+					"value" => "0",
+					"comment" => 'PRACH Root Sequence Index
 Cells with overlapping coverage should have different values.
 Allowed values 0..837.
 Default value taken from PHY CID.',
-	"validity" => array("check_field_validity", 0, 837)
-    ),
+					"validity" => array("check_field_validity", 0, 837)
+				),
 
-    "prach-FreqOffset" => array(
-	"value" => 0,
-	"comment" => 'PRACH frequency offset in the uplink resource grid.
+				"prach-FreqOffset" => array(
+					"value" => 0,
+					"comment" => 'PRACH frequency offset in the uplink resource grid.
 In units of resource blocks.
 Allow values are 0 .. (number of RBs - 6)
 Default is 0.',
-	"validity" => array("check_field_validity", 0, 94)
-    ),
-    
-    "numberOfRA-Preambles" => array(
-	array("4","8","12","16","20","24","28","32","36","40","44","48","52","56","60","64","selected"=>"4"),
-	"display" => "select_without_non_selected",
-	"comment" => 'Number of PRACH preambles to use.
+					"validity" => array("check_field_validity", 0, 94)
+				),
+
+				"numberOfRA-Preambles" => array(
+					array("4","8","12","16","20","24","28","32","36","40","44","48","52","56","60","64","selected"=>"4"),
+					"display" => "select_without_non_selected",
+					"comment" => 'Number of PRACH preambles to use.
 Default 4.'
-    ),
-    
-    "preambleInitialReceivedTargetPower" => array(
-	array("-120", "-118", "-116", "-114", "-112", "-110", "-108", "-106", "-104", "-102", "-100", "-98", "-96", "-94", "-92", "-90", "selected" => "-90"),
-	"display" => "select_without_non_selected",
-	"column_name" => 'Initial RSSI Target',
-	"comment" => 'Initial target RSSI for PRACH transmissions in dBm.
+				),
+
+				"preambleInitialReceivedTargetPower" => array(
+					array("-120", "-118", "-116", "-114", "-112", "-110", "-108", "-106", "-104", "-102", "-100", "-98", "-96", "-94", "-92", "-90", "selected" => "-90"),
+					"display" => "select_without_non_selected",
+					"column_name" => 'Initial RSSI Target',
+					"comment" => 'Initial target RSSI for PRACH transmissions in dBm.
 Allows values multiples of 2, -90 .. -120. Default -90.',
-    ),
-    
-    "prach-ConfigIndex" => array(
-	array("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15", "selected"=>"0"),
-	"display" => "select_without_non_selected",
-	"comment" => 'PRACH configuration index
+				),
+
+				"prach-ConfigIndex" => array(
+					array("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15", "selected"=>"0"),
+					"display" => "select_without_non_selected",
+					"comment" => 'PRACH configuration index
 Determines how often the UE is allowed to send PRACH.
 3GPP 36.211 Table 5.7.1-2 (FDD) or Tables 5.7.1-3, 4 (TDD)'
-    ),
-    
-    "zeroCorrelationZoneConfig" => array(
-	array("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","selected"=>"7"),
-	"display" => "select_without_non_selected",
-	"comment" => 'PRACH zero correlation zone configuration
+				),
+
+				"zeroCorrelationZoneConfig" => array(
+					array("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","selected"=>"7"),
+					"display" => "select_without_non_selected",
+					"comment" => 'PRACH zero correlation zone configuration
 Larger cell radius requires larger values.
 3GPP 36.211 5.7.2-2
 Allowed values: 0, 1..15.
@@ -711,177 +740,177 @@ Values 1..15 correspond to cell radius of 0.8 - 58.9 km, but it is not a linear 
 Value 0 is a special case that forces each PRACH preamble to have a unique root sequence index,
 which allows for any cell radius.
 Default value of 7 (4.4 km)'
-    ),
-    
-    "PrachThreshold-dB" => array(
-	array("15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","selected"=>"20"),
-	"display" => "select_without_non_selected",
-	"comment" => "PRACH post-filter SNR detection threshold in dB
+				),
+
+				"PrachThreshold-dB" => array(
+					array("15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","selected"=>"20"),
+					"display" => "select_without_non_selected",
+					"comment" => "PRACH post-filter SNR detection threshold in dB
 Negative threshold enables a debugging feature that steps up the threshold with each detection event.
 Allowed range 15-30 dB.
 Default is 20 dB."
-    )
-),
+				)
+			),
 
-"pdcch" => array(
-    "CFI" => array(
-	array("1","2","3","selected"=>"2"),
-	"display" => "select_without_non_selected",
-	"comment" => "Control format indicator (from PCFICH)
+			"pdcch" => array(
+				"CFI" => array(
+					array("1","2","3","selected"=>"2"),
+					"display" => "select_without_non_selected",
+					"comment" => "Control format indicator (from PCFICH)
 Controls number of symbols used for PDCCH."
-    ),
+				),
 
-    "Ng" => array(
-	array("oneSixth", "half", "one", "two", "selected"=>"oneSixth"),
-	"display" => "select_without_non_selected",
-	"column_name" => "PHICH Ng factor",
-	"comment" => "PHICH Ng factor (from MIB in PBCH)
+				"Ng" => array(
+					array("oneSixth", "half", "one", "two", "selected"=>"oneSixth"),
+					"display" => "select_without_non_selected",
+					"column_name" => "PHICH Ng factor",
+					"comment" => "PHICH Ng factor (from MIB in PBCH)
 Determines bandwidth used for PHICH, affects available bandwidth for PDCCH."
-    ),
+				),
 
-    "PdcchFormat" => array(
-	array("2","3","selected"=>"2"),
-	"display" => "select_without_non_selected",
-	"comment" => "PdcchFormat, 3GPP 36.211 Table 6.8.1-1
+				"PdcchFormat" => array(
+					array("2","3","selected"=>"2"),
+					"display" => "select_without_non_selected",
+					"comment" => "PdcchFormat, 3GPP 36.211 Table 6.8.1-1
 Aggregation level in PDCCH is 2^format.
 Default is 2."
-    ),
+				),
 
-)
-),
+			)
+		),
 
 
-"developers" => array(
+		"developers" => array(
 
-"general" => array(
+			"general" => array(
 
-    "mode" => array(
-	"value" => "ENB",
-	"comment" => "Operation mode
+				"mode" => array(
+					"value" => "ENB",
+					"comment" => "Operation mode
 This setting determines which control Javascript file to load.
 Optional Javascript files are used for special test modes. Default ENB."
-    ),
+				),
 
-    "autostart" => array(
-	"value"   => true,
-	"display" => "checkbox",
-	"comment" => "Start the cell operation at load time
+				"autostart" => array(
+					"value"   => true,
+					"display" => "checkbox",
+					"comment" => "Start the cell operation at load time
 Disabling autostart allows deferring cell startup"
-    ),
+				),
 
-    "transceiver" => array(
-	"value" => true,
-	"display" => "checkbox",
-	"comment" => "Start the radio transceiver (TrxManager).
+				"transceiver" => array(
+					"value" => true,
+					"display" => "checkbox",
+					"comment" => "Start the radio transceiver (TrxManager).
 This setting is mainly used for testing, since most of the ENB is
 driven by the radio transceiver."
-    ),
-),
+				),
+			),
 
-"radio" => array(
+			"radio" => array(
 
-    "radio_driver" => array(
-	"comment" => 'Name of the radio device driver to use
+				"radio_driver" => array(
+					"comment" => 'Name of the radio device driver to use
 Leave it empty to try any installed driver',
-    ),
-),
+				),
+			),
 
-"uu-simulator" => array(
+			"uu-simulator" => array(
 
-    "address" => array(
-	"comment"=> "Example: 127.0.0.1",
-	"validity"=> array("check_valid_ipaddress")
-    ),
-    
-    "port" => array(
-	"comment" => "Example: 9350",
-	"validity"=> array("check_valid_integer") 
-    ),
+				"address" => array(
+					"comment"=> "Example: 127.0.0.1",
+					"validity"=> array("check_valid_ipaddress")
+				),
 
-    "pci" => array(
-	"comment" => "Example: 0",
-	"validity"=> array("check_valid_integer")
-    ),
+				"port" => array(
+					"comment" => "Example: 9350",
+					"validity"=> array("check_valid_integer") 
+				),
 
-    "earfcn" => array(
-	"comment" => "Example: 0",
-	"validity"=> array("check_valid_integer")
-    ),
+				"pci" => array(
+					"comment" => "Example: 0",
+					"validity"=> array("check_valid_integer")
+				),
 
-    "broadcast" => array( 
-	"comment" => "Example: 127.0.0.1:9351, 127.0.0.1:9352",
-	"validity"=> array("check_broadcast")
-    ),
+				"earfcn" => array(
+					"comment" => "Example: 0",
+					"validity"=> array("check_valid_integer")
+				),
 
-    "max_pdu" => array(
-	"comment" => "Example: 128",
-    )
-),
+				"broadcast" => array( 
+					"comment" => "Example: 127.0.0.1:9351, 127.0.0.1:9352",
+					"validity"=> array("check_broadcast")
+				),
 
-"uu-loopback" => array(
+				"max_pdu" => array(
+					"comment" => "Example: 128",
+				)
+			),
 
-    "AddrSubnet" => array(
-	"comment" => "IPv4 subnet for allocating IP addresses to TUN interfaces
+			"uu-loopback" => array(
+
+				"AddrSubnet" => array(
+					"comment" => "IPv4 subnet for allocating IP addresses to TUN interfaces
 Ex: 10.167.227.%u",
-	"validity" => array("check_field_validity", false, false, "^([0-9]{1,3}\.){3}%u$")
-    ),
+					"validity" => array("check_field_validity", false, false, "^([0-9]{1,3}\.){3}%u$")
+				),
 
-    "AuxRoutingTable" => array(
-	"comment" => "Auxiliary routing table that is used for configuring TUN interfaces routes. 
+				"AuxRoutingTable" => array(
+					"comment" => "Auxiliary routing table that is used for configuring TUN interfaces routes. 
 Can be the table number or name (if it's configured in
 /etc/iproute2/rt_tables)
 Ex: 131",
-	"validity" => array("check_auxrouting_table")
-    ),
+					"validity" => array("check_auxrouting_table")
+				),
 
-    "SymmetricMacCapture" => array(
-	"display" => "checkbox",
-	"comment" => "Whether to submit wireshark capture for MAC PDUs on both LteConnection instances. 
+				"SymmetricMacCapture" => array(
+					"display" => "checkbox",
+					"comment" => "Whether to submit wireshark capture for MAC PDUs on both LteConnection instances. 
 If disabled, only the LteConnection that represents the eNodeB submits wireshark capture, causing each MAC PDUs to appear only once and in the right direction (DL-SCH vs. UL-SCH)."
-    ),
-),
+				),
+			),
 
-"test-enb" => array(
+			"test-enb" => array(
 
-    "__" => array(
-	"value" => "PDCCH Test",
-	"display" => "objtitle"
-    ),
+				"__" => array(
+					"value" => "PDCCH Test",
+					"display" => "objtitle"
+				),
 
-    "PdcchTestMode" => array(
-	"display" => "checkbox",
-	"comment" => "Specifies if the PDCCH test mode is on or off.
+				"PdcchTestMode" => array(
+					"display" => "checkbox",
+					"comment" => "Specifies if the PDCCH test mode is on or off.
 PDCCH test mode sends extra messages on PDCCH."
-    ),
+				),
 
-    "___" => array(
-	"value" => "PDSCH traffic simulator",
-	"display" => "objtitle"
-    ),
+				"___" => array(
+					"value" => "PDSCH traffic simulator",
+					"display" => "objtitle"
+				),
 
-    "DownlinkTrafficGenererator" => array(
-	"display" => "checkbox",
-	"comment" => "Specifies if the traffic generator test mode is on or off.
+				"DownlinkTrafficGenererator" => array(
+					"display" => "checkbox",
+					"comment" => "Specifies if the traffic generator test mode is on or off.
 The test mode generate random traffic on shared channel (PDSCH) on random resource blocks
 NOTE: When test mode is enabled, regular PDSCH traffic is suppressed,included SIBs."
-    ),
+				),
 
-    "DownlinkTrafficGeneratorLoad" => array(
-	"value" => "0",
-	"comment" => "The PDSCH utilisation for the traffic generator, in percentages.
+				"DownlinkTrafficGeneratorLoad" => array(
+					"value" => "0",
+					"comment" => "The PDSCH utilisation for the traffic generator, in percentages.
 Allowed integer range: 0 - 100. Default value: 0."
-    ),
+				),
 
-    "DownlinkTrafficGeneratorSubframes" => array(
-	"value" => "10",
-	"comment" => "The number of subframes to use for traffic simulation.
+				"DownlinkTrafficGeneratorSubframes" => array(
+					"value" => "10",
+					"comment" => "The number of subframes to use for traffic simulation.
 Traffic simulator uses this many subframes, starting from subframe 0."
-    ),
-    
-    "SimulatePdschTraffic" => array(
-	array("0", "1023", "31", "301", "602", "selected"=>"0"),
-	"display" => "select_without_non_selected",
-	"comment" => "PDSCH traffic simulator
+				),
+
+				"SimulatePdschTraffic" => array(
+					array("0", "1023", "31", "301", "602", "selected"=>"0"),
+					"display" => "select_without_non_selected",
+					"comment" => "PDSCH traffic simulator
 Fills free PDSCH elements with random QPSK symbols in selected subframes.
 Control is a bit mask. If bit N is set in the mask, fill subframe N.
 If configured, this feature is active even if PdschEnabled is false.
@@ -890,10 +919,10 @@ Default is 0 - no simulated traffic.
 31 - first 5 subframes
 301 - every even subframe
 602 - every odd subframe"
-    ),
+				),
 
-    "____" => array(
-	"value" => "Channel controls for testing
+				"____" => array(
+					"value" => "Channel controls for testing
 Enable and disable specific channel types.
 
 Indicates if the named PHY channel's data can be sent on the TX grid.
@@ -901,100 +930,100 @@ Note that the RsEnabled is the master enabler for all the reference signals, cur
 To enable CSRS, RsEnabled must also be true.
 Default is yes for all.
 ",
-	"display" => "message"
-    ),
+					"display" => "message"
+				),
 
-    "PhichEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ),
+				"PhichEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				),
 
-    "PcfichEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ),
+				"PcfichEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				),
 
-    "PssEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ),
+				"PssEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				),
 
-    "SssEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ),
+				"SssEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				),
 
-    "CsrsEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ),
+				"CsrsEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				),
 
-    "PdschEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ), 
+				"PdschEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				), 
 
-    "PdcchEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ), 
+				"PdcchEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				), 
 
-    "PbchEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    ),
+				"PbchEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				),
 
-    "RsEnabled" => array(
-	"display" => "checkbox",
-	"value" => true
-    )
-),
+				"RsEnabled" => array(
+					"display" => "checkbox",
+					"value" => true
+				)
+			),
 
-"test-scheduler" => array(
-    
-    "scheduler-generator" => array(
-	"value" => true,
-	"display" => "checkbox",
-	"comment" => "Flag which enables/disables scheduler UE traffic generator"
-    ),
+			"test-scheduler" => array(
 
-    "scheduler-generator.ues" => array(
-	"value" => 5,
-	"comment" => "Integer; The number of UE's which generates traffic"
-    ),
+				"scheduler-generator" => array(
+					"value" => true,
+					"display" => "checkbox",
+					"comment" => "Flag which enables/disables scheduler UE traffic generator"
+				),
 
-    "scheduler-generator.qci" => array(
-	"value" => "7",
-	"comment" => "Integer; Downlink cqi to obtain MCS"
-    ),
+				"scheduler-generator.ues" => array(
+					"value" => 5,
+					"comment" => "Integer; The number of UE's which generates traffic"
+				),
 
-    "scheduler-generator.cqi" => array(
-	"value" => "7",
-	"comment" => "Integer; Uplink cqi to obtain MCS",
-    ),
+				"scheduler-generator.qci" => array(
+					"value" => "7",
+					"comment" => "Integer; Downlink cqi to obtain MCS"
+				),
 
-    "scheduler-generator.gbr" => array(
-	"value" => 10000,
-	"comment" => "Integer; UE GBR"
-    ),
+				"scheduler-generator.cqi" => array(
+					"value" => "7",
+					"comment" => "Integer; Uplink cqi to obtain MCS",
+				),
 
-    "scheduler-generator.ambr" => array(
-	"value" => "0",
-	"comment" => "Integer; UE AMBR"
-    ),
+				"scheduler-generator.gbr" => array(
+					"value" => 10000,
+					"comment" => "Integer; UE GBR"
+				),
 
-    "scheduler-generator.upload-rate" => array(
-	"value" => "10000",
-	"comment" => "Integer; This specifies the maximum number of bytes to be generated in a second for upload."
-    ),
+				"scheduler-generator.ambr" => array(
+					"value" => "0",
+					"comment" => "Integer; UE AMBR"
+				),
 
-    "scheduler-generator.download-rate" => array(
-	"value" => "10000",
-	"comment" => "Integer; This specifies the maximum number of bytes to be generated in a second for download."
-    )
-)
-)
-);
+				"scheduler-generator.upload-rate" => array(
+					"value" => "10000",
+					"comment" => "Integer; This specifies the maximum number of bytes to be generated in a second for upload."
+				),
+
+				"scheduler-generator.download-rate" => array(
+					"value" => "10000",
+					"comment" => "Integer; This specifies the maximum number of bytes to be generated in a second for download."
+				)
+			)
+		)
+	);
 
 	foreach ($enodeb_params as $section=>$subsections) {
 		foreach ($subsections as $subs=>$data1) {
@@ -1006,14 +1035,18 @@ Default is yes for all.
 		}
 	}
 
+
+	if ($without_api_request)
+		return $enodeb_params;
+
 	if (isset($_SESSION["enb_fields"]["interfaces_ips"])) {
-		
+
 		// initialize seesion for interface_ips, interface_ips2,..., interface_ips5 
 		// for MME local ips dropdowns
 		$interfaces_ips = $_SESSION["enb_fields"]["interfaces_ips"]["both"];
 		for ($i=2; $i<=5; $i++) 
-				${"interfaces_ips".$i} = $_SESSION["enb_fields"]["interfaces_ips".$i]["both"];
-		
+			${"interfaces_ips".$i} = $_SESSION["enb_fields"]["interfaces_ips".$i]["both"];
+
 		$ipv4 = $_SESSION["enb_fields"]["interfaces_ips"]["ipv4_gtp"];
 		$ipv6 = $_SESSION["enb_fields"]["interfaces_ips"]["ipv6_gtp"];
 
@@ -1035,7 +1068,7 @@ Default is yes for all.
 				${"interfaces_ips".$i} = build_net_addresses_dropdown($res, false, "both", "local_".$i);
 				$_SESSION["enb_fields"]["interfaces_ips".$i]["both"] = ${"interfaces_ips".$i};
 			}
-			
+
 			$ipv4 = build_net_addresses_dropdown($res, false, "ipv4", "addr4");
 			$_SESSION["enb_fields"]["interfaces_ips"]["ipv4_gtp"] = $ipv4;
 			$ipv6 = build_net_addresses_dropdown($res, false, "ipv6", "addr6");
@@ -1054,26 +1087,26 @@ Default is yes for all.
 		// add "all interfaces" IPv4 IP and label
 		$gtp_ipv4[] = array ("addr4_id"=>"__disabled", "addr4"=>"------all interfaces------");
 		$gtp_ipv4[] = array ("addr4_id"=>"0.0.0.0", "addr4"=>"0.0.0.0");
-		
+
 		$enodeb_params["core"]["gtp"]["addr4"] = array($gtp_ipv4,"display"=>"select", "comment" => "IPv4 address to use with the eNodeB tunnel end. <br/>0.0.0.0 - GTP listener on all IPv4 interfaces.", "column_name"=>"Local address IPv4");
 
 		$gtp_ipv6 = $ipv6;
 		// add "all interfaces" ipv6 IP and label
 		$gtp_ipv6[] = array ("addr6_id"=>"__disabled", "addr6"=>"------all interfaces------");
 		$gtp_ipv6[] = array ("addr6_id"=>"::", "addr6"=>"::");
-		
+
 		$enodeb_params["core"]["gtp"]["addr6"] = array($gtp_ipv6,"display"=>"select", "comment" => "IPv6 address to use with the eNodeB tunnel end. <br/>:: - GTP listener on all IPv6 interfaces.", "column_name"=>"Local address IPv6");
 
-		
+
 		// initialize local, local_2 ... local_5 dropdowns from mme section 
 		$enodeb_params["core"]["mme"]["local"] = array($interfaces_ips,"display"=>"select","comment"=>"Ex: 192.168.56.1", "column_name"=>"Local address");
 		for ($i=2; $i<=5; $i++) {
 			$enodeb_params["core"]["mme"]["local_".$i] = array(${"interfaces_ips".$i},"display"=>"select","comment"=>"Ex: 192.168.56.1","column_name"=>"Local address", "triggered_by" => $i);
 		}
 	}
-	
+
 	$bands = get_available_bands();
-	
+
 	if ($bands) {
 		$bands_options = array();
 		$band_comment = "";
@@ -1095,7 +1128,7 @@ Default is yes for all.
 		unset($enodeb_params["radio"]["enodeb"]["Band"][0]); 
 		$enodeb_params["radio"]["enodeb"]["Band"]["error"] = true;
 	}
-	
+
 	return $enodeb_params;
 }
 
