@@ -17,7 +17,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-function prepare_gsm_field_radio_c0()
+/**
+ * Prepare the values for GSM field Radio.C0 used in dropdown
+ * @param $change_field_name Bool. Default false. If true change the name of the field
+ * This is done for form parameters used from wizards
+ * @return $vals the array with the specific values of the Radio.C0 field dropdown 
+ */ 
+function prepare_gsm_field_radio_c0($change_field_name=false)
 {
 $valid_values =  "INVALID|GSM850
 128| #128 : 869.2 MHz downlink / 824.2 MHz uplink
@@ -996,6 +1002,8 @@ INVALID|PCS1900
 810| #810 : 1989.79 MHz downlink / 1909.79 MHz uplink";
 
 	$key = "Radio.C0";
+	if ($change_field_name)
+		$key = "radio_c0";
 	$expl_valid = explode("\n",$valid_values);
 	$vals = array();
 	$count_options = count($expl_valid);
@@ -1006,7 +1014,7 @@ INVALID|PCS1900
 	if (getparam("Radio_Band"))
 		$_SESSION["Radio.Band"] = getparam("Radio_Band");
 	$radio_band = (isset($_SESSION["Radio.Band"])) ? $_SESSION["Radio.Band"] : "850";
-	for ($j=0; $j<$count_options;$j++) {
+	for ($j=0; $j<$count_options; $j++) {
 		$val_opt = $expl_valid[$j];
 		$expl_val_opt = explode("|",$val_opt);
 		$opt_name = (!isset($expl_val_opt[1])) ? $expl_val_opt[0] : $expl_val_opt[1];
