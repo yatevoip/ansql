@@ -126,6 +126,8 @@ function check_uplink_rbs($field_name, $field_value, $ulrbsstartind, $rbs)
 
 function check_n1PucchAn($field_name, $field_value, $bandwidth)
 {
+	if (!$bandwidth)
+		 return array(false, "$field_name can't be tested! No Bandwidth provided!");
 	$valid = check_valid_number($field_name, $field_value);
 	if (!$valid[0])
 		return $valid;	
