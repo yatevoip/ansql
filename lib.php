@@ -996,7 +996,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 		foreach($custom_submit as $field_name=>$field_format)
 			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width);
 
-	if($submit != "no" && $submit != "no_submit")
+	if($submit != "no" && $submit != "no_submit" && $submit != 'only_cancel')
 	{
 		print '<tr class="'.$css.'">';
 		print '<td class="'.$css.' trailer" colspan="2">';
@@ -1018,6 +1018,18 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 		print '</td>';
 		print '</tr>';
 	}
+
+	if ($submit == 'only_cancel')
+	{
+		print '<tr class="'.$css.'">';
+		print '<td class="'.$css.' trailer" colspan="2">';
+		$cancel_but = cancel_button($css);
+		if ($cancel_but)
+			print "&nbsp;&nbsp;$cancel_but";
+		print '</td>';
+		print '</tr>';
+
+	}
 	print '</table>';
 }
 
@@ -1036,7 +1048,7 @@ function cancel_button($css="", $name="Cancel")
 				continue;
 			$link.= "$param=".urlencode($value)."&";
 		}
-		$res = '<input class="'.$css.'" type="button" value="'.$name.'" onClick="location.href=\''.$link.'\'"/>';
+		$res = '<input class="'.$css.'" type="button" value="'.$name.'" onClick="document.location.href=\''.$link.'\'"/>';
 	}
 	return $res;
 }
@@ -2401,8 +2413,13 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 		foreach ($general_actions as $methd=>$methd_name) {
 			if ($link_no)
 				print '&nbsp;&nbsp;';
-			print '<a class="'.$css.'" href="'.$base.$methd.'">'.$methd_name.'</a>';
-			$link_no++;
+
+			if ($methd === "cb") {
+				set_cb($methd_name);
+			} else {
+				print '<a class="'.$css.'" href="'.$base.$methd.'">'.$methd_name.'</a>';
+				$link_no++;
+			}
 		}
 		print '</td>';
 		print '</tr>';
@@ -3576,7 +3593,7 @@ function exception_to_save()
 
 /**
  * Saves page info, puts the parameters from $_REQUEST in array $_SESSION["previous_page"]
- * If exceptions_to_save() is true and method biggins with one of: edit,add_,delete, import, export
+ * If exceptions_to_save() is true and method biggins with one of: edit,add_,delete, import, export, view_
  * then page info is not saved.
  * 
  * !! It is really important to test the whole project again if this is added later on, not at the start of the project.
@@ -3588,7 +3605,7 @@ function save_page_info()
 	global $method, $module, $exceptions_to_save;
 
 	// don't save info for edit/add/delete pages
-	if (substr($method,0,4) == "edit" || substr($method,0,4) == "add_" || substr($method,0,6) == "delete" || exception_to_save() || substr($method,0,6)=="import" || substr($method,0,6)=="export") {
+	if (substr($method,0,4) == "edit" || substr($method,0,4) == "add_" || substr($method,0,5) == "view_" || substr($method,0,6) == "delete" || exception_to_save() || substr($method,0,6)=="import" || substr($method,0,6)=="export") {
 		return;
 	}
 
