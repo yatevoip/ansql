@@ -278,7 +278,7 @@ class Debug
 					$body.= ($manually_triggered) ? "See User description\n" : $message;
 				}
 				$logs_file = self::get_log_file();
-				if ($logs_file) {
+				if (is_file($logs_file)) {
 					$dir_arr = explode("/",$logs_file);
 					$path = "";
 					for ($i=0; $i<count($dir_arr)-1; $i++)
@@ -291,7 +291,7 @@ class Debug
 					rename($logs_file, $new_file);
 				}
 
-				$attachment = ($logs_file) ? array(array("file"=>$attach_file,"content_type"=>"text/plain")) : false;
+				$attachment = (is_file($logs_file)) ? array(array("file"=>$attach_file,"content_type"=>"text/plain")) : false;
 				if (!$attachment)
 					// logs are not kept in file, add xdebug to email body
 					$body .= "\n\n$xdebug";
@@ -309,7 +309,8 @@ class Debug
 				foreach ($to_emails as $to)
 					send_mail($to, $server_email_address, $subject, $body, $attachment,null,false);
 
-				exec("rm -f $attach_file");
+				if ($attachment)
+					exec("rm -f $attach_file");
 
 				break;
 			case "web":
