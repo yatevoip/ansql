@@ -35,7 +35,7 @@ class EnbTabbedSettings extends TabbedSettings
 	{
 		$this->current_section    = $this->default_section;
 		$this->current_subsection = $this->default_subsection;
-		$this->open_tabs = 3;
+		$this->open_tabs = 2;
 	}
 
 	function getMenuStructure()
@@ -52,10 +52,10 @@ class EnbTabbedSettings extends TabbedSettings
 		$structure = array(
 			"Radio" => array("eNodeB", "Calibration"/*, "Bearers"*/),
 			"Core" => array("GTP", "MME"/*, "S1AP"*/),
-			"Access channels" => array("PRACH",/* "PDSCH",*/ "PUSCH", "PUCCH", "PDCCH"),
+		//	"Access channels" => array("PRACH",/* "PDSCH",*/ "PUSCH", "PUCCH", "PDCCH"),
 
 			"Hardware" => array("Site info", "Site equipment", "Shutdown"),
-			"System" => array("System information", "Scheduler"/*, "Advanced", "RadioHardware", "Measurements"*/),
+			"System" => array("System information"/*, "Scheduler", "Advanced", "RadioHardware", "Measurements"*/),
 		);
 
 		if ($developers_tab)
@@ -90,7 +90,7 @@ They are gathered in this section to make them easy to find.", //basic section f
 		    streams = 5 
 		    dscp = expedited",
 
-			"scheduler" => "Parameters related to the MAC scheduler",
+	    //	"scheduler" => "Parameters related to the MAC scheduler",
 		/*	"advanced" => "Here, \"advanced\" just means parameters that are not normally changed.  \n
 		    It is not a reference to LTE-Advanced features.",*/
 		//	"measurements" => "KPI-related performance measurements",
@@ -171,7 +171,7 @@ This parameters are ignored in Labkit units."
 		}
 
 		// rename some of the sections the parameters appear under: basic->enodeb, basic-> all subsections under access channels, basic-> system_information
-		$aggregated_subsections = array("enodeb","system_information",/*"pdsch",*/"pusch","pucch","prach","pdcch");
+		$aggregated_subsections = array("enodeb","system_information",/*"pdsch","pusch","pucch","prach","pdcch"*/);
 		foreach ($aggregated_subsections as $subsection)
 			if (isset($res["basic"]))
 				$res[$subsection] = $res["basic"];
@@ -386,7 +386,7 @@ This parameters are ignored in Labkit units."
 		$request_fields = array("yateenb"=>array("basic"=>array()));//, "gtp"=>array());
 		$request_fields["calibrate"] = $this->setCalibrationFields($fields);
 
-		$basic_sections = array("enodeb","system_information"/*,"pdsch"*/,"pusch","pucch","prach","pdcch");
+		$basic_sections = array("enodeb","system_information"/*,"pdsch","pusch","pucch","prach","pdcch"*/);
 		foreach ($basic_sections as $basic_section) {
 			$request_fields["yateenb"]["basic"] = array_merge($request_fields["yateenb"]["basic"], $fields[$basic_section]);
 			unset($fields[$basic_section]);

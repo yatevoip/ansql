@@ -161,7 +161,7 @@ EARFCN 50840, 2484 MHz, Channel 14 (2.4 GHz WiFi)	2473 - 2495 MHz'),
 					"validity" => array("validate_earfcn_band", "Band", "Bandwidth"),
 				),
 
-				"__" => array(
+				/*"__" => array(
 					"display" => "objtitle",
 					"value" => format_comment("Physical Layer Cell ID 
 Phy Cell ID = 3*NID1 + NID2,
@@ -175,21 +175,21 @@ On Access Channels in PRACH screen: RootSequenceIndex
 On Access Channels in PUSCH screen: groupAssignmentPUSCH
 On Access Channels in PUSCH screen: cyclicShift
 On Access Channels in PUCCH screen: n1Pucch-An
-					")
-				),
+")
+				),*/
 
 				"NID1" => array(
 					"required" => true,
 					"comment"  => "NID1 is between 0 and 167",
 					"required" => true,
 					"validity" => array("check_field_validity", 0, 167),
-					"javascript" => "onchange='set_cellid_dependencies();'" 
+				//	"javascript" => "onchange='set_cellid_dependencies();'" 
 				),
 				"NID2" => array(
 					array("0", "1", "2"),
 					"display" => "select_without_non_selected",
 					"required" => true,
-					"javascript" => "onchange='set_cellid_dependencies();'"
+				//	"javascript" => "onchange='set_cellid_dependencies();'"
 				),
 
 				"CrestFactor" => array(
@@ -562,7 +562,7 @@ Defaults to 5 seconds.",
 				)
 			),
 
-			"scheduler" => array(
+			/*"scheduler" => array(
 
 				"SpecialRntiCodeEfficiency" => array(
 					"value" => "0.0625",
@@ -601,11 +601,11 @@ Default is infinity."
 					"display" => "select_without_non_selected",
 					"comment" => "Parameter Ngap from DCI, currently set as system wide configuration; corresponds to Ngap,1/Ngap,2"
 				),
-			)
+			)*/
 		),
 
 
-		"access_channels" => array(
+/*		"access_channels" => array(
 
 			"pusch" => array(
 				// This params will be sent in "basic" section when sending request to API
@@ -777,7 +777,7 @@ Default is 2."
 				),
 
 			)
-		),
+		),*/
 
 
 		"developers" => array(
