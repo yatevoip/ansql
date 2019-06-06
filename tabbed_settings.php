@@ -266,6 +266,9 @@ abstract class TabbedSettings
 					$paramname = str_replace(".", "_", $param_name);
 					$val_req   = getparam($paramname);
 
+					if (isset($data["display"]) && $data["display"]=='fixed')
+						continue;
+
 					if (isset($data["display"]) && $data["display"]=='checkbox') {
 
 						$value = $data["value"];
@@ -826,7 +829,8 @@ abstract class TabbedSettings
 		// don't display the TAB form in this case 
 		if (!strlen($this->error) && $this->return_to_page) {
 			$this->cleanSession();
-			$message = (!$fields_modified) ? "Finished editing sections. Nothing to update." : "Finished applying configuration.";
+			$store_res_mess = (isset($res[1])) ? $res[1] : "Finished applying configuration.";
+			$message = (!$fields_modified) ? "Finished editing sections. Nothing to update." : $store_res_mess;
 			notice($message, $this->return_to_page);
 			return;
 		}
