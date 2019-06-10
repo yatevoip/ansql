@@ -1254,3 +1254,44 @@ function show_hide_file_examples(elems,button_id) {
 	else
 		button.innerHTML = "Display more examples...";
 }
+
+/**
+ * Cancel button action ( for Import files form within an iframe). Wil call the callback from pages.php and will remove the iframe keeping just it's content
+ * @param string cb. Function to be called after cancel button is clicked
+ * @param string equipment_id
+ * @param string cb_container_id. Id of the container holding the iframe.
+ *				  If not provided falls to default "custom_step_0"
+  */
+function import_iframe_cancel_button (cb, equipment_id=null, cb_container_id=null)
+{
+    var url = 'pages.php?method=' + cb;
+    if (equipment_id)
+	    url = url  + '&equipment_id=' + equipment_id;
+    if (!cb_container_id)
+	    cb_container_id = 'custom_step_0';
+
+    var callback = {
+		"name": callback_request,
+		"param": {
+			"container_id": "import_form",
+			"cbs": [{
+				    "name": import_iframe_response,
+				    "params": [cb_container_id]
+				}]
+		}
+	    };
+    make_request(url, callback);
+}
+
+/**
+ * Removes iframe used for import files by copying content from import_form (from iframe) in the container holding the iframe
+ * @param string iframe_container_id The id of the container holding the iframe
+ * @param string content_container_id The id of the container holding the content. If not provided falls to default id "import_form" 
+ */
+function import_iframe_response(iframe_container_id, content_container_id = null)
+{
+    if (!content_container_id)
+	    content_container_id = 'import_form';
+
+    window.parent.document.getElementById(iframe_container_id).innerHTML = document.getElementById(content_container_id).innerHTML;
+}

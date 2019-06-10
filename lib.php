@@ -2064,14 +2064,20 @@ function links_general_actions($general_actions, $no_columns, $css, $base, $on_t
 			$link_no = 0;
 			if (is_array($left_actions)) {
 				foreach($left_actions as $methd => $methd_name)	{
+					if ($link_no)
+						print '&nbsp;&nbsp;';
 					if ($methd === "cb")
 						set_cb($methd_name);
-					else {
-						if ($link_no)
+					elseif ($methd === "cbs") {
+						
+						foreach ($methd_name as $meth) {
+							set_cb($meth);
 							print '&nbsp;&nbsp;';
+						}
+					} else {
 						print '<a class="'.$css.'" href="'.$base.$methd.'">'.$methd_name.'</a>';
-						$link_no++;
 					}
+					$link_no++;
 				} 
 			} else
 				print $left_actions;
@@ -2089,14 +2095,19 @@ function links_general_actions($general_actions, $no_columns, $css, $base, $on_t
 		foreach($general_actions as $methd=>$methd_name) {
 			if ($methd_name == "__top")
 				continue;
+			if ($link_no)
+				print '&nbsp;&nbsp;';
 			if ($methd === "cb") {
 				set_cb($methd_name);
-			} else {
-				if ($link_no)
+			} elseif ($methd === "cbs") {
+				foreach ($methd_name as $meth) {
+					set_cb($meth);
 					print '&nbsp;&nbsp;';
+				}
+			} else {
 				print '<a class="'.$css.'" href="'.$base.$methd.'">'.$methd_name.'</a>';
-				$link_no++;
 			}
+			$link_no++;
 		}
 		print '</td>';
 		print '</tr>';
@@ -3593,7 +3604,7 @@ function exception_to_save()
 
 /**
  * Saves page info, puts the parameters from $_REQUEST in array $_SESSION["previous_page"]
- * If exceptions_to_save() is true and method biggins with one of: edit,add_,delete, import, export, view_
+ * If exceptions_to_save() is true and method begins with one of: edit,add_,delete, import, export, view_
  * then page info is not saved.
  * 
  * !! It is really important to test the whole project again if this is added later on, not at the start of the project.
@@ -3949,7 +3960,7 @@ function get_mp3_len($file)
 	return (filesize($file) - $headerlen) / $framelen / ($samp / $framesize);
 }
 
-function arr_to_csv($file_name, $arr, $formats=null, $func="write_in_file", $title_text=null)
+function arr_to_csv($file_name, $arr, $formats=null, $func="write_in_file", $title_text=null, $display_as_notice_mess = false)
 {
 	global $download_option;
 
@@ -3976,9 +3987,15 @@ function arr_to_csv($file_name, $arr, $formats=null, $func="write_in_file", $tit
 	chmod($file, 0777);
 
 	if (isset($download_option) && $download_option=="direct_file")
-		print "Content was exported. <a href=\"$upload_path/$file_name$format\">Download</a>";
+		$message = "Content was exported. <a href=\"$upload_path/$file_name$format\">Download</a>";
 	else
-		print "Content was exported. <a href=\"download.php?file=$file_name$format\">Download</a>";
+		$message = "Content was exported. <a href=\"download.php?file=$file_name$format\">Download</a>";
+	
+	$message.= "<br/><br/> ** When opening this file, double quote should be selected as 'text delimiter' so text having line breaks will not be displayed on separate lines.";
+	if ($display_as_notice_mess)
+		notice($message, "no", true, false);
+	else 		
+		print $message;
 }
 
 function mysql_in_file($fh, $formats, $array, $sep)
@@ -5368,5 +5385,450 @@ function str_to_arr($str, $delimiter=",", $extra="trim")
 		$arr = array_map($extra, $arr);
 	
 	return $arr;
+}
+
+/**
+ * Prints iframe having content(src) from 'pages.php?method=". getparam("form_method") ."&equipment_id=". getparam("equipment_id")."'
+ * 
+ * @param array $additional_params Array containing the names of the additional params to be added in src
+ */
+function import_file_iframe($additional_params = array())
+{
+	$form_method = getparam("form_method");
+	if (!is_callable($form_method))
+		Debug::trigger_report('critical', "import_file_iframe: Callable ".print_r($form_method,true)." provided in param 'form_method' is not implemented.");
+	
+	$equipment_id = getparam("equipment_id");
+        
+	$src = "pages.php?method=". $form_method ."&equipment_id=". $equipment_id;
+	
+	foreach ($additional_params as $additional_param)
+		$src .= "&" . $additional_param . "=" . getparam ($additional_param);
+	
+	print "<iframe id='import_iframe' class='import_iframe' src='$src'>";
+        print "</iframe>";
+}
+
+function open_html_iframe() 
+{
+	print "<html>";
+	print "<head>";
+	print "<meta http-equiv='content-type' content='text/html; charset=UTF-8'/>";
+	print "<link type=\"text/css\" rel=\"stylesheet\" href=\"" . set_file_version("css/main.css") . "\" />";
+	print "<link type=\"text/css\" rel=\"stylesheet\" href=\"" . set_file_version("css/wizard.css") . "\" />";
+	print "<script type=\"text/javascript\" src=\"" . set_file_version("javascript/lib_wizard.js") . "\"></script>";
+	print "<script type=\"text/javascript\" src=\"" . set_file_version("ansql/javascript.js") . "\"></script>";
+	print "</head>";
+	print "<body class=\"mainbody\">";
+	print "<div id=\"import_form\">";
+}
+
+function close_html_iframe() 
+{
+	print "</div>";
+	print "</body>";
+	print "</html>";
+}
+
+/**
+ * General function for displaying import form
+ * @param string $class. Name of the objects class.
+ * @param int $equipment_id. Id of the equipment if objects to be imported are not global objects
+ * @param array $examples. Keeps the name, path and other info for example files.  Same array used in display_pair for display=file.
+ * @param string $error. Error message 
+ * @param array $error_fields. Array containing fields having incorrect values.
+ * @param string $cb. Name of the function which will be called after the execution of this function is 
+ * @param bool $iframe. If true will indicate that the form is inside a iframe, therefore is needed to add the html structure for a 
+ *			html document and to link JS and CSS docs so we can use css and javascript inside iframe
+ * @param string $form_action. Name of the function used for validation
+ */
+function  import_form_obj($class, $equipment_id, $examples, $error="", $error_fields = array(), $cb = null, $iframe=true, $form_action=null)
+{	
+	if (!$cb)
+		$cb = "display_" . get_plural_form($class);
+	
+	$fields = array();
+	
+	if ($iframe) {
+		open_html_iframe();
+		// when using iframe we need to use a custom cancel button which will:
+		//  -  replace the iframe content with the content displayed from calling cb and 
+		//  -  will remove iframe by replacing iframe with it's own content
+		// 
+		$fields["buttons"] = array(	
+			"display" => "custom_submit", 
+			"value"   => "<input class=\"edit\" name=\"Upload\" value=\"Upload\" type=\"submit\">
+				     <input class=\"edit\" value=\"Reset\" type=\"reset\">
+				     <input type=\"button\" onclick=\"import_iframe_cancel_button ('$cb', '$equipment_id');\" value=\"Cancel\" />"
+		);
+	}
+			
+	$fields["insert_file_location"] = $examples;
+	$fields["insert_file_location"]["display"] = "file";
+	
+	$button_name = (!isset($fields["buttons"])) ? "Upload" : "no";
+	
+	if (!$form_action)
+		$form_action = "import_" . get_plural_form($class) . "_database";
+	
+	error_handle($error, $fields, $error_fields);
+	start_form("pages.php?method=" . $form_action, "POST", true, $cb);
+	if ($equipment_id)
+		print '<input id="equipment_id" type="hidden" value="'.$equipment_id.'" name="equipment_id" />';
+	editObject(NULL,$fields,"Import " . str_replace("_", " ", get_plural_form($class)) . " from file", $button_name);
+	end_form();
+	
+	if ($iframe)
+		close_html_iframe();
+}
+
+/**
+ * General function to proceess file imported via import form
+ * @param string $class. Name of the objects class.
+ * @param type $equipment_id
+ * @param array $mandatory_cols. Array containing the names of the required cols.
+ * @param array $unique_cols. Array containing the names of the cols which need to contain unique values.
+ * @param string $cb. Name of the function which will be called if import file is valid
+ * @param string $other_validation_cb. The name of the callback for validating import file. When using other callback for validation the callback needs to return array(true/false, "message", array(err_fields)
+ * @param bool $iframe. If true will indicate that the form is inside a iframe, therefore is needed to add the html structure for a 
+ *			html document and to link JS and CSS docs so we can use css and javascript inside iframe
+ * @param string $container_id. Container holding the iframe (if iframe param is true)
+ * @param string $cb_custom_params The name of the callback for validating custom params added in custom fields in import form 
+ * @return array. Returns array(true) if validations passed, else array(false,"error message") otherwise
+ */
+function process_import_file($class, $equipment_id, $mandatory_cols = array(), $unique_cols = array(), $cb = null, $other_validation_cb = null, $iframe=true, $container_id = null, $cb_custom_params=null)
+{
+	if (!class_exists($class))
+		return array(false, "Provided class '$class' is not defined!", array());
+	
+	$res = validate_import_file($class, $equipment_id, $mandatory_cols, $unique_cols);
+	if (!$res[0])
+		return $res;
+	
+	$data = $res[1];
+	
+	if ($other_validation_cb) {
+		if (!is_callable($other_validation_cb))
+			Debug::trigger_report('critical', "process_import_file: Callable ".print_r($other_validation_cb,true)." which should have been used for extra validation is not implemented.");
+
+		$res = call_user_func($other_validation_cb, $data);
+		if (!$res)
+			return array(false, "Can not upload file: ".$res, array());
+	}
+	
+	if ($cb_custom_params && !is_callable($cb_custom_params))
+		Debug::trigger_report('critical', "process_import_file: Callable ".print_r($cb_custom_params,true)." which should add custom params is not implemented.");
+
+	if (!$cb)
+		$cb = "display_" . get_plural_form($class);
+		
+	if (!is_callable($cb))
+		Debug::trigger_report('critical', "process_import_file: Callable ".print_r($cb,true)." is not implemented.");
+	
+	if ($iframe)
+		open_html_iframe();
+	
+	$mes = import_csv_data($data, $equipment_id, $class, $mandatory_cols, $unique_cols, $cb_custom_params);
+	notice($mes,$cb);
+	
+	if ($iframe) {
+		close_html_iframe();
+		if(!$container_id)
+				$container_id = "custom_step_0";
+		// remove iframe by replacing it with it's content so we can keep 
+		// the success mesage displayed inside it and 
+		// the content received from calling the cb 
+		echo "<script> import_iframe_response('$container_id');</script>";
+	}
+	
+	return array(true);
+}
+
+/**
+ * General function to validate file imported via import form
+ * @param string $class. Name of the objects class.
+ * @param type $equipment_id
+ * @param array $mandatory_cols. Array containing the names of the required cols.
+ * @param array $unique_cols. Array containing the names of the cols which need to contain unique values.
+ * @return array. Returns array(true,array_with_csv_lines) if validations passed, and array(false,"error message") otherwise
+ */
+function validate_import_file($class, $equipment_id, $mandatory_cols = array(), $unique_cols = array())
+{
+	global $upload_path;
+
+	if (!class_exists($class))
+		Debug::trigger_report('critical', "validate_import_file: Provided class: ".print_r($class,true)." is not implemented.");
+	
+	if (!count($_FILES))
+		return array(false, "No file uploaded!", array());
+	
+	if ($err = file_upload_has_err("insert_file_location"))
+		return array(false, $err, array());
+
+	$filename = basename($_FILES["insert_file_location"]["name"]);	
+	
+	$ext = strtolower(substr($filename,-4));
+	if ($ext!==".csv")
+		return array(false,"File type must be .csv!", array());
+
+	if (!is_dir($upload_path))
+		mkdir($upload_path);
+
+	$real_name = time().$ext;
+	$file      = "$upload_path/$real_name";
+	if (!move_uploaded_file($_FILES["insert_file_location"]['tmp_name'],$file))
+		return array(false, "Could not upload file.", array());	
+
+	$handle = fopen($file,'r');	
+	$res    =  csv_to_arr($handle);
+	if (!$res["col_names"] || !count($res["data"])) {
+		return array(false, "Can not upload file. File seems to be empty.", array());	
+	}
+	$data        = $res["data"];// $data = array( array("csv_line_no"=>Line_NR ,col1=>val1,col2=>val2),array("csv_line_no"=>Line_NR ,col1=>val1,col2=>val2) ...)
+	$csv_columns = $res["col_names"];
+
+	$columns = $class::variables();	
+	$cols    = array();
+	foreach ($columns as $col_name => $value) {
+		$cols[] = $col_name;
+		if ($value->_required && !in_array($col_name, $mandatory_cols))
+			$mandatory_cols[] = $col_name;
+	}
+	
+	$missing_col = "";
+	foreach ($mandatory_cols as $mandatory_col) {
+		if (!in_array($mandatory_col, $csv_columns)) {			
+			$missing_col = $mandatory_col;
+			break;
+		}
+	}
+
+	if ($missing_col) {
+		$msg =  (count($mandatory_cols)) ? "Columns '" .implode("', '",$mandatory_cols)."' are mandatory!" : "Column '" .implode("', '",$mandatory_cols)."' is mandatory!";
+		return array(false, "Can not upload file. Column '" . $missing_col ."' was not found in file. " . $msg, array());	
+	}
+	
+	return array(true, $data);
+}
+
+/**
+ * General function to import data from a csv file.
+ * ! does not verify file structure! 
+ * ! Use validate_import_file() to validate file structure
+ * @param array $data. Array containing the information to be imported. Format: // $data = array( array("csv_line_no"=>Line_NR ,col1=>val1,col2=>val2),array("csv_line_no"=>Line_NR ,col1=>val1,col2=>val2) ...)
+ * @param type $equipment_id
+ * @param string $class. Name of the class.
+ * @param array $mandatory_cols. Array containing the names of the required cols.
+ * @param array $unique_cols. Array containing the names of the cols which need to contain unique values.
+ * @param array $cb_custom_params The name of the callback for validating custom params added in custom fields in import form 
+ */
+function import_csv_data($data, $equipment_id, $class, $mandatory_cols = array(), $unique_cols=array(), $cb_custom_params=null)
+{
+	if (!class_exists($class))
+		Debug::trigger_report('critical', "import_csv_data: Provided class: ".print_r($class,true)." is not implemented.");
+
+	$cols = array();
+	$vars = $class::variables();	
+	foreach ($vars as $col_name => $value)
+		$cols[] = $col_name;
+
+	$lines_imported = 0;	
+	foreach ($data as $csv_line) {
+		$params = array();
+		if ($equipment_id)
+			$params["equipment_id"] = $equipment_id;
+		else if (in_array("equipment_id", $cols))
+			$params["equipment_id"] = NULL;
+		$obj = new $class;
+		
+		foreach ($csv_line as $col_name => $col_val) {
+			if ($col_name == "csv_line_no")
+				continue;
+
+			$params[$col_name] = $col_val;
+
+			if (in_array($col_name, $mandatory_cols) && $col_val===null) {
+				warning_mess("Skipped line " . $csv_line["csv_line_no"] . ": Column '$col_name' must not be empty!","no");
+				continue 2;
+			}
+			if (in_array($col_name, $unique_cols)) {
+				
+				$cond = array($col_name=>$col_val);
+				
+				if ($equipment_id)
+					$cond["equipment_id"] = $equipment_id;
+				else if (in_array("equipment_id", $cols))
+					$cond["equipment_id"] = "__empty";
+				
+				$count = $obj->fieldSelect("count(*)", $cond);
+				if ($count) {
+					warning_mess("Skipped line " . $csv_line["csv_line_no"] . ": Column '$col_name' must have unique values! Value '$col_val' already exists in ".str_replace("_", " ", get_plural_form($class)).".", "no");
+					continue 2;
+				}
+			}
+		}
+		if ($cb_custom_params) {
+			if (!is_callable($cb_custom_params))
+				Debug::trigger_report('critical', "import_csv_data: Callable ".print_r($cb_custom_params,true)." is not implemented.");
+
+			$params = call_user_func ($cb_custom_params, $params);
+		}
+		$res = $obj->add($params);
+		if (!$res[0])
+			errormess("Could not import line " . $csv_line["csv_line_no"] . ": " . $res[1], "no");
+		$lines_imported++;
+	}
+	$plural = ucfirst(str_replace("_"," ",get_plural_form($class)));
+	$mes    = ($lines_imported == 0) ? "There were no lines imported in " . $plural . "." : "Succesfully imported " . $lines_imported . " " . $plural . ".";
+	
+	return $mes;
+}
+
+/**
+ * 
+ * General function used to export all objects or just the objects checked from from provided class
+ * The function excludes columns containing object id's.
+ * @param string $class. Class name from which we will export objects
+ * @param int $equipment_id. If provided, exports just objects where equipment_id has provided value
+ * @param string $cb. Name of the function which will be called after the execution of this function 
+ * @param array $exclude_cols. Columns which will not be included in exported file
+ * @param boolean $export_all If true will export all objects from provided class
+ * @param string $order_by_cb Callback used to order array of objects returned by selection() (because oreder_by param does not work in Temporary Model)
+ */
+function export_objects($class, $equipment_id = null, $cb = null, $exclude_cols = array(), $export_all = false, $order_by_cb = null)
+{
+	$date     = date('mdYhis', time());
+	$filename = $class."_".$date;
+
+	if (!$cb)
+		$cb = "display_" . get_plural_form ($class);
+	
+	if (!is_callable($cb))
+		Debug::trigger_report('critical', "export_objects: Callable ".print_r($cb,true)." is not implemented.");
+
+	if (!class_exists($class))
+		Debug::trigger_report('critical', "export_objects: Provided class: ".print_r($class,true)." is not implemented.");
+
+	// get columns for export and exclude columns containing object ids
+	// and also exclude columns from exclude_columns array
+	$columns   = $class::variables();
+	$col_names = array();
+	foreach ($columns as $col_name => $val) {
+		if ($col_name == "equipment_id")
+			$has_equipment_id_col = true;
+		if (substr($col_name,-3) === "_id")
+			continue;
+		if (in_array($col_name, $exclude_cols))
+			continue;
+		$col_names[] = $col_name;
+	}
+	$cond = array();
+	if (!empty($has_equipment_id_col))
+		$cond = ($equipment_id) ? array("equipment_id"=>$equipment_id) : array("equipment_id"=>"__empty");
+
+	if (class_exists("TemporaryModel")) 
+		$objs = TemporaryModel::selection($class,$cond);
+	else
+		$objs = Model::selection($class,$cond);
+
+	if ($order_by_cb)
+		$objs = call_user_func($order_by_cb, $objs);
+
+	// if we have just one object it does not make sense to "check_" it
+	if (!$export_all && count($objs)>1) {
+		$selected_obj_ids = array();
+		foreach ($_REQUEST as $field_name => $val) {
+			if (substr($field_name, 0, 6) !== "check_")
+				continue;
+			
+			$checkbox_value = getparam($field_name);
+			if (!bool_value($checkbox_value))
+				continue;
+			
+			$selected_obj_ids[] = substr($field_name, 6);
+		}
+
+		if(!count($selected_obj_ids)) {
+			errormess("No " . str_replace("_", " ",$class) . " selected.", "no");
+			return call_user_func($cb);
+		}
+
+		// remove objects which were not checked for export
+		$obj_id = $class."_id";
+		foreach ($objs as $key => $obj) {
+			if (in_array($obj->$obj_id, $selected_obj_ids))
+				continue;
+			unset($objs[$key]);
+		}
+	}
+	
+	$arr = Model::objectsToArray(array_values($objs), "all");
+	
+	//replace double quotes with single quotes
+	foreach ($arr as $key => $line) {
+		foreach ($line as $name => $value) {
+			$arr[$key][$name] = str_replace ('"', "'", $arr[$key][$name]);
+		}
+	}
+	arr_to_csv($filename, $arr, $col_names,"write_in_file",null,true);
+
+	call_user_func($cb);
+}
+
+/**
+ * Reads all lines from csv and transforms them into an array having next format:
+ * array( array("csv_line_no"=>1, "col_11"=>"val_11", "col_12"=>"val_12"),
+ *	  array("csv_line_no"=>2, "col_21"=>"val_21", "col_22"=>"val_22"),
+ *	  ..... );
+ * return array("data"=> array_containing_all_csv_lines, "col_names"=>array_containing_col_names);
+ * @param resource $handle. File pointer resource.
+ */
+function csv_to_arr($handle) 
+{
+	$fields    = array(); //  col values
+	$col_names = array(); //  col names
+	$data      = array(); //  all lines from file
+	$no        = 0;       //  row number	
+
+	while(($line = fgetcsv($handle)) !== FALSE) {
+		if (!count($col_names)) {
+			// this is the first line containing the names
+			foreach ($line as $col_name) {
+				$col_name  = remove_csv_escape_chars($col_name) ;
+				$col_name  = str_replace(" ", "_", strtolower($col_name));
+				
+				$col_names[] = $col_name;
+			}
+			$no++;
+			continue;
+		}
+		
+		$fields = array("csv_line_no"=>$no++);
+		for ($j=0; $j<count($col_names); $j++) {
+			$line[$j]  = remove_csv_escape_chars($line[$j]) ;
+				
+			$fields[$col_names[$j]] = (isset($line[$j]) && strlen(trim($line[$j]))) ? $line[$j] : null;
+		}
+		$data[] = $fields;
+ 	}
+	return array("data"=>$data, "col_names"=>$col_names);
+}
+
+/**
+ * Removes escape characters (single quotes, double quotes and equal sign)
+ * from the beginning and end of the provided string
+ */
+function remove_csv_escape_chars($value) 
+{
+	$value  = str_replace(array('"="', "'='"), '', $value);
+	
+	if (substr($value,0,2)=='="')
+		$value = substr($value,2);
+	if (substr($value,0,1)=='"')
+		$value = substr($value,1);
+	if (substr($value,-1)=='"')
+		$value = substr($value,0,-1);
+	
+	return $value;
 }
 ?>
