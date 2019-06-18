@@ -2396,45 +2396,7 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 			$colspan += 1; 
 		print '<tr><td class="last_row" colspan="'.$colspan.'"></td></tr>';
 	}
-	if (count($general_actions)) {
-		print '<tr>';
-		if (isset($general_actions["left"])) {
-			$left_actions = $general_actions["left"];
-			$columns_left = floor($no_columns/2);
-			$no_columns -= $columns_left;
-			print '<td class="'.$css.' allleft endtable" colspan="'.$columns_left.'">';
-			$link_no = 0;
-			foreach ($left_actions as $methd => $methd_name) {
-				if ($link_no)
-					print '&nbsp;&nbsp;';
-				print '<a class="'.$css.'" href="'.$base.$methd.'">'.$methd_name.'</a>';
-				$link_no++;
-			}
-			print '</td>';
-			if (isset($general_actions["right"]))
-				$general_actions = $general_actions["right"];
-			else
-				$general_actions = array();
-		}
-		
-		print '<td class="'.$css.' allright endtable" colspan="'.$no_columns.'">';
-		$link_no = 0;
-		if (!count($general_actions))
-			print "&nbsp;";
-		foreach ($general_actions as $methd=>$methd_name) {
-			if ($link_no)
-				print '&nbsp;&nbsp;';
-
-			if ($methd === "cb") {
-				set_cb($methd_name);
-			} else {
-				print '<a class="'.$css.'" href="'.$base.$methd.'">'.$methd_name.'</a>';
-				$link_no++;
-			}
-		}
-		print '</td>';
-		print '</tr>';
-	}
+	links_general_actions($general_actions, $no_columns, $css, $base);
 	print "</table>";
 }
 
@@ -5483,7 +5445,7 @@ function  import_form_obj($class, $equipment_id, $examples, $error="", $error_fi
 }
 
 /**
- * General function to proceess file imported via import form
+ * General function to process csv file imported via import form
  * @param string $class. Name of the objects class.
  * @param type $equipment_id
  * @param array $mandatory_cols. Array containing the names of the required cols.
@@ -5501,7 +5463,7 @@ function process_import_file($class, $equipment_id, $mandatory_cols = array(), $
 	if (!class_exists($class))
 		return array(false, "Provided class '$class' is not defined!", array());
 	
-	$res = validate_import_file($class, $equipment_id, $mandatory_cols, $unique_cols);
+	$res = validate_import_file($class, $mandatory_cols);
 	if (!$res[0])
 		return $res;
 	
@@ -5545,40 +5507,22 @@ function process_import_file($class, $equipment_id, $mandatory_cols = array(), $
 }
 
 /**
- * General function to validate file imported via import form
+ * General function to validate csv file imported via import form
  * @param string $class. Name of the objects class.
- * @param type $equipment_id
  * @param array $mandatory_cols. Array containing the names of the required cols.
- * @param array $unique_cols. Array containing the names of the cols which need to contain unique values.
  * @return array. Returns array(true,array_with_csv_lines) if validations passed, and array(false,"error message") otherwise
  */
-function validate_import_file($class, $equipment_id, $mandatory_cols = array(), $unique_cols = array())
+function validate_import_file($class, $mandatory_cols = array())
 {
 	global $upload_path;
 
 	if (!class_exists($class))
 		Debug::trigger_report('critical', "validate_import_file: Provided class: ".print_r($class,true)." is not implemented.");
 	
-	if (!count($_FILES))
-		return array(false, "No file uploaded!", array());
-	
-	if ($err = file_upload_has_err("insert_file_location"))
-		return array(false, $err, array());
-
-	$filename = basename($_FILES["insert_file_location"]["name"]);	
-	
-	$ext = strtolower(substr($filename,-4));
-	if ($ext!==".csv")
-		return array(false,"File type must be .csv!", array());
-
-	if (!is_dir($upload_path))
-		mkdir($upload_path);
-
-	$real_name = time().$ext;
-	$file      = "$upload_path/$real_name";
-	if (!move_uploaded_file($_FILES["insert_file_location"]['tmp_name'],$file))
-		return array(false, "Could not upload file.", array());	
-
+	$res = check_file_upload(".csv");
+	if (!$res[0])
+		return $res;
+	$file = $res[1];
 	$handle = fopen($file,'r');	
 	$res    =  csv_to_arr($handle);
 	if (!$res["col_names"] || !count($res["data"])) {
@@ -5686,7 +5630,7 @@ function import_csv_data($data, $equipment_id, $class, $mandatory_cols = array()
 
 /**
  * 
- * General function used to export all objects or just the objects checked from from provided class
+ * General function used to export into .csv all objects or just the objects checked from the provided class
  * The function excludes columns containing object id's.
  * @param string $class. Class name from which we will export objects
  * @param int $equipment_id. If provided, exports just objects where equipment_id has provided value
@@ -5736,18 +5680,7 @@ function export_objects($class, $equipment_id = null, $cb = null, $exclude_cols 
 
 	// if we have just one object it does not make sense to "check_" it
 	if (!$export_all && count($objs)>1) {
-		$selected_obj_ids = array();
-		foreach ($_REQUEST as $field_name => $val) {
-			if (substr($field_name, 0, 6) !== "check_")
-				continue;
-			
-			$checkbox_value = getparam($field_name);
-			if (!bool_value($checkbox_value))
-				continue;
-			
-			$selected_obj_ids[] = substr($field_name, 6);
-		}
-
+		$selected_obj_ids = get_selected_chk();
 		if(!count($selected_obj_ids)) {
 			errormess("No " . str_replace("_", " ",$class) . " selected.", "no");
 			return call_user_func($cb);
@@ -5773,6 +5706,59 @@ function export_objects($class, $equipment_id = null, $cb = null, $exclude_cols 
 	arr_to_csv($filename, $arr, $col_names,"write_in_file",null,true);
 
 	call_user_func($cb);
+}
+
+function get_selected_chk() 
+{
+	$selected_obj_ids = array();
+	foreach ($_REQUEST as $field_name => $val) {
+		if (substr($field_name, 0, 6) !== "check_")
+			continue;
+
+		$checkbox_value = getparam($field_name);
+		if (bool_value($checkbox_value) || $checkbox_value=="on") {
+			$selected_obj_ids[] = substr($field_name, 6);
+		} else
+			continue;
+	}
+	
+	return $selected_obj_ids;
+}
+
+
+/**
+ * Function used for pre-validatating file. 
+ * Verifies if a file with specified extension was provided in $_FILES and uploads it in $upload_path/time().$ext
+ * @global type $upload_path
+ * @param type $ext
+ * @return array. If success returns array(true, " path to file") otherwise returns array(false, msg, array())
+ */
+function check_file_upload($ext)
+{
+	global $upload_path;
+	
+	if (!count($_FILES))
+		return array(false, "No file uploaded!", array());
+	
+	if ($err = file_upload_has_err("insert_file_location"))
+		return array(false, $err, array());
+
+	$filename = basename($_FILES["insert_file_location"]["name"]);	
+	
+	$len = -1 * strlen($ext);
+	$file_ext = strtolower(substr($filename,$len));
+	if ($file_ext!==$ext)
+		return array(false,"File type must be ".$ext."!", array());
+
+	if (!is_dir($upload_path))
+		mkdir($upload_path);
+
+	$real_name = time().$ext;
+	$file      = "$upload_path/$real_name";
+	if (!move_uploaded_file($_FILES["insert_file_location"]['tmp_name'],$file))
+		return array(false, "Could not upload file.", array());	
+	
+	return array(true, $file);
 }
 
 /**
