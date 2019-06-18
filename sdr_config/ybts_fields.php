@@ -1365,9 +1365,9 @@ Defaults to 5000",
 This interval includes paging if needed.
 This parameter can be overridden in the msg.execute message by a 'timeout' parameter.
 This parameter is applied on reload.
-Interval allowed: 5000..600000
+Interval allowed: 5000..60000
 Defaults to 30000",
-				"validity"=> array("check_field_validity",5000, 600000)
+				"validity"=> array("check_field_validity",5000, 60000)
 			),
 			"ussd.session_timeout" => array(
 				"display" => "text",
