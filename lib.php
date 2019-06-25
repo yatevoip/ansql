@@ -884,7 +884,10 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
  */
 function editObject($object, $fields, $title, $submit="Submit", $compulsory_notice=NULL, $no_reset=false, $css=NULL, $form_identifier='', $td_width=NULL, $hide_advanced=false)
 {
-	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");	
+	
+	global $level, $method, $only_cancel_button, $exceptions_only_cancel_button;
+
 	if(!$css)
 		$css = "edit";
 
@@ -996,29 +999,23 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 		foreach($custom_submit as $field_name=>$field_format)
 			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width);
 
-	if($submit != "no" && $submit != "no_submit" && $submit != 'only_cancel')
-	{
-		print '<tr class="'.$css.'">';
-		print '<td class="'.$css.' trailer" colspan="2">';
-		if(is_array($submit))
-		{
-			for($i=0; $i<count($submit); $i++)
-			{
-				print '&nbsp;&nbsp;';
-				print '<input class="'.$css.'" type="submit" name="'.$submit[$i].'" value='.html_quotes_escape($submit[$i]).'/>';
-			}
-		}else
-			print '<input class="'.$css.'" type="submit" name="'.$submit.'" value='.html_quotes_escape($submit).'/>';
-		if(!$no_reset) {
-			print '&nbsp;&nbsp;<input class="'.$css.'" type="reset" value="Reset"/>';
-			$cancel_but = cancel_button($css);
-			if ($cancel_but)
-				print "&nbsp;&nbsp;$cancel_but";
-		}
-		print '</td>';
-		print '</tr>';
+	// don't display submit buttons if $submit value is "no" or "no_submit"
+	if (in_array($submit, array("no", "no_submit"))) {
+		print '</table>';
+		return;
 	}
-
+	
+	// $submit value must be "only_cancel" if 
+	// - current user level is allowed to see just cancel button
+	// - and if used method is not an exception method for which this user level can see submit button
+	if (
+	  isset($only_cancel_button) && in_array($level, $only_cancel_button) 
+	  && 
+	  (!isset($exceptions_only_cancel_button) || isset($exceptions_only_cancel_button) && !in_array($method, $exceptions_only_cancel_button))
+	  )
+		$submit = "only_cancel";
+	
+	// display only cancel button if $submit value is "only_cancel"
 	if ($submit == 'only_cancel')
 	{
 		print '<tr class="'.$css.'">';
@@ -1028,8 +1025,28 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 			print "&nbsp;&nbsp;$cancel_but";
 		print '</td>';
 		print '</tr>';
-
+		print '</table>';
+		return;
 	}
+	
+	print '<tr class="'.$css.'">';
+	print '<td class="'.$css.' trailer" colspan="2">';
+	if(is_array($submit)) {
+		for($i=0; $i<count($submit); $i++)
+		{
+			print '&nbsp;&nbsp;';
+			print '<input class="'.$css.'" type="submit" name="'.$submit[$i].'" value='.html_quotes_escape($submit[$i]).'/>';
+		}
+	} else
+		print '<input class="'.$css.'" type="submit" name="'.$submit.'" value='.html_quotes_escape($submit).'/>';
+	if (!$no_reset) {
+		print '&nbsp;&nbsp;<input class="'.$css.'" type="reset" value="Reset"/>';
+		$cancel_but = cancel_button($css);
+		if ($cancel_but)
+			print "&nbsp;&nbsp;$cancel_but";
+	}
+	print '</td>';
+	print '</tr>';
 	print '</table>';
 }
 
@@ -1726,6 +1743,54 @@ function tableOfObjects_ord($objects, $formats, $object_name, $object_actions=ar
 }
 
 /**
+ * Removes forbidden actions from $object_actions/ $general_actions array from table/tableOfObjects($forbidden_actions are set in structure.php)
+ */
+function clean_actions_array($actions)
+{
+	global $level, $forbidden_actions;
+	
+	if (!isset($forbidden_actions[$level]))
+		return $actions;
+	
+	foreach ($actions as $key=>$value) {
+		$verif = (is_int($key)) ? $value : $key;
+
+		if (in_array($verif, array("left", "right", "remove"))) {
+			$actions[$key] = clean_actions_array($value);
+			continue;
+		}
+		
+		if ($verif === "cbs") {
+			foreach ($value as $cb_key => $cb) {
+				$test_val = (isset($cb["name"])) ? $cb["name"] : $cb; 
+				if (stripos_array_values($test_val, $forbidden_actions[$level]))
+					unset($actions[$verif][$cb_key]);
+			}
+			continue;
+		}
+	
+		if ($verif === "cb")
+			$test_val = (is_array($value)) ? $value["name"] : $value;
+		else
+			$test_val = $verif;
+	
+		if (stripos_array_values($test_val, $forbidden_actions[$level]))
+			unset($actions[$key]);
+	}
+	
+	return $actions;
+}
+
+function stripos_array_values($str, $array) 
+{
+	foreach ($array as $val)
+		if (stripos($str,$val)!==FALSE)
+			return true;
+	
+	return false;
+}
+
+/**
  * Creates table of objects
  * @param $objects Array with the objects to be displayed
  * @param $formats Array with columns to be displayed in the table
@@ -1767,6 +1832,10 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 
 	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities;
 
+	$object_actions = clean_actions_array($object_actions);
+	$general_actions = clean_actions_array($general_actions);
+	$formats = clean_actions_array($formats);
+	
 	if(!$db_true)
 		$db_true = "yes";
 	if(!$db_false)
@@ -2194,6 +2263,10 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module, $do_not_apply_htmlentities;
+
+	$element_actions = clean_actions_array($element_actions);
+	$general_actions = clean_actions_array($general_actions);
+	$formats = clean_actions_array($formats);
 
 	if (!$css)
 		$css = "content";
