@@ -891,6 +891,10 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 	if(!$css)
 		$css = "edit";
 
+	if ($level === "auditor") {
+		$title = str_replace("Edit ", "View ", $title);
+	}
+	
 	print '<table class="'.$css.'" cellspacing="0" cellpadding="0">';
 	if($title) {
 		print '<tr class="'.$css.'">';
@@ -1830,11 +1834,15 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"paranoid");
 
-	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities;
+	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities, $level;
 
 	$object_actions = clean_actions_array($object_actions);
 	$general_actions = clean_actions_array($general_actions);
 	$formats = clean_actions_array($formats);
+
+	// Start output buffering if level is auditor, so all output is stored in the internal buffer and it is not sent from the script.
+	if ($level == "auditor")
+		ob_start();
 	
 	if(!$db_true)
 		$db_true = "yes";
@@ -2029,6 +2037,14 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		links_general_actions($general_actions, $no_columns, $css, $base);
 
 	print "</table>";
+	
+	// catch table before it is displayed and replace Edit with View
+	if ($level == "auditor") {
+		$table = ob_get_contents();
+		ob_end_clean();
+		
+		echo str_replace(array(">Edit</a>",">Edit </a>", "> Edit</a>", "> Edit </a>"), ">View</a>", $table);
+	}
 }
 
 /**
@@ -2262,12 +2278,16 @@ function trim_value(&$value)
 function table($array, $formats, $element_name, $id_name, $element_actions = array(), $general_actions = array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names = array(), $table_id = null, $select_all = false, $order_by_columns = false, $build_link_elements = array(), $add_empty_row=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module, $do_not_apply_htmlentities;
+	global $module, $do_not_apply_htmlentities, $level;
 
 	$element_actions = clean_actions_array($element_actions);
 	$general_actions = clean_actions_array($general_actions);
 	$formats = clean_actions_array($formats);
 
+	// Start output buffering if level is auditor, so all output is stored in the internal buffer and it is not sent from the script.
+	if ($level == "auditor")
+		ob_start();
+	
 	if (!$css)
 		$css = "content";
 	if (!count($array)) {
@@ -2471,6 +2491,14 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 	}
 	links_general_actions($general_actions, $no_columns, $css, $base);
 	print "</table>";
+	
+	// catch table before it is displayed and replace Edit with View
+	if ($level == "auditor") {
+		$table = ob_get_contents();
+		ob_end_clean();
+		
+		echo str_replace(array(">Edit</a>",">Edit </a>", "> Edit</a>", "> Edit </a>"), ">View</a>", $table);
+	}
 }
 
 /**
