@@ -4138,8 +4138,9 @@ function mysql_in_file($fh, $formats, $array, $sep)
  * False to get directly the values from arrays of arrays. 
  * @param $col_header Bool. True to set header parameters from $formats 
  * @param $keep_bools Bool. False by default to not keep boolean values.
+ * @param $escape Bool. True by default to escape the values of the columns set in file.
  */ 
-function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_header=true, $keep_bools=false)
+function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_header=true, $keep_bools=false, $escape=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	$col_nr = 0;
@@ -4162,7 +4163,10 @@ function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_head
 			}
 			$val = str_replace("_"," ",ucfirst($name));
 			$val = str_replace("&nbsp;"," ",$val);
-			$val = ($col_nr) ? $sep."\"$val\"" : "\"$val\"";
+			if ($escape)
+				$val = ($col_nr) ? $sep."\"$val\"" : "\"$val\"";
+			else
+				$val = ($col_nr) ? $sep.$val : $val;
 			fwrite($fh, $val);
 			$col_nr++;
 		} 
@@ -4205,10 +4209,11 @@ function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_head
 				if (!$keep_bools) {
 					if (!strlen($column_value))
 						$column_value = "";
-					$column_value = "\"=\"\"".$column_value."\"\"\"";
+					
+					$column_value = ($escape) ? "\"=\"\"".$column_value."\"\"\"" : $column_value;
 				} else {
 					if (!is_bool($column_value) && $column_value!==null)
-						$column_value = "\"=\"\"".$column_value."\"\"\"";
+						$column_value = ($escape) ? "\"=\"\"".$column_value."\"\"\"" : $column_value;
 					
 				}
 				if ($col_nr)
@@ -4218,7 +4223,7 @@ function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_head
 			}
 		} else {
 			for ($j=0; $j<count($array[$i]); $j++) {
-				$column_value = "\"".$array[$i][$j]."\"";
+				$column_value = ($escape) ? "\"".$array[$i][$j]."\"" : $array[$i][$j];
 				if ($col_nr)
 					$column_value =  $sep.$column_value;
 				fwrite($fh, $column_value);
