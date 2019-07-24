@@ -459,27 +459,40 @@ function clean_node_types($installed_nodes)
  * Uses get_node_status API request to get the node status. 
  * Returns array("state":text,"color":red/green/yellow,"details":true/false)
  */ 
-function node_status($out=array(), $url="get_node_status")
+function node_status($out=array(), $url="get_node_status", $extra=array())
 {
+	if (!$out)
+		$out = array();
+	if (!$url)
+		$url = "get_node_status";
+	if (!$extra)
+		$extra = array();
+	
 	$res = make_request($out,$url);
+	
+	$ret = array();
+	foreach ($extra as $extra_field) {
+		if (isset($res[$extra_field]))
+			$ret[$extra_field] = $res[$extra_field];
+	}
 
 	if (!isset($res["code"])) {
 		$mess = (isset($res["message"])) ? $res["message"] : $res;
-		return array(
+		return array_merge($ret, array(
 			"state"=>html_entity_decode(nl2br($mess)), 
 			"color"=>"red",
 			"details"=>false,
 			"version"=>(isset($res["version"])) ? $res["version"] : null
-		);
+		));
 	}
 	
 	if ($res["code"] != 0)
-		return array(
+		return array_merge($ret, array(
 			"state"=>html_entity_decode(nl2br($res["message"])), 
 			"color"=>"red",
 			"details"=>false,
 			"version"=>(isset($res["version"])) ? $res["version"] : null
-		);
+		));
 
 	$node_status = array(
 		"details"=>true,
@@ -509,6 +522,6 @@ function node_status($out=array(), $url="get_node_status")
 	else
 		$node_status["color"] = "red";
 
-	return $node_status;
+	return array_merge($ret, $node_status);
 }
 ?>
