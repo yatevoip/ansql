@@ -1187,7 +1187,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if ($display=="message" || $display=="objtitle" || $display=="custom_submit" || $display=="custom_field") {
 		$custom_field_css = ($display=="custom_field") ? "custom_field" : 'double_column';
 
-		print '<td class="'.$css.' '.$custom_field_css.'" colspan="2">';
+		$extra_css = (isset($field_format["extra_css"])) ? $field_format["extra_css"] : "";
+		
+		print '<td class="'.$css.' '.$custom_field_css. ' ' . $extra_css .'" colspan="2">';
 		if ($display=="objtitle")
 			print "<div class='objtitle'>$value</div>";
 		else
