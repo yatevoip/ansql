@@ -5473,7 +5473,7 @@ function str_to_arr($str, $delimiter=",", $extra="trim")
 }
 
 /**
- * Prints iframe having content(src) from 'pages.php?method=". getparam("form_method") ."&equipment_id=". getparam("equipment_id")."'
+ * Prints iframe having content(src) from 'pages.php?method=". getparam("form_method")
  * 
  * @param array $additional_params Array containing the names of the additional params to be added in src
  */
@@ -5482,14 +5482,19 @@ function import_file_iframe($additional_params = array())
 	$form_method = getparam("form_method");
 	if (!is_callable($form_method))
 		Debug::trigger_report('critical', "import_file_iframe: Callable ".print_r($form_method,true)." provided in param 'form_method' is not implemented.");
-	
-	$equipment_id = getparam("equipment_id");
         
-	$src = "pages.php?method=". $form_method ."&equipment_id=". $equipment_id;
+	$src = "pages.php?method=".$form_method;
 	
-	foreach ($additional_params as $additional_param)
-		$src .= "&" . $additional_param . "=" . getparam ($additional_param);
-	
+	if(count($additional_params)) {
+		foreach ($additional_params as $additional_param)
+			$src .= "&{$additional_param}=".getparam($additional_param);
+	} else {
+		foreach($_REQUEST as $param => $value){
+			if($param==="form_method" || $param==="method")
+				continue;
+			$src .= "&{$param}={$value}";
+		}
+	}
 	print "<iframe id='import_iframe' class='import_iframe' src='$src'>";
         print "</iframe>";
 }
@@ -5559,7 +5564,8 @@ function import_form_obj($class, $examples, $error="", $error_fields = array(), 
 	
 	error_handle($error, $fields, $error_fields);
 	start_form("pages.php?method=" . $form_action, "POST", true, $cb_cancel);
-	if($hidden_fields) {
+	
+	if(count($hidden_fields)) {
 		foreach($hidden_fields as $name => $value)
 			print "<input id='$name' name='$name' type='hidden' value='$value'/>";
 	}
@@ -5574,7 +5580,7 @@ function import_form_obj($class, $examples, $error="", $error_fields = array(), 
 /**
  * General function to process csv file imported via import form
  * @param string $class. Name of the objects class.
- * @param type $equipment_id
+ * @param type $additional_params
  * @param array $mandatory_cols. Array containing the names of the required cols.
  * @param array $unique_cols. Array containing the names of the cols which need to contain unique values.
  * @param string $cb. Name of the function which will be called if import file is valid
@@ -5687,7 +5693,7 @@ function validate_import_file($class, $mandatory_cols = array())
  * ! does not verify file structure! 
  * ! Use validate_import_file() to validate file structure
  * @param array $data. Array containing the information to be imported. Format: // $data = array( array("csv_line_no"=>Line_NR ,col1=>val1,col2=>val2),array("csv_line_no"=>Line_NR ,col1=>val1,col2=>val2) ...)
- * @param type $equipment_id
+ * @param type $additional_params
  * @param string $class. Name of the class.
  * @param array $mandatory_cols. Array containing the names of the required cols.
  * @param array $unique_cols. Array containing the names of the cols which need to contain unique values.
