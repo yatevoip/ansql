@@ -3408,13 +3408,28 @@ function format_for_dropdown($vals)
 }
 
 /**
- * Builds the format for the dropdown with the posibility
+ * Builds the format for the dropdown with the possibility
+ * of the option to be different from value displayed
+ * @param $vals Array contains the ids and the values of elements
+ * @param $field_name String the name of the field
+ */ 
+function format_for_dropdown_assoc_opt($vals,$field_name)
+{
+	$arr = array();
+	foreach ($vals as $key => $val) {
+		array_push($arr, array("{$field_name}_id"=>$key, "{$field_name}"=>$val));
+	}
+	return $arr;
+}
+
+/**
+ * Builds the format for the dropdown with the possibility
  * of the option to be different from value displayed 
  *
  * @param $vals Array contains the ids and the values of elements
  * @param $field String the name of the field
  * @param $set_id Bool if true the option selected is the id of the element
- * otherwize the option selected is the same as the value
+ * otherwise the option selected is the same as the value
  * @return $arr Array with the specific format for the dropdown
  */ 
 function format_opt_for_dropdown($vals, $field="field", $set_id=false)
@@ -5503,19 +5518,19 @@ function close_html_iframe()
 /**
  * General function for displaying import form
  * @param string $class. Name of the objects class.
- * @param int $equipment_id. Id of the equipment if objects to be imported are not global objects
  * @param array $examples. Keeps the name, path and other info for example files.  Same array used in display_pair for display=file.
  * @param string $error. Error message 
  * @param array $error_fields. Array containing fields having incorrect values.
- * @param string $cb. Name of the function which will be called after the execution of this function is 
- * @param bool $iframe. If true will indicate that the form is inside a iframe, therefore is needed to add the html structure for a 
+ * @param string $cb_cancel. Name of the function which will be called after the execution of this function is
+ * @param array $cb_cancel_parameters. Id of the equipment if objects to be imported are not global objects
+ * @param bool $iframe. If true will indicate that the form is inside an iframe, therefore is needed to add the html structure for a 
  *			html document and to link JS and CSS docs so we can use css and javascript inside iframe
  * @param string $form_action. Name of the function used for validation
  */
-function  import_form_obj($class, $equipment_id, $examples, $error="", $error_fields = array(), $cb = null, $iframe=true, $form_action=null)
+function import_form_obj($class, $examples, $error="", $error_fields = array(), $cb_cancel = null,$cb_cancel_parameters=array(),$hidden_fields=array(),$iframe=true, $form_action=null)
 {	
-	if (!$cb)
-		$cb = "display_" . get_plural_form($class);
+	if (!$cb_cancel)
+		$cb_cancel = "display_" . get_plural_form($class);
 	
 	$fields = array();
 	
@@ -5524,12 +5539,13 @@ function  import_form_obj($class, $equipment_id, $examples, $error="", $error_fi
 		// when using iframe we need to use a custom cancel button which will:
 		//  -  replace the iframe content with the content displayed from calling cb and 
 		//  -  will remove iframe by replacing iframe with it's own content
-		// 
+		//
+		$cb_parameters = (count($cb_cancel_parameters)) ? json_encode($cb_cancel_parameters) : "false";
 		$fields["buttons"] = array(	
 			"display" => "custom_submit", 
 			"value"   => "<input class=\"edit\" name=\"Upload\" value=\"Upload\" type=\"submit\">
 				     <input class=\"edit\" value=\"Reset\" type=\"reset\">
-				     <input type=\"button\" onclick=\"import_iframe_cancel_button ('$cb', '$equipment_id');\" value=\"Cancel\" />"
+				     <input type=\"button\" onClick='import_iframe_cancel_button(\"$cb_cancel\",$cb_parameters);' value=\"Cancel\" />"
 		);
 	}
 			
@@ -5542,9 +5558,12 @@ function  import_form_obj($class, $equipment_id, $examples, $error="", $error_fi
 		$form_action = "import_" . get_plural_form($class) . "_database";
 	
 	error_handle($error, $fields, $error_fields);
-	start_form("pages.php?method=" . $form_action, "POST", true, $cb);
-	if ($equipment_id)
-		print '<input id="equipment_id" type="hidden" value="'.$equipment_id.'" name="equipment_id" />';
+	start_form("pages.php?method=" . $form_action, "POST", true, $cb_cancel);
+	if($hidden_fields) {
+		foreach($hidden_fields as $name => $value)
+			print "<input id='$name' name='$name' type='hidden' value='$value'/>";
+	}
+	
 	editObject(NULL,$fields,"Import " . str_replace("_", " ", get_plural_form($class)) . " from file", $button_name);
 	end_form();
 	
@@ -5566,7 +5585,7 @@ function  import_form_obj($class, $equipment_id, $examples, $error="", $error_fi
  * @param string $cb_custom_params The name of the callback for validating custom params added in custom fields in import form 
  * @return array. Returns array(true) if validations passed, else array(false,"error message") otherwise
  */
-function process_import_file($class, $equipment_id, $mandatory_cols = array(), $unique_cols = array(), $cb = null, $other_validation_cb = null, $iframe=true, $container_id = null, $cb_custom_params=null)
+function process_import_file($class, $additional_params=array(), $mandatory_cols = array(), $unique_cols = array(), $cb = null, $other_validation_cb = null, $iframe=true, $container_id = null, $cb_custom_params=null)
 {
 	if (!class_exists($class))
 		return array(false, "Provided class '$class' is not defined!", array());
@@ -5598,7 +5617,7 @@ function process_import_file($class, $equipment_id, $mandatory_cols = array(), $
 	if ($iframe)
 		open_html_iframe();
 	
-	$mes = import_csv_data($data, $equipment_id, $class, $mandatory_cols, $unique_cols, $cb_custom_params);
+	$mes = import_csv_data($data, $additional_params, $class, $mandatory_cols, $unique_cols, $cb_custom_params);
 	notice($mes,$cb);
 	
 	if ($iframe) {
@@ -5674,7 +5693,7 @@ function validate_import_file($class, $mandatory_cols = array())
  * @param array $unique_cols. Array containing the names of the cols which need to contain unique values.
  * @param array $cb_custom_params The name of the callback for validating custom params added in custom fields in import form 
  */
-function import_csv_data($data, $equipment_id, $class, $mandatory_cols = array(), $unique_cols=array(), $cb_custom_params=null)
+function import_csv_data($data, $additional_params, $class, $mandatory_cols = array(), $unique_cols=array(), $cb_custom_params=null)
 {
 	if (!class_exists($class))
 		Debug::trigger_report('critical', "import_csv_data: Provided class: ".print_r($class,true)." is not implemented.");
@@ -5686,11 +5705,7 @@ function import_csv_data($data, $equipment_id, $class, $mandatory_cols = array()
 
 	$lines_imported = 0;	
 	foreach ($data as $csv_line) {
-		$params = array();
-		if ($equipment_id)
-			$params["equipment_id"] = $equipment_id;
-		else if (in_array("equipment_id", $cols))
-			$params["equipment_id"] = NULL;
+		$params = $additional_params;
 		$obj = new $class;
 		
 		foreach ($csv_line as $col_name => $col_val) {
@@ -5705,12 +5720,10 @@ function import_csv_data($data, $equipment_id, $class, $mandatory_cols = array()
 			}
 			if (in_array($col_name, $unique_cols)) {
 				
-				$cond = array($col_name=>$col_val);
+				$cond = array($col_name => $col_val);
 				
-				if ($equipment_id)
-					$cond["equipment_id"] = $equipment_id;
-				else if (in_array("equipment_id", $cols))
-					$cond["equipment_id"] = "__empty";
+				foreach($additional_params as $prop => $value)
+					$cond[$prop] = ($value===null) ? "__empty" : $value;
 				
 				$count = $obj->fieldSelect("count(*)", $cond);
 				if ($count) {
@@ -5741,19 +5754,19 @@ function import_csv_data($data, $equipment_id, $class, $mandatory_cols = array()
  * General function used to export into .csv all objects or just the objects checked from the provided class
  * The function excludes columns containing object id's.
  * @param string $class. Class name from which we will export objects
- * @param int $equipment_id. If provided, exports just objects where equipment_id has provided value
+ * @param array $cond. If provided, export data fulfilling the condition
  * @param string $cb. Name of the function which will be called after the execution of this function 
  * @param array $exclude_cols. Columns which will not be included in exported file
  * @param boolean $export_all If true will export all objects from provided class
  * @param string $order_by_cb Callback used to order array of objects returned by selection() (because oreder_by param does not work in Temporary Model)
  */
-function export_objects($class, $equipment_id = null, $cb = null, $exclude_cols = array(), $export_all = false, $order_by_cb = null)
+function export_objects($class, $cond=array(), $cb = null, $exclude_cols = array(), $export_all = false, $order_by_cb = null)
 {
 	$date     = date('mdYhis', time());
 	$filename = $class."_".$date;
 
 	if (!$cb)
-		$cb = "display_" . get_plural_form ($class);
+		$cb = "display_".get_plural_form($class);
 	
 	if (!is_callable($cb))
 		Debug::trigger_report('critical', "export_objects: Callable ".print_r($cb,true)." is not implemented.");
@@ -5766,18 +5779,13 @@ function export_objects($class, $equipment_id = null, $cb = null, $exclude_cols 
 	$columns   = $class::variables();
 	$col_names = array();
 	foreach ($columns as $col_name => $val) {
-		if ($col_name == "equipment_id")
-			$has_equipment_id_col = true;
 		if (substr($col_name,-3) === "_id")
 			continue;
 		if (in_array($col_name, $exclude_cols))
 			continue;
 		$col_names[] = $col_name;
 	}
-	$cond = array();
-	if (!empty($has_equipment_id_col))
-		$cond = ($equipment_id) ? array("equipment_id"=>$equipment_id) : array("equipment_id"=>"__empty");
-
+	
 	if (class_exists("TemporaryModel")) 
 		$objs = TemporaryModel::selection($class,$cond);
 	else

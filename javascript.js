@@ -867,7 +867,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 		// this field is advanced -> display it only if user already requested to see advanced fields
 		if (tr_element.getAttribute("advanced")=="true" && show_advanced==false)
 			continue;
-
+		
 		show(id_tr_element);
 	}
 
@@ -1258,29 +1258,35 @@ function show_hide_file_examples(elems,button_id) {
 /**
  * Cancel button action ( for Import files form within an iframe). Wil call the callback from pages.php and will remove the iframe keeping just it's content
  * @param string cb. Function to be called after cancel button is clicked
- * @param string equipment_id
+ * @param object cb_parameters, Example: {"equipment_id": 20,"equipment_type":"smsc"}
  * @param string cb_container_id. Id of the container holding the iframe.
  *				  If not provided falls to default "custom_step_0"
   */
-function import_iframe_cancel_button (cb, equipment_id=null, cb_container_id=null)
+function import_iframe_cancel_button (cb, cb_parameters, cb_container_id=null)
 {
-    var url = 'pages.php?method=' + cb;
-    if (equipment_id)
-	    url = url  + '&equipment_id=' + equipment_id;
-    if (!cb_container_id)
-	    cb_container_id = 'custom_step_0';
+	var url = 'pages.php?method=' + cb;
+	var json_cb_parameters = (cb_parameters) ? JSON.parse(cb_parameters) : false;
+	if(isObject(json_cb_parameters) && !emptyObj(json_cb_parameters)) {
+		for (var field in json_cb_parameters) {
+			url += "&" + field + "=" + json_cb_parameters[field];
+		}
+	}
+	if (!cb_container_id)
+		cb_container_id = 'custom_step_0';
 
-    var callback = {
+	var callback = {
 		"name": callback_request,
 		"param": {
 			"container_id": "import_form",
-			"cbs": [{
+			"cbs": [
+				{
 				    "name": import_iframe_response,
 				    "params": [cb_container_id]
-				}]
+				}
+			]
 		}
-	    };
-    make_request(url, callback);
+	};
+	make_request(url, callback);
 }
 
 /**
@@ -1294,4 +1300,18 @@ function import_iframe_response(iframe_container_id, content_container_id = null
 	    content_container_id = 'import_form';
 
     window.parent.document.getElementById(iframe_container_id).innerHTML = document.getElementById(content_container_id).innerHTML;
+}
+
+function isObject(obj)
+{
+	return(obj !== null && typeof obj === 'object');
+}
+
+function emptyObj(obj) 
+{
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key))
+            return false;
+    }
+    return true;
 }
