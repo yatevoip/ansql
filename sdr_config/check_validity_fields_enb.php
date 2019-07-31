@@ -29,7 +29,7 @@ function validate_cell_identity($field_name, $field_value)
 
 /* validate EARFCN */
 // $field_value corresponds to the inserted earfcn
-function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandwidth)
+function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandwidth, $sel_band=null,$sel_bandw=null)
 {
 	$bands = get_available_bands();
 	if (!$bands)
@@ -44,8 +44,8 @@ function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandw
 	    100 => 20
 	);
 	
-	$selected_band = getparam($name_band);
-	$selected_bandwidth = getparam($name_bandwidth);
+	$selected_band = ($sel_band)? $sel_band : getparam($name_band);
+	$selected_bandwidth = ($sel_bandw)? $sel_bandw : getparam($name_bandwidth);
 	
 	if (!isset($bandwidth_mhz[$selected_bandwidth]))
 		return array(false, "Invalid selected 'Bandwidth': $selected_bandwidth");
