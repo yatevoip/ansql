@@ -39,7 +39,7 @@ function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandw
 		$bands = get_available_bands(true);
 		if (!$bands)
 			return array(false, $_SESSION[$wizard_name][$server_name][$templ_id]["error_get_bands"]." Please fix error before trying to save configuration. The 'Bands' evaluation can't be done for the template selected.");
-		$add_message = "Please fix the error in the template that you chosen or select a template that have the correct values for 'Band', 'Bandwith', 'EARFCN'. ".get_allowed_band($sel_band, $bands); 
+		$add_message = "Please fix the error in the template that you selected or select another template that has the correct values for 'Band', 'Bandwith', 'EARFCN'. ".get_allowed_band($sel_band, $bands); 
 	} else {
 		$bands = get_available_bands();
 		if (!$bands)
@@ -84,7 +84,7 @@ function get_allowed_band($band_set, $bands)
 {
 	foreach ($bands as $k=>$band) {
 		if ($bands[$k]["band"] == $band_set)
-			return "For the Band: ".$band_set." the Frequency Download is ".$bands[$k]["frequency_dl"]. ", the MinEarcfn Download is ".$bands[$k]["min_earfcn_dl"].", the Mas ".$bands[$k]["max_earfcn_dl"].", the Frequency Upload is ".$bands[$k]["frequency_ul"].", the Earcfn Offset is ".$bands[$k]["earfcn_offset"];
+			return "For the Band: ".$band_set." the Frequency Download is ".$bands[$k]["frequency_dl"]. ", the MinEarcfn Download is ".$bands[$k]["min_earfcn_dl"].", the MaxEarcfn Download is ".$bands[$k]["max_earfcn_dl"].", the Frequency Upload is ".$bands[$k]["frequency_ul"].", the Earcfn Offset is ".$bands[$k]["earfcn_offset"];
 	}
 	return "";
 }
