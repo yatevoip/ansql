@@ -1132,12 +1132,15 @@ Default is yes for all.
 	return $enodeb_params;
 }
 
-function get_available_bands()
+function get_available_bands($used_from_wizard=false)
 {
 	global $request_protocol, $server_name;
+	global $wizard_name, $templ_id;
 	
-	if (isset($_SESSION["available_bands"])) {
+	if (!$used_from_wizard && isset($_SESSION["available_bands"])) {
 		$bands = $_SESSION["available_bands"];
+	} elseif ($used_from_wizard && isset($_SESSION[$wizard_name][$server_name][$templ_id]["available_bands"])) {
+		$bands = $_SESSION[$wizard_name][$server_name][$templ_id]["available_bands"];
 	} else {
 		if (!$request_protocol)
 			$request_protocol = "http";
@@ -1150,10 +1153,16 @@ function get_available_bands()
 			// my_sip is set for IPv4
 			// set third param in bellow function call to "both" if you need IPv6 and IPv4 in my_sip dropdown
 			$bands = string_bands($res["bands"]);
-			$_SESSION["available_bands"] = $bands;
+			if (!$used_from_wizard)
+				$_SESSION["available_bands"] = $bands;
+			else
+				$_SESSION[$wizard_name][$server_name][$templ_id]["available_bands"] = $bands;
 
 		} else {
-			$_SESSION["error_get_bands"] = "[API: ".$res["code"]."] ".$res["message"];
+			if (!$used_from_wizard)
+				$_SESSION["error_get_bands"] = "[API: ".$res["code"]."] ".$res["message"];
+			else
+				$_SESSION[$wizard_name][$server_name][$templ_id]["error_get_bands"] = "[API: ".$res["code"]."] ".$res["message"];
 			return null;
 		}
 	}

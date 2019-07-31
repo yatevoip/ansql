@@ -31,9 +31,20 @@ function validate_cell_identity($field_name, $field_value)
 // $field_value corresponds to the inserted earfcn
 function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandwidth, $sel_band=null,$sel_bandw=null)
 {
-	$bands = get_available_bands();
-	if (!$bands)
-		return array(false, $_SESSION["error_get_bands"]." Please fix error before trying to save new configuration.");
+	global $server_name, $wizard_name, $templ_id;
+
+	$add_message = "";
+	if ($sel_band) {
+		// the validation is used from wizards
+		$bands = get_available_bands(true);
+		if (!$bands)
+			return array(false, $_SESSION[$wizard_name][$server_name][$templ_id]["error_get_bands"]." Please fix error before trying to save configuration. The 'Bands' evaluation can't be done for the template selected.");
+		$add_message = "Please fix the error in the template that you chosen or select a template that have the correct values for 'Band', 'Bandwith', 'EARFCN'. ".get_allowed_band($sel_band, $bands); 
+	} else {
+		$bands = get_available_bands();
+		if (!$bands)
+			return array(false, $_SESSION["error_get_bands"]." Please fix error before trying to save new configuration.");
+	}
 	
 	$bandwidth_mhz = array(
 	    6 => 1.4,
@@ -48,7 +59,7 @@ function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandw
 	$selected_bandwidth = ($sel_bandw)? $sel_bandw : getparam($name_bandwidth);
 	
 	if (!isset($bandwidth_mhz[$selected_bandwidth]))
-		return array(false, "Invalid selected 'Bandwidth': $selected_bandwidth");
+		return array(false, "Invalid selected 'Bandwidth': ".$selected_bandwidth." ".$add_message);
 	
 	$bandwidth = $bandwidth_mhz[$selected_bandwidth];
 	foreach ($bands as $optional_band) {
@@ -57,17 +68,27 @@ function validate_earfcn_band($field_name, $field_value, $name_band, $name_bandw
 	}
 	
 	if (!isset($band))
-		return array(false, "Selected 'Band':$selected_band is not in permitted values.");
+		return array(false, "Selected 'Band':$selected_band is not in permitted values."." ".$add_message);
 	
 	$min_earfcn = $band["min_earfcn_dl"];
 	$max_earfcn = $band["max_earfcn_dl"];
 	
 	if ( ! ( ($field_value - $min_earfcn) * 0.1 > ($bandwidth/2)  &&
 	         ($max_earfcn - $field_value) * 0.1 > ($bandwidth/2) )  )
-		return array(false, "Invalid combination of 'Band':$selected_band, 'Bandwidth':$selected_bandwidth and 'Earfcn':$field_value.");
+		return array(false, "Invalid combination of 'Band':$selected_band, 'Bandwidth':$selected_bandwidth and 'Earfcn':$field_value."." ".$add_message);
 
 	return array(true);
 }
+
+function get_allowed_band($band_set, $bands)
+{
+	foreach ($bands as $k=>$band) {
+		if ($bands[$k]["band"] == $band_set)
+			return "For the Band: ".$band_set." the Frequency Download is ".$bands[$k]["frequency_dl"]. ", the MinEarcfn Download is ".$bands[$k]["min_earfcn_dl"].", the Mas ".$bands[$k]["max_earfcn_dl"].", the Frequency Upload is ".$bands[$k]["frequency_ul"].", the Earcfn Offset is ".$bands[$k]["earfcn_offset"];
+	}
+	return "";
+}
+
 
 /**
  * Validate Broadcast format IP:port, IP:port, ....
