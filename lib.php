@@ -5112,7 +5112,8 @@ function split_lines($stats, $match, $default)
 			$ret[$line] = array();
 		$ret[$line][$prop] = $details;
 	}
-	return $ret;
+	ksort($ret);
+	return array_values($ret);
 }
 
 /**
