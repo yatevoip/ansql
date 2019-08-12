@@ -644,6 +644,9 @@ function items_on_page($nrs = array(20,50,100), $additional_url_elements=null)
 
 /**
  * Builds and prints pagination links. Ex: 1 2 3 >| or |< 1 2 3 4 5. Takes into account the total number of objects and limit of items to display on page
+ * @global string $go_to_prev_page_link. Holds previous page link if being on exception case** / Empty if correct page is displayed
+ *					(**exception case: if the only object from last page is deleted $page will be equal with the total number of objects therefore that page will still be displayed)
+ *					Used in table() / tableOfObjects() to load content from previous page if it was detected that table would be displayed without content (not applied if being on first page and deleting the only object from table)
  * @param $total Integer. Total number of entities
  * @param $additional_url_elements Array. Additional elements to add in links beside default ones(module, method, page, total)
  * Ex: array("status")
@@ -651,7 +654,7 @@ function items_on_page($nrs = array(20,50,100), $additional_url_elements=null)
 function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $limit, $page, $module, $method, $action;
+	global $limit, $page, $module, $method, $action, $go_to_prev_page_link;
 	
 	if (!$limit)
 		$limit = 20;
@@ -674,6 +677,15 @@ function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 
 	if (!$total)
 		$total = 0;
+
+	// fix page value (if the only object from last page is deleted $page would be equal with the total number of objects therfore that page would still be displayed)
+	if ($page && $page == $total) {
+		// fix page value so previous(correct) page and correct content will be displayed 
+		$page = $page - $limit;
+		//used in table() / tableOfObjects() functions to load the previous page if no content for page
+		$go_to_prev_page_link = $link."&page=".$page;
+	}
+
 	if ($total <= $limit)  
 		return; 
 
@@ -1836,7 +1848,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"paranoid");
 
-	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities, $level;
+	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities, $level, $go_to_prev_page_link;
 
 	$object_actions = clean_actions_array($object_actions);
 	$general_actions = clean_actions_array($general_actions);
@@ -1852,6 +1864,12 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		$db_false = "no";
 
 	if(!count($objects)) {
+		// display previous page contained in $go_to_prev_page_link (if pages() function detected that the wrong page is displayed then $go_to_prev_page_link will contain the previous page link with the correct page param variable)
+		if ($go_to_prev_page_link) {
+			print "<meta http-equiv=\"REFRESH\" content=\"3;url=".$go_to_prev_page_link."\">";
+			plainmessage("<table class=\"$css\"><tr><td>Page will be refreshed in a few seconds.</td></tr>", false);
+			return;
+		}
 		$plural = get_plural_form($object_name);
 		print "<table class=\"$css\"><tr><td style=\"text-align:right;\">";
 		plainmessage("There aren't any $plural in the database.");
@@ -2280,7 +2298,7 @@ function trim_value(&$value)
 function table($array, $formats, $element_name, $id_name, $element_actions = array(), $general_actions = array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names = array(), $table_id = null, $select_all = false, $order_by_columns = false, $build_link_elements = array(), $add_empty_row=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module, $do_not_apply_htmlentities, $level;
+	global $module, $do_not_apply_htmlentities, $level, $go_to_prev_page_link;
 
 	$element_actions = clean_actions_array($element_actions);
 	$general_actions = clean_actions_array($general_actions);
@@ -2293,6 +2311,13 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 	if (!$css)
 		$css = "content";
 	if (!count($array)) {
+		// display previous page contained in $go_to_prev_page_link (if pages() function detected that the wrong page is displayed then $go_to_prev_page_link will contain the previous page link with the correct page param variable)
+		if ($go_to_prev_page_link) {
+			print "<meta http-equiv=\"REFRESH\" content=\"3;url=".$go_to_prev_page_link."\">";
+			plainmessage("<table class=\"$css\"><tr><td>Page will be refreshed in a few seconds.</td></tr>", false);
+			return;
+		}
+
 		$plural = get_plural_form($element_name);
 		plainmessage("<table class=\"$css\"><tr><td>There aren't any $plural.</td></tr>", false);
 		if (!count($general_actions)) {
