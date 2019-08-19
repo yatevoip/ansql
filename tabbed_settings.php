@@ -37,6 +37,7 @@ abstract class TabbedSettings
 	protected $detected_invalidities_message = "";
 	protected $validated_fields              = false;
 	protected $return_to_page                = false;
+	protected $clean_session		 = true;
 	protected $title;
 
 	function __construct()
@@ -437,7 +438,7 @@ abstract class TabbedSettings
 
 		$response_fields = $this->getApiFields();
 		$default_fields  = $this->getDefaultFields();
-
+		
 		//if the params are not set in ybts get the default values to be displayed
 		if (!$response_fields) { 
 			$fields = $default_fields;
@@ -528,7 +529,7 @@ abstract class TabbedSettings
 				print "</div>";
 			}
 		}
-		addHidden("database");
+		addHidden("database",array("section" => $section,"subsection" => $subsection));
 		end_form();
 	}
 
@@ -814,7 +815,7 @@ abstract class TabbedSettings
 			if (strlen($this->error))
 				break;
 		}
-
+		
 		if (!strlen($this->error)) {
 			// see if there were changes
 			$fields_modified = $this->haveChanges($structure);
@@ -846,7 +847,8 @@ abstract class TabbedSettings
 					message("Warning! " . $this->warnings, "no");
 				$this->editForm($this->current_section, $this->current_subsection, $this->error, $error_fields);
 			} else {
-				$this->cleanSession();
+				if($this->clean_session)
+					$this->cleanSession();
 				$message = (!$fields_modified) ? "Finished editing sections. Nothing to update." : "Finished applying configuration.";
 				print "<div id=\"notice_" . $this->current_subsection . "\">";
 				message($message, "no");
