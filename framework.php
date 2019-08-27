@@ -39,6 +39,8 @@ if (!isset($check_col_diff))
 
 require_once("debug.php");
 
+config_globals_from_session();
+
 // class for defining a variable that will be mapped to a column in a sql table
 // name of variable must not be a numer or a numeric string
 class Variable

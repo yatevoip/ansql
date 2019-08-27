@@ -20,6 +20,8 @@
 
 require_once("debug.php");
 
+config_globals_from_session();
+
 global $module, $method, $action, $vm_base, $limit, $db_true, $db_false, $limit, $page, $system_standard_timezone;
 
 /**

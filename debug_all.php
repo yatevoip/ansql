@@ -66,8 +66,11 @@ $call();
 
 function debug()
 {
-	global $array;
+	global $array, $logs_in, $debug_modules;
 
+	if (!is_array($debug_modules))
+		$debug_modules = array();
+	
 	$error = ini_get("error_reporting");
 	$errors = $array;
 	if(isset($array[$error]))
@@ -81,25 +84,79 @@ function debug()
 
 	$dump_xdebug = (isset($_SESSION["dump_xdebug"])) ? "t" : "f";
 	$debug_queries = (isset($_SESSION["debug_all"])) ? "t" : "f";
+	$display_logs_on_web = (isset($_SESSION["display_logs_on_web"])) ? $_SESSION["display_logs_on_web"] : false;
+	$enable_debug_buttons = (isset($_SESSION["enable_debug_buttons"])) ? $_SESSION["enable_debug_buttons"] : false;
+	$debug_modules = (isset($_SESSION["debug_modules"])) ? $_SESSION["debug_modules"] : implode(",", $debug_modules);
+	
 	$log_errors = (ini_get("log_errors")) ? "t" : "f";
 	$error_log = ($a = ini_get("error_log")) ? $a : '';
+
 	$arr = array(
 		"pass_debug"=>array("compulsory"=>true, "column_name"=>"Password", "comment"=>"Password to be allowed to modify the debugging options (set in config.php usually)"),
+		// Setting debug levels
+		"objtitle1"=>array("display"=> "objtitle" , "value"=> "Setting/Activating debug levels"),
+  		"enable_debug_buttons"=>array("value"=>$enable_debug_buttons, "display"=>"checkbox"),
 		"dump_xdebug"=>array("value"=>$dump_xdebug, "display"=>"checkbox", "comment"=>"Dump xdebug log in log file - not the php xdebug, but application and library specific xdebug."),
 		"debug_queries"=>array("value"=>$debug_queries, "display"=>"checkbox", "comment"=>"Dump query log in log file."),
+		"display_logs_on_web"=>array("column_name"=>"Display debug in web page","value"=>$display_logs_on_web, "display"=>"checkbox", "comment"=>"If checked the logs will be displayed on screen. If 'dump_xdebug'/'debug_queries' is not checked, just module logs will be displayed. By default logs are added in " . implode(",", $logs_in)),
+	  	"debug_modules"=>array("value"=>$debug_modules,  "comment"=>"Comma delimited list of tags for which the values must be displayed. Overwrites critical_tags, debug_tags value with provided value and debug_all variable becomes false."),
+	  	// Setting php ini 
+		"objtitle2"=>array("display"=> "objtitle" , "value"=> "Settings overwriting php ini"),
 		"error_reporting"=>array($errors, "display"=>"select", "comment"=>"Controls php error_reporting. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."), 
 		"display_errors"=>array("value"=>$display_errors, "display"=>"checkbox", "comment"=>"Controls php display_errors. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."),
 		"log_errors"=>array("value"=>$log_errors, "display"=>"checkbox", "comment"=>"Controls php log_errors. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."),
-		"error_log"=>array("value"=>$error_log/*, "display"=>"checkbox"*/)
+		"error_log"=>array("value"=>$error_log/*, "display"=>"checkbox"*/),
+		"examples"=>array(
+		  "display"=>"message", 
+		  "value"=>"Usage examples:
+			<ul>
+				<li> visualize logs in \$_Session['xdebug']</li>
+					<ul>
+						<li> by default logs are displayed in \$_Session['xdebug']</li>
+						<li> use Dump \$_SESSION button to visualize them </li>	
+					</ul>
+				<li> send all xdebug logs in log file </li>
+					<ul> 
+						<li> check dump_xdebug </li>
+					</ul>
+				<li> display all xdebug logs on screen</li>
+					<ul>
+						<li> check dump_xdebug field</li>
+						<li> check 'Display logs on web' field</li>
+					</ul>
+				<li> display just xdebug logs from specific tags on screen</li>
+					<ul>
+						<li> check dump_xdebug</li>
+						<li> check 'Display logs on web' field</li>
+						<li> add the tags in debug_modules field </li>
+					</ul>			
+				<li> display Debug::debug_message() function output</li>
+					<ul>
+						<li> check 'Display debug in web page'</li>
+					</ul>
+				<li> enable/disable debug buttons</li>
+					<ul>
+						<li> check/uncheck 'Enable debug buttons' option</li>
+					</ul>
+			</ul>",
+		  "no_escape"=>true)
 	);
 
 	if (is_auth("debug"))
 		unset($arr["pass_debug"]);
 
+	$submit_button = "<input class=\"edit\" name=\"Save\" value=\"Save\" type=\"submit\">";
+	$reset_button = "<input class=\"edit\" value=\"Reset\" type=\"reset\">";
+	
+	$cancel_link =  previous_page_link();
+	$cancel_button = "<input class=\"edit\" value=\"Cancel\" onclick=\"location.replace('$cancel_link');\" type=\"button\">";
+
+	$arr["buttons"] = array("display"=>"custom_submit", "value"=>$submit_button . " " . $reset_button . " " . $cancel_button);
+	
 ?>	<br/><br/>
 	<form action="debug_all.php" method="post"><?php
 	addHidden("database");
-	editObject(NULL,$arr, "Setting debug levels", "Save");
+	editObject(NULL,$arr, "Debug Settings", "no");
 ?></form><?php
 }
 
@@ -113,6 +170,22 @@ function debug_database()
 		debug();
 		return;
 	}
+
+	if (getparam("display_logs_on_web")) {
+		$_SESSION["display_logs_on_web"] = true;
+	} else 
+		unset($_SESSION["display_logs_on_web"]);
+	
+	if (getparam("debug_modules")) {
+		$debug_modules = getparam("debug_modules");
+		$_SESSION["debug_modules"] = $debug_modules;
+	} else 
+		unset($_SESSION["debug_modules"]);
+	
+	if (getparam("enable_debug_buttons") == "on")
+		$_SESSION["enable_debug_buttons"] = "on";
+	else
+		unset($_SESSION["enable_debug_buttons"]);
 
 	if (getparam("debug_queries") == "on")
 		$_SESSION["debug_all"] = "on";
@@ -152,10 +225,23 @@ function debug_database()
 	ini_set("error_log", $error_log);
 	$_SESSION["error_log"] = $error_log;
 
-	print 'Settings were saved';
+	
+	$previous_link =  previous_page_link() ;
+	
+	message("Settings were saved!<a href='$previous_link'>Back to previous page.</a>", "no", "", false);
+	
 	debug();
 }
 
+function previous_page_link() 
+{
+	if (isset($_SESSION["previous_link"]))
+		$previous_link =  $_SESSION["previous_link"];
+	else
+		$previous_link = str_replace("/ansql/debug_all.php", "", $_SERVER["PHP_SELF"]) . "/main.php";
+	
+	return   $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["HTTP_HOST"] . $previous_link;
+}
 ?>
 </body>
 </html>

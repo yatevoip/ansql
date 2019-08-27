@@ -57,8 +57,10 @@ if (!isset($debug_notify))
 // you can also add additional buttons if you define the callbacks for them
 if (!isset($debug_buttons))
 	$debug_buttons = array(
-		"dump_session"=>'Dump $_SESSION', 
-		"dump_request"=>'Dump $_REQUEST',
+		"dump_session"=>'Dump&nbsp;$_SESSION', 
+		"dump_request"=>'Dump&nbsp;$_REQUEST',
+		"debug_options" => 'Debug&nbsp;options',
+	  	"clean_xdebug_session" =>'Clean&nbsp;XDebug',	  
 		// 
 		// "custom_debug_opt1" => callback
 	);
@@ -67,9 +69,6 @@ if(is_file("defaults.php"))
 	include_once("defaults.php");
 if(is_file("config.php"))
 	include_once("config.php");
-
-if (!isset($enable_debug_buttons) || $enable_debug_buttons!=true)
-	$debug_buttons = false;
 
 class Debug
 {
@@ -339,6 +338,83 @@ class Debug
 	}
 
 	/**
+	 * Uses xdebug to dump the content of a variable/ object/ array/ array of objects
+	 *
+	 * @param string $tag. Tag to identify/group debug messages easier.
+	 * @param mixed $var. Can be object/array/string/int etc.. which value will be dumped
+	 * @param string $obj_level.  Just for objects, ignored otherwise. Depending on provided level all properties will be displayed or just the ones defined in variables() method
+	 * @param string $sep. Row separator. Default is "\n". Example: "\n", "</br>" or other..
+	 * @param string $identation. Initial indentation. Default is empty string.
+	 * @param string $increase_ident. How to increase identation. Default is 4 spaces.
+	 */
+	public static function debug_message($tag, $var, $obj_level = "basic", $sep = "\n", $identation = "", $increase_ident = "    ")
+	{
+		global $debug_all;
+		global $debug_tags;
+		global $logs_in;
+	
+		if ( ($debug_all==true && !in_array($tag,$debug_tags))    ||    ($debug_all==false && in_array($tag,$debug_tags)) ) {
+			$date = gmdate("[D M d H:i:s Y]");
+
+			$msg =  Debug::format_value($var,$obj_level, $sep, $identation, $increase_ident) ;
+	
+			if (in_array("web", $logs_in)) {
+				$msg = $date . strtoupper($tag) . ": " . $msg;
+				
+				if (!isset($_SESSION["dump_xdebug"])) {
+					print "<br/>\n" . "<pre> " .  htmlentities($msg) . "</pre>" . "<br/>\n";
+				}
+			}
+
+			Debug::xdebug($tag, $msg);
+		}
+	}
+
+	/**
+	 * Transforms and formats variables content into human readable string ready to be displayed 
+	 * @param any_type $var Variable to be transformed in string. Can have any type.
+	 * @param string $obj_level Used just if provided variable has object type. Value can be "basic" or "esential".  
+	 * @param string $sep Row separator. Default is "\n".
+	 * @param string $initial_ident. Initial indentation. Default is empty string.
+	 * @param string $increase_ident. How to increase identation. Default is 4 spaces.
+	 * @return string. Returns $var content as human readable formated string.
+	 */
+	public static function format_value($var, $obj_level = "basic", $sep = "\n", $initial_ident = "", $increase_ident = "    ")
+	{
+		$identation   = $initial_ident . $increase_ident;
+		$inside_ident = $identation . $increase_ident;
+		
+		$content = "";
+		if (is_array($var) && count($var)) {
+			foreach ($var as $key=>$v) {
+				$content .= $sep . $identation . "'$key' => " . Debug::format_value($v,$obj_level, $sep, $inside_ident);
+			}
+			
+			$msg =	$sep . $initial_ident . "array(" . count($var) . ") {" .
+				$content . $sep . 
+				$initial_ident . "}";		
+		} else if (is_object($var)) {
+			$content = Debug::dumpObj($var, $obj_level, $sep, false, $identation);
+			
+			$msg =	$sep . $initial_ident . get_class($var) . " Object" . $sep . 
+				$initial_ident . "(" . $sep .
+				$content. $sep. 
+				$initial_ident . ")";
+		} else {
+			if (gettype($var) == "string")
+				$content =  "(" . strlen($var) . ")" . "\"". $var . "\"";
+			else 
+				$content =  "(" . print_r($var,true) . ")";
+			
+			$msg = gettype($var) . $content;
+		
+		}
+		
+		return $msg;
+	
+	}
+	
+	/**
 	 * Contacts $message to $_SESSION["xdebug"].
 	 * The writting of this log can be triggered or not.
 	 * Unless users report a bug or code reaches a developer triggered report,
@@ -356,9 +432,6 @@ class Debug
 		global $max_xdebug_mess;
 		global $critical_tags;
 
-		if (!in_array($tag, $critical_tags) &&  $max_xdebug_mess && strlen($message)>$max_xdebug_mess)
-			$message = substr($message,0,$max_xdebug_mess)." - (truncated)";
-
 		if ($message==null && strpos($tag," ")) {
 			$message = $tag;
 			$tag = $default_tag;
@@ -367,6 +440,10 @@ class Debug
 			self::output("critical","Error in Debug::debug() tag=$tag, empty message in .",false);
 			return;
 		}
+
+		if (!in_array($tag, $critical_tags) &&  $max_xdebug_mess && strlen($message)>$max_xdebug_mess)
+			$message = substr($message,0,$max_xdebug_mess)." - (truncated)";
+		
 		if ( ($debug_all==true && !in_array($tag,$debug_tags)) || 
 		     ($debug_all==false && in_array($tag,$debug_tags)) ) {
 			$date = gmdate("[D M d H:i:s Y]");
@@ -433,7 +510,7 @@ class Debug
 
 		for ($i=0; $i<count($arr); $i++) {
 			if ($arr[$i] == "web") {
-				print "<br/>\n<br/>\n$msg<br/>\n<br/>\n";
+				print "<br/>\n<br/>\n<pre>$msg</pre><br/>\n<br/>\n";
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
 				// check that file is writtable or if output would be stdout (force_update in cli mode)
@@ -545,7 +622,7 @@ class Debug
 
 		print "<div class='trigger_report'>";
 		if (isset($debug_notify["mail"]) && count($debug_notify["mail"]))
-			print "<a class='llink' href='main.php?module=".$module."&method=form_bug_report'>Send bug report</a>";
+			print "<a class='llink' href='main.php?module=".$module."&method=form_bug_report'>Send&nbsp;bug&nbsp;report</a>";
 		if (isset($_SESSION["triggered_report"]) && $_SESSION["triggered_report"]==true && isset($debug_notify["web"]) && in_array("notify",$debug_notify["web"]))
 			print "<div class='triggered_error'>!ERROR <a class='llink' href='".$_SESSION["main"]."?module=$module&method=clear_triggered_error'>Clear</a></div>";
 
@@ -558,12 +635,21 @@ class Debug
                                                     $page = "pages.php";
                                                 else
                                                     $page = (isset($_SESSION["main"])) ? $_SESSION["main"] : "main.php";
-						print "&nbsp;<a class='llink' href='$page?method=$method' target='_blank'>$button</a>";
+						print " <a class='llink' href='$page?method=$method' target='_blank'>$button</a>";
 						break;
 					case "dump_request":
 						$dump_request_params = true;
-						print "&nbsp;<a class='llink' onclick='show_hide(\"dumped_request\");'>$button</a>";
+						print " <a class='llink' onclick='show_hide(\"dumped_request\");'>$button</a>";
 						break;
+					case "clean_xdebug_session":
+						print " <a class='llink' onclick='make_request(\"pages.php?method=$method\");show(\"cleaned_xdebug_session\");'>$button</a>
+							<span id='cleaned_xdebug_session' style='display:none;color: green;'>Xdebug Session was cleaned! </span>";
+						break;
+					case "debug_options":
+                                            	print " <a class='llink' href='ansql/debug_all.php'>$button</a>";
+						$_SESSION["previous_link"] = $_SERVER["REQUEST_URI"];
+						break;
+					
 					default:
 						call_user_func($button);
 				}
@@ -644,25 +730,37 @@ class Debug
 		else
 			$_SESSION["xdebug"] .= $mess;
 	}
-	
-	public static function dumpObj($obj, $level="esential", $sep="auto")
+	/**
+	 * Extracts esential/basic information from object and returns it as string
+	 * @param object $obj
+	 * @param string $level Default "esential". Can be "basic"/"esential"
+	 * @param string $sep Default is "auto" or can be set a custom one ex: "</br>";
+	 * @param boolean $print_on_scrren If true extracted information will be also displayed on screen.
+	 * @param string $identation. 
+	 * @return string. Dumped object.
+	 */
+	public static function dumpObj($obj, $level="esential", $sep="auto", $print_on_scrren = true, $identation = "")
 	{
 		$vars = get_object_vars($obj);
 		
-		$basic = '';
-		$internal = '';
+		$basic = array();
+		$internal = array();
 		$full = array("_model");
 		foreach ($vars as $var_name=>$var) {
-			print "$var_name=".print_r($var,true)."<br/>";
+			if ($print_on_scrren)
+				print "$var_name=".print_r($var,true)."<br/>";
 			if (in_array($var_name, $full)) {
 				continue;
 			}
 			if (substr($var_name,0,1) == "_") {
-				$internal .= "$var_name=".print_r($var,true)."__sep";
+				$internal[] = $identation . "$var_name=".print_r($var,true);
 				continue;
 			}
-			$basic .= "$var_name=".print_r($var,true)."__sep";
+			$basic[] = $identation . "$var_name=".print_r($var,true);
 		}
+		
+		$basic = implode("__sep", $basic);
+		$internal = implode("__sep", $internal);
 		
 		switch ($level) {
 			case "basic":
@@ -702,12 +800,48 @@ function dump_session()
 		$sess = $_SESSION;
 		array_walk_recursive($sess, function (&$value) { $value = htmlentities($value);});
 		$copy_session = $sess;
-		$xdebug = $copy_session["xdebug"];
-		unset($copy_session["xdebug"]);
+		if (isset($copy_session["xdebug"])) {
+			$xdebug = $copy_session["xdebug"];
+			unset($copy_session["xdebug"]);
+		}
+		if (!isset($xdebug))
+			$xdebug = "";
 		var_dump($copy_session);
 		print "xdebug: ";
 		var_dump($xdebug);
 		print "</pre>";
 	}
 }
+	
+function clean_xdebug_session()
+{
+	if (isset($_SESSION["xdebug"])) 
+		$_SESSION["xdebug"] = "";
+}
+
+function config_globals_from_session()
+{
+	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags;;
+	
+	if (isset($_SESSION["enable_debug_buttons"]))
+		$debug_buttons = true;
+	
+	if (isset($_SESSION["display_logs_on_web"])) {
+		if (!is_array($logs_in))
+			$logs_in = array();
+		$logs_in[] = "web";
+	}
+
+	//verify if debug modules has values and if so make the necessary  configurations	
+	if (isset($_SESSION["debug_modules"])) {
+		$debug_modules = explode(",",  $_SESSION["debug_modules"]);
+		$debug_modules = array_map("trim",$debug_modules);
+	}
+	if (empty($debug_modules))
+		return;
+	$debug_all = false;
+	$debug_tags = $debug_modules;
+	$critical_tags = $debug_modules;
+}
+
 ?>
