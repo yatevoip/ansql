@@ -286,6 +286,9 @@ This parameters are ignored in Labkit units."
 
 						elseif ( !isset($fields[$section][$subsection][$param]["display"]) || $fields[$section][$subsection][$param]["display"]!="fixed" )
 							$fields[$section][$subsection][$param]["value"] = $data; 
+						elseif (isset($fields[$section][$subsection][$param]["display"]) && in_array(isset($fields[$section][$subsection][$param]["display"]), array("message","objtitle","fixed","custom_field"))) 
+							continue;
+
 
 						// unmark triggered fields if they are set
 						if ((strlen($data) || getparam($param)) && isset($this->trigger_names[$subsection])) {

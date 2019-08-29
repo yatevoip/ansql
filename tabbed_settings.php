@@ -71,7 +71,8 @@ abstract class TabbedSettings
 	}
 	
 	// Returns the field names which don't need invalid value detection
-	function skip_detectInvalidFields_dropdown() {
+	function skip_detectInvalidFields_dropdown()
+	{
 		return array();
 	}
 
@@ -455,7 +456,7 @@ abstract class TabbedSettings
 						$paramname = str_replace(".", "_", $param_name);
 						if (isset($data["display"]) && ($data["display"]=="select" || $data["display"]=="select_without_non_selected")) {
 							$fields[$m_section][$m_subsection][$param_name][0]["selected"] = getparam($paramname);
-							if (getparam($paramname)=="Custom") {
+							if (getparam($paramname)=="Custom" && $fields[$m_section][$m_subsection]["custom_".$param_name]["display"] != "custom_field") {
 								$fields[$m_section][$m_subsection]["custom_".$param_name]["value"] = getparam("custom_".$param_name);
 								$fields[$m_section][$m_subsection]["custom_".$param_name]["column_name"] = "";
 							}
@@ -464,7 +465,7 @@ abstract class TabbedSettings
 						elseif (isset($data["display"]) && $data["display"]=="checkbox")
 							$fields[$m_section][$m_subsection][$param_name]["value"] = (getparam($paramname)=="on") ? "1" : "0";
 
-						elseif (isset($data["display"]) && in_array($data["display"], array("message","objtitle","fixed")))
+						elseif (isset($data["display"]) && in_array($data["display"], array("message","objtitle","fixed","custom_field")))
 							continue;
 
 						else
@@ -500,7 +501,6 @@ abstract class TabbedSettings
 								unset($fields[$m_section][$m_subsection][$param_name]["triggered_by"]);
 							}
 						}
-
 					}
 				}
 			}

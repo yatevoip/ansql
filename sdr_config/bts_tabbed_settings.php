@@ -264,10 +264,13 @@ This parameters are ignored in Labkit units."
 							}
 							$fields[$section][$subsection][$param][0]["selected"] = $data;
 
-						} elseif (isset($fields[$section][$subsection][$param]["display"]) && $fields[$section][$subsection][$param]["display"] == "checkbox") 
+						} elseif (isset($fields[$section][$subsection][$param]["display"]) && $fields[$section][$subsection][$param]["display"] == "checkbox") {
 							$fields[$section][$subsection][$param]["value"] = ($data == "yes" || $data=="on" || $data=="1")  ? "on" : "off";
-						else 
+						} elseif (isset($fields[$section][$subsection][$param]["display"]) && in_array(isset($fields[$section][$subsection][$param]["display"]), array("message","objtitle","fixed","custom_field"))) {
+							continue;
+						} else { 
 							$fields[$section][$subsection][$param]["value"] = $data; 
+						}
 					}
 				}
 			}
