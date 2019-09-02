@@ -160,46 +160,10 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		write_error($request, $out, $ret, "CURL exec error: $error", $url, $resp);
 		curl_close($curl);
 		return $resp;
-	} else {
-		$info = curl_getinfo($curl);
-
+	} else {	
 		$http_code = curl_getinfo($curl,CURLINFO_HTTP_CODE);
-		$raw_headers = explode("\n", substr($ret, 0, $info['header_size']) );
-
-		$gzip = false;
-		if (!isset($_SESSION["all_cookies"]))
-			$_SESSION["all_cookies"] = array();
-		foreach ($raw_headers as $header) {
-			if( preg_match('/^(.*?)\\:\\s+(.*?)$/m', $header, $header_parts) ){
-				$headers[$header_parts[1]] = $header_parts[2];
-
-				if ($header_parts[1] == "Set-Cookie") {
-					$cookie = $header_parts[2];
-					$cookie = explode("=", $cookie);
-					if (count($cookie)<2)
-						continue;
-					$value = explode(";",$cookie[1]);
-					$value = $value[0];
-					$_SESSION["all_cookies"][$cookie[0]] = $value;
-				}
-				if ($header_parts[1] == "Content-Encoding" && substr(trim($header_parts[2]),0,4)=="gzip")
-					$gzip = true;
-			}
-		}
-
-		$_SESSION["cookie"] = "";
-		foreach ($_SESSION["all_cookies"] as $name=>$value) {
-			if ($_SESSION["cookie"]!="")
-				$_SESSION["cookie"] .= "; ";
-			$_SESSION["cookie"] .= "$name=$value";
-		}
-		// test to check that server doesn't return gziped captcha
-		//if ($gzip && $request!="get_captcha" ) {
-		if ($gzip) {
-			$zipped_ret = substr($ret,$info['header_size']);
-			$ret = gzinflate(substr($zipped_ret,10));
-		} else
-			$ret = substr($ret,$info['header_size']);
+		
+		handle_headers_response($curl, $ret);
 
 		$code = curl_getinfo($curl,CURLINFO_HTTP_CODE);
 		$type = curl_getinfo($curl,CURLINFO_CONTENT_TYPE);
@@ -253,18 +217,108 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 			}
 			curl_close($curl);
 			print $ret;
-		} elseif ($type == "application/octet-stream" || substr($type,0,10) == "text/plain") {
+		} elseif ($type == "application/octet-stream" || substr($type,0,10) == "text/plain" || substr($type,0,25) == "text/tab-separated-values") {
 			curl_close($curl);
 			return $ret;
 		} else {
 			//print $ret;
-			$resp = array("code"=>"-101", "message"=>_("Could not parse response from API."));
+			$resp = array("code"=>"-101", "message"=>_("Could not parse response from API. Got unknown type $type."));
 			write_error($request, $out, $ret, $http_code, $url, $resp);
 			curl_close($curl);
 			return $resp;
 			//return $ret;
 		}
 	}
+}
+
+function make_basic_curl_request($url,$out,$auth_header=false)
+{
+	global $func_handle_headers;
+	
+	$curl = curl_init($url);
+	if ($curl === false) {
+		return array(false, "Could not initialize curl request.");
+	}
+
+	if (isset($_SESSION["cookie"])) {
+		$cookie = $_SESSION["cookie"];
+	}
+
+	$timeout = 20;
+
+	$headers = array(
+	    "Accept-Encoding: gzip, deflate"
+	);
+	if ($auth_header)
+		$headers[] = "X-Authentication: ".$json_api_secret;
+	curl_setopt($curl,CURLOPT_POST,true);
+	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
+	curl_setopt($curl,CURLOPT_POSTFIELDS,$out);
+	curl_setopt($curl,CURLOPT_HTTPHEADER,$headers);
+
+	curl_setopt($curl,CURLOPT_RETURNTRANSFER, 1);
+	// handle_api_headers will be called for each header line and must return number of handled bytes
+	if (is_callable($func_handle_headers))
+		curl_setopt($curl,CURLOPT_HEADERFUNCTION, $func_handle_headers);
+
+	curl_setopt($curl,CURLOPT_CONNECTTIMEOUT,5);
+	curl_setopt($curl,CURLOPT_TIMEOUT,$timeout);
+	curl_setopt($curl,CURLOPT_HEADER, true);
+
+	if (isset($cookie)) 
+		curl_setopt($curl,CURLOPT_COOKIE,$cookie);
+
+	$ret = curl_exec($curl);
+
+	if ($ret === false) {
+		$error = curl_error($curl);
+		curl_close($curl);
+		return array(false, "Could not send request. Please try again later.\n Error: $error.");
+	} else {
+		handle_headers_response($curl, $ret);
+		return $ret;
+	}
+}
+
+function handle_headers_response($curl, &$ret)
+{
+	$info = curl_getinfo($curl);	
+	$raw_headers = explode("\n", substr($ret, 0, $info['header_size']) );
+
+	$gzip = false;
+	if (!isset($_SESSION["all_cookies"]))
+		$_SESSION["all_cookies"] = array();
+	foreach ($raw_headers as $header) {
+		if( preg_match('/^(.*?)\\:\\s+(.*?)$/m', $header, $header_parts) ){
+			$headers[$header_parts[1]] = $header_parts[2];
+
+			if ($header_parts[1] == "Set-Cookie") {
+				$cookie = $header_parts[2];
+				$cookie = explode("=", $cookie);
+				if (count($cookie)<2)
+					continue;
+				$value = explode(";",$cookie[1]);
+				$value = $value[0];
+				$_SESSION["all_cookies"][$cookie[0]] = $value;
+			}
+			if ($header_parts[1] == "Content-Encoding" && substr(trim($header_parts[2]),0,4)=="gzip")
+				$gzip = true;
+		}
+	}
+
+	$_SESSION["cookie"] = "";
+	foreach ($_SESSION["all_cookies"] as $name=>$value) {
+		if ($_SESSION["cookie"]!="")
+			$_SESSION["cookie"] .= "; ";
+		$_SESSION["cookie"] .= "$name=$value";
+	}
+	// test to check that server doesn't return gziped captcha
+	//if ($gzip && $request!="get_captcha" ) {
+	if ($gzip) {
+		$zipped_ret = substr($ret,$info['header_size']);
+		$ret = gzinflate(substr($zipped_ret,10));
+	} else
+		$ret = substr($ret,$info['header_size']);
 }
 
 function write_error($request, $out, $ret, $http_code, $url, $displayed_response=null)
