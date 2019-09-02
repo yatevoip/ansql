@@ -824,7 +824,9 @@ function config_globals_from_session()
 	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags;;
 	
 	if (isset($_SESSION["enable_debug_buttons"]))
-		$debug_buttons = true;
+		$enable_debug_buttons = true;
+	if (!isset($enable_debug_buttons) || $enable_debug_buttons!=true)
+		$debug_buttons = false;
 	
 	if (isset($_SESSION["display_logs_on_web"])) {
 		if (!is_array($logs_in))
