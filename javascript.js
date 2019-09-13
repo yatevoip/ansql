@@ -1265,7 +1265,7 @@ function show_hide_file_examples(elems,button_id) {
 function import_iframe_cancel_button (cb, cb_parameters, cb_container_id=null)
 {
 	var url = 'pages.php?method=' + cb;
-	var json_cb_parameters = (cb_parameters) ? JSON.parse(cb_parameters) : false;
+	var json_cb_parameters = (cb_parameters) ? JSON.parse(JSON.stringify(cb_parameters)) : false;
 	if(isObject(json_cb_parameters) && !emptyObj(json_cb_parameters)) {
 		for (var field in json_cb_parameters) {
 			url += "&" + field + "=" + json_cb_parameters[field];
