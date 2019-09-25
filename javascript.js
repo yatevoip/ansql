@@ -1190,23 +1190,24 @@ function display_popup(html_content,popup_request_object)
 	
 	container.innerHTML = html_content;
 	
-	if (typeof popup_request_object.cb_close_button != 'undefined' || popup_request_object.cb_close_button!=null) {
-		if (popup_request_object.cb_close_button == false)
-			document.getElementById("closebut").style.display = "none";
-		if (typeof popup_request_object.cb_close_button_param != 'undefined' || popup_request_object.cb_close_button_param!=null){
-			document.getElementById("closebut").onclick = function() {
-									// params will be an array that contains the object properties
-									var params = Object.values(popup_request_object.cb_close_button_param);
-									var cb = popup_request_object.cb_close_button;
-									//call the function with multiple params
-									cb.apply(null,params);
-								};
-		}
-		else		
-			document.getElementById("closebut").onclick = popup_request_object.cb_close_button;
-	} else
-		document.getElementById("closebut").onclick = close_popup;
-	
+	if (document.getElementById("closebut")) {
+	    if (typeof popup_request_object.cb_close_button != 'undefined' || popup_request_object.cb_close_button!=null) {
+		    if (popup_request_object.cb_close_button == false)
+			    document.getElementById("closebut").style.display = "none";
+		    if (typeof popup_request_object.cb_close_button_param != 'undefined' || popup_request_object.cb_close_button_param!=null){
+			    document.getElementById("closebut").onclick = function() {
+									    // params will be an array that contains the object properties
+									    var params = Object.values(popup_request_object.cb_close_button_param);
+									    var cb = popup_request_object.cb_close_button;
+									    //call the function with multiple params
+									    cb.apply(null,params);
+								    };
+		    }
+		    else		
+			    document.getElementById("closebut").onclick = popup_request_object.cb_close_button;
+	    } else
+		    document.getElementById("closebut").onclick = close_popup;
+	}
 
 	if (container.style.display=="none") {
 		show_hide('maximize_overlay');
