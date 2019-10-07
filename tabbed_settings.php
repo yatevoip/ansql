@@ -273,7 +273,7 @@ abstract class TabbedSettings
 
 					if (isset($data["display"]) && $data["display"]=='checkbox') {
 
-						$value = $data["value"];
+						$value = isset($data["value"]) ? $data["value"] : "off";
 						if ($value!="on" && $value!="off")
 							$value = ($value=="1") ? "on" : "off";
 
