@@ -988,9 +988,9 @@ To use the host system DNS servers again, execute 'unconfig GGSN.DNS'",
 				"validity" => array("check_valid_dns")
 			),
 			"Firewall.Enable" => array( 
-				array( "selected"=> "1", array("Firewall.Enable_id"=>"0","Firewall.Enable"=>"no firewall"),array( "Firewall.Enable_id"=>"1","Firewall.Enable"=> "block MS attempted access to OpenBTS or other MS"),array ( "Firewall.Enable_id"=>"2","Firewall.Enable"=> "block all private IP addresses")),
+				array( "selected"=> "1", array("Firewall.Enable_id"=>"0","Firewall.Enable"=>"no firewall"),array( "Firewall.Enable_id"=>"1","Firewall.Enable"=> "block MS attempted access to YateBTS or other MS"),array ( "Firewall.Enable_id"=>"2","Firewall.Enable"=> "block all private IP addresses")),
 				"display" => "select",
-				"comment" => " 0=no firewall; 1=block MS attempted access to OpenBTS or other MS; 2=block all private IP addresses
+				"comment" => " 0=no firewall; 1=block MS attempted access to YateBTS or other MS; 2=block all private IP addresses
 Defaults to 1."
 			),
 			"IP.MaxPacketSize" =>array( 
@@ -1032,7 +1032,7 @@ Defaults to 254",
 				"display" => "text",
 				"value" => "",
 				"comment" => "A route address to be used for downstream clients.
-By default, OpenBTS manufactures this value from the GGSN.MS.IP.Base assuming a 24 bit mask
+By default, YateBTS manufactures this value from the GGSN.MS.IP.Base assuming a 24 bit mask
 To override, specify a route address in the form xxx.xxx.xxx.xxx/yy.
 The address must encompass all MS IP addresses. To use the auto-generated value again, execute 'unconfig GGSN.MS.IP.Route'"
 			),
