@@ -1911,18 +1911,11 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 
 		// print the name of the columns + add column for each action on object
 		foreach($formats as $column_name => $var_name) {
-			$exploded = explode(":",$column_name);
-			if(count($exploded)>1)
-				$name = $exploded[1];
-			else {
-				$name = $column_name;
-				if(substr($column_name, 0, 9) == "function_")
-					$name = substr($column_name,9);
-				if(is_numeric($column_name))
-					$name = $var_name;
-			}
+			$name = extract_column_name($column_name, $var_name);
+			$css_col = extract_column_css($conditional_css, $name);
+			
 			$ucss = ($no_columns == 0) ? "$css first_th" : $css;
-			$ths .= '<th class="'.$ucss.'">';
+			$ths .= '<th class="'.$ucss.$css_col.'">';
 			//$ths .= str_replace("_","&nbsp;",ucfirst($name));
 			$column_link = false;
 			if ($order_by_columns) {
@@ -1961,6 +1954,8 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 	for($i=0; $i<count($objects); $i++) {
 		$cond_css = '';
 		foreach($conditional_css as $css_name=>$conditions) {
+			if (substr($css_name, 0,10) == "__col_css_")
+				continue;
 			$add_css = true;
 			foreach($conditions as $column=>$cond_column) {
 				if($objects[$i]->{$column} != $cond_column) {
@@ -1984,7 +1979,9 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		}
 		$j=0;
 		foreach($formats as $column_name => $var_name) {
-			print '<td class="'.$css.$cond_css;
+			$name = extract_column_name($column_name, $var_name);
+			$css_col = extract_column_css($conditional_css, $name);
+			print '<td class="'.$css.$cond_css .$css_col;
 			if($i%2 == 0)
 				print " evenrow";
 			if($j == count($formats)-1 && !count($object_actions))
@@ -2022,7 +2019,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 			if($column_value !== NULL) {
 				$column_value = ($apply_htmlentities) ? $column_value : htmlentities($column_value);
 				print $column_value;
-			} else
+			} else if (!isset ($function_name))
 				print "&nbsp;";
 			print '</td>';
 			$j++;
@@ -2069,6 +2066,34 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 	}
 }
 
+function extract_column_name($column_name, $var_name) 
+{
+	$exploded = explode(":",$column_name);
+	if(count($exploded)>1)
+		$name = $exploded[1];
+	else {
+		$name = $column_name;
+		if(substr($column_name, 0, 9) == "function_")
+			$name = substr($column_name,9);
+		if(is_numeric($column_name))
+			$name = $var_name;
+	}
+	return $name;	
+}
+
+function extract_column_css($conditional_css, $name)
+{
+	$css_col = "";
+	foreach ($conditional_css as $css_class_name => $conditions) {
+		if (substr($css_class_name, 0,10) != "__col_css_")
+			continue;
+		if (!in_array($name, $conditions))
+			continue;
+		$css_col .= " " . substr($css_class_name,10);
+	}
+	
+	return $css_col;
+}
 /**
  * Get column and direction to order table elements by
  * @param $fields Array. This is the same parameter as $fields from \ref tableOfObjects
@@ -2366,18 +2391,11 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 
 		$request_link = build_link_request(array("order_by","order_dir"));
 		foreach ($formats as $column_name => $var_name) {
-			$exploded = explode(":",$column_name);
-			if (count($exploded)>1)
-				$name = $exploded[1];
-			else {
-				$name = $column_name;
-				if (substr($column_name, 0, 9) == "function_")
-					$name = substr($column_name,9);
-				if (is_numeric($column_name))
-					$name = $var_name;
-			}
+			$name = extract_column_name($column_name, $var_name);
+			$css_col = extract_column_css($conditional_css, $name);
+			
 			$ucss = ($no_columns == 0) ? "$css first_th" : $css;
-			print '<th class="'.$ucss.'">';
+			print '<th class="'.$ucss." ".$css_col.'">';
 			$column_link = false;
 			if ($order_by_columns) {
 				if ((is_numeric($column_name) || count(explode(",",$var_name))==1) && ($order_by_columns===true || !isset($order_by_columns[$name]) || $order_by_columns[$name]==true)) {
@@ -2408,9 +2426,12 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 	for ($i=0; $i<count($array); $i++) {
 		$cond_css = '';
 		foreach ($conditional_css as $css_name => $conditions) {
+			if (substr($css_name, 0,10) == "__col_css_")
+				continue;
 			$add_css = true;
 			foreach ($conditions as $column => $cond_column) {
-				if ($array[$i][$column] != $cond_column)	{
+				
+				if ($array[$i][$column] != $cond_column) {
 					$add_css = false;
 					break;
 				}
@@ -2431,7 +2452,10 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 		}
 		$j=0;
 		foreach ($formats as $column_name => $names_in_array) {
-			print '<td class="'.$css. "$cond_css";
+			$name = extract_column_name($column_name, $var_name);
+			$css_col = extract_column_css($conditional_css, $name);
+			
+			print '<td class="'.$css. "$cond_css" . " " . $css_col;
 			if ($i%2 == 0)
 				print " evenrow";
 
@@ -6066,5 +6090,15 @@ function getBrowser($return_all_in_name = true)
 	);
 	return $res;
 } 
+
+function get_request_protocol()
+{
+	if ( (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https') || 
+	  (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || 
+	  (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') )
+	       return 'https';
+	
+	return 'http';
+}
 
 ?>
