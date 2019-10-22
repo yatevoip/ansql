@@ -530,7 +530,7 @@ function make_request(url, cb, async, already_encoded)
  */
 function make_api_request(url, cb, async)
 {
-	xmlhttp = GetXmlHttpObject();
+	var xmlhttp = GetXmlHttpObject();
 	if (xmlhttp == null) {
 		alert("Your browser does not support XMLHTTP!");
 		return;
