@@ -240,7 +240,9 @@ function previous_page_link()
 	else
 		$previous_link = str_replace("/ansql/debug_all.php", "", $_SERVER["PHP_SELF"]) . "/main.php";
 	
-	return   $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["HTTP_HOST"] . $previous_link;
+	$request_protocol = get_request_protocol();
+
+	return   $request_protocol . "://" . $_SERVER["HTTP_HOST"] . $previous_link;
 }
 ?>
 </body>
