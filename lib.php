@@ -2019,7 +2019,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 			if($column_value !== NULL) {
 				$column_value = ($apply_htmlentities) ? $column_value : htmlentities($column_value);
 				print $column_value;
-			} else if (!isset ($function_name))
+			} else 
 				print "&nbsp;";
 			print '</td>';
 			$j++;
