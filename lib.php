@@ -1402,6 +1402,36 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 			if(isset($field_format["add_custom"]))
 				print $field_format["add_custom"];
+			
+			if (isset($selected) && $selected=="Custom" && isset($field_format["javascript"])) {
+
+				?>
+<script><?php 
+	// when Custom value is selected in dropdown js custom_value_dropdown(custom_value,dropdown_id) is called on onchange
+	// call js from here so field appears under <select>
+	// For this to work in conjuction with wizard's pages.php methods, callback_request was modified to retrieve js pieces from response and eval them
+	$js = $field_format["javascript"]; 
+	// get js piece
+	$js = explode("=\"", $js); 
+	if (count($js)==1)
+		$js = explode("='", $js[0]); 
+
+	if (count($js)>1) {
+		// strip last ' or "
+		$js = $js[1];
+		$js = substr($js,0,strlen($js)-1); 
+		// modify calling of function to include value for custom fields instead of '' or ""
+		if (getparam("custom_".$form_identifier.$field_name)) {
+			if (false!==strpos($js,"''"))
+				$js = str_replace("''", "'".getparam("custom_".$form_identifier.$field_name)."'",$js);
+			elseif (false!==strpos($js,'""'))
+				$js = str_replace('""', '"'.getparam("custom_".$form_identifier.$field_name).'"',$js);
+		}  
+		print $js;
+	}?>
+</script>	
+				<?php
+			}
 
 			break;
 		case "radios":
