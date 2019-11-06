@@ -4807,11 +4807,15 @@ function requiredFieldsJs($form_fields, $excluded_fields)
  * @param $value_readonly Bool. If true set 'Value' field as readonly, when 'Search by' is not selected.
  * Ex: array("title"=>array("Search1", "Search2"),array("<input type.../>", "<select>..</select>"))
  */
-function generic_search($search_options, $custom_fields=array(), $value_readonly=false, $custom_order=false)
+function generic_search($search_options, $custom_fields=array(), $value_readonly=false, $custom_order=false, $default_selected=NULL)
 {
 	$search_options = format_for_dropdown($search_options);
-	$search_options["selected"] = getparam("col");
-
+	
+	if (getparam("col"))
+		$search_options["selected"] = getparam("col");
+	else if ($default_selected)
+		$search_options["selected"] = $default_selected;
+	
 	$title = array("Search by", "Value", "&nbsp;");
 	$ro = (!$value_readonly) ? "undefined" : "true";
 	$fields = array(array(
