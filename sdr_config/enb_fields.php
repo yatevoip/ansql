@@ -513,10 +513,10 @@ If the temperature exceeds this level, all digital radio processing functions ar
 				),
 
 				"TxGain2" => array(
-					array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"25"),
+					array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "selected"=>"25"),
 					"display" => "select_without_non_selected",
 					"comment" => "TX post-mixer gain in dB.
-\"Naked\" BladeRFor Lab Kit: 25 dB.
+\"Naked\" BladeRF or LabKit: 25 dB.
 					SatSite: 11 dB"
 				),
 
@@ -524,14 +524,14 @@ If the temperature exceeds this level, all digital radio processing functions ar
 					array("5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"5"),
 					"display" => "select_without_non_selected",
 					"comment" => "Rx pre-mixer gain in dB.
-\"Naked\" BladeRF or Lab Kit: 5 dB"
+\"Naked\" BladeRF or LabKit: 5 dB"
 				),
 
 				"RxGain2" => array(
 					array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "selected"=>"5"),
 					"display" => "select_without_non_selected",
 					"comment" => "Rx post-mixer gain in dB.
-\"Naked\" BladeRF or Lab Kit: 5 dB"
+\"Naked\" BladeRF or LabKit: 5 dB"
 				),
 
 				'referenceSignalPower' => array(
