@@ -528,16 +528,22 @@ function make_request(url, cb, async, already_encoded)
  * @param aync Bool. If set, specifies if the request should be handled asynchronously or not. 
  * Default async is true (asynchronous)
  */
-function make_api_request(url, cb, async)
+function make_api_request(url, cb, async, request_type, ignore_not_successful)
 {
 	var xmlhttp = GetXmlHttpObject();
 	if (xmlhttp == null) {
 		alert("Your browser does not support XMLHTTP!");
 		return;
 	}
-
+	
+	if (typeof ignore_not_successful === 'undefined')
+		ignore_not_successful = false;
+	    
 	xmlhttp.onreadystatechange = function() {
 		if (xmlhttp.readyState == 4) {
+			if (ignore_not_successful && (xmlhttp.status==0 || xmlhttp.status>=400)) 
+				return;
+			
 			var response = xmlhttp.responseText;
 			if (response)
 				remove_spinner();
@@ -548,12 +554,15 @@ function make_api_request(url, cb, async)
 	if (typeof async === 'undefined')
 		async = true;
 
+	if (typeof request_type === 'undefined')
+	    request_type = "POST";
+	
 	var pos = url.indexOf('?');
 	var request_fields = url.substr(pos+1);
 	if (pos!=-1)
 		url  = url.substr(0,pos);
 
-	xmlhttp.open("POST", url, async);
+	xmlhttp.open(request_type, url, async);
 	xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	xmlhttp.send(request_fields);
 }
