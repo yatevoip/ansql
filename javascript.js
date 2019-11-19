@@ -557,6 +557,16 @@ function make_api_request(url, cb, async)
 	xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	xmlhttp.send(request_fields);
 }
+function get_current_base_url()
+{  
+    return window.location.protocol + "//" + window.location.hostname + ":" + window.location.port;
+}
+
+function get_current_url()
+{
+    var base_url = get_current_base_url();
+    return  base_url + window.location.pathname;
+}
 
 /**
  * Make callback 
