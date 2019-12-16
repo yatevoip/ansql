@@ -1403,34 +1403,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			if(isset($field_format["add_custom"]))
 				print $field_format["add_custom"];
 			
-			if (isset($selected) && $selected=="Custom" && isset($field_format["javascript"])) {
-
-				?>
-<script><?php 
-	// when Custom value is selected in dropdown js custom_value_dropdown(custom_value,dropdown_id) is called on onchange
-	// call js from here so field appears under <select>
-	// For this to work in conjuction with wizard's pages.php methods, callback_request was modified to retrieve js pieces from response and eval them
-	$js = $field_format["javascript"]; 
-	// get js piece
-	$js = explode("=\"", $js); 
-	if (count($js)==1)
-		$js = explode("='", $js[0]); 
-
-	if (count($js)>1) {
-		// strip last ' or "
-		$js = $js[1];
-		$js = substr($js,0,strlen($js)-1); 
-		// modify calling of function to include value for custom fields instead of '' or ""
-		if (getparam("custom_".$form_identifier.$field_name)) {
-			if (false!==strpos($js,"''"))
-				$js = str_replace("''", "'".getparam("custom_".$form_identifier.$field_name)."'",$js);
-			elseif (false!==strpos($js,'""'))
-				$js = str_replace('""', '"'.getparam("custom_".$form_identifier.$field_name).'"',$js);
-		}  
-		print $js;
-	}?>
-</script>	
-				<?php
+			if (isset($selected) && ($selected=="Custom" || $selected==array("Custom")) && isset($field_format["javascript"])) {
+				autocall_js($field_name, $field_format, $form_identifier);
 			}
 
 			break;
@@ -1577,6 +1551,48 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	print '</td>';
 	print '</tr>';
+}
+
+// Call js associated to a field
+// Decission to call it is made before calling this function
+// Used when in dropdown 'Custom' was selected and we need to replicate js functiolity
+// Instead of adding tr_custom_$field_name, call js function that will build the input field with the custom value already set
+function autocall_js($field_name, $field_format, $form_identifier) 
+{	
+	global $in_wizard;
+	if (!isset($in_wizard))
+		$in_wizard = false;
+	
+	$js = $field_format["javascript"]; 
+	$autocall = (isset($field_format["js_autocall"])) ? $field_format["js_autocall"] : null;
+				
+	$change_val_dropdown = (strpos($js, "custom_value_dropdown")) ? true : false;
+				
+	if ($autocall===true || ($change_val_dropdown && $autocall!==false && !$in_wizard)) {
+	
+		// when Custom value is selected in dropdown js custom_value_dropdown(custom_value,dropdown_id) is called on onchange
+		// call js from here so field appears under <select>
+		// For this to work in conjuction with wizard's pages.php methods, callback_request was modified to retrieve js pieces from response and eval them
+
+		// get js piece
+		$js = explode("=\"", $js); 
+		if (count($js)==1)
+			$js = explode("='", $js[0]); 
+
+		if (count($js)>1) {
+			// strip last ' or "
+			$js = $js[1];
+			$js = substr($js,0,strlen($js)-1); 
+			// modify calling of function to include value for custom fields instead of '' or ""
+			if (getparam("custom_".$form_identifier.$field_name)) {
+				if (false!==strpos($js,"''"))
+					$js = str_replace("''", "'".getparam("custom_".$form_identifier.$field_name)."'",$js);
+				elseif (false!==strpos($js,'""'))
+					$js = str_replace('""', '"'.getparam("custom_".$form_identifier.$field_name).'"',$js);
+			}
+			print "<script> $js </script>";	
+		}
+	}
 }
 
 function comment_field($field_format, $form_identifier, $field_name, $category_id, $display)
