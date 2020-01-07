@@ -18,6 +18,49 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+if(is_file("defaults.php"))
+	require_once("defaults.php");
+elseif(is_file("../defaults.php"))
+	require_once("../defaults.php");
+
+//set $session_lifetime from defaults.php
+global $session_lifetime;
+
+if($session_lifetime) {
+	// Set the max lifetime
+	ini_set("session.gc_maxlifetime", $session_lifetime);
+
+	// Set the session cookie to timout
+	ini_set("session.cookie_lifetime", $session_lifetime);
+	
+	// Change the save path. Sessions stored in the same path
+	// all share the same lifetime; the lowest lifetime will be
+	// used for all. Therefore, for this to work, the session
+	// must be stored in a directory where only sessions sharing
+	// it's lifetime are. Best to just dynamically create on.
+	$separator = strstr(strtoupper(substr(PHP_OS, 0, 3)), "WIN") ? "\\" : "/";
+	$path = ini_get("session.save_path")."{$separator}session_{$session_lifetime}sec";
+
+	if(!file_exists($path)) {
+		@mkdir($path);
+	}
+
+	//If the new path exists, set it, otherwise PHP will use the default session.save_path
+	if(is_dir($path))
+		ini_set("session.save_path", $path);
+
+	// Set the chance to trigger the garbage collection.
+	ini_set("session.gc_probability", 1);
+	ini_set("session.gc_divisor", 100); // Should always be 100
+
+	// Renew the time left until this session times out.
+	// If you skip this, the session will time out based
+	// on the time when it was created, rather than when
+	// it was last used.
+	if(isset($_COOKIE[session_name()])) {
+		setcookie(session_name(), $_COOKIE[session_name()], time() + $session_lifetime);
+	}
+}
 
 session_start();
 
