@@ -40,15 +40,20 @@ if($session_lifetime) {
 	// it's lifetime are. Best to just dynamically create on.
 	$separator = strstr(strtoupper(substr(PHP_OS, 0, 3)), "WIN") ? "\\" : "/";
 	$path = ini_get("session.save_path")."{$separator}session_{$session_lifetime}sec";
-
+	
 	if(!file_exists($path)) {
 		@mkdir($path);
 	}
 
 	//If the new path exists, set it, otherwise PHP will use the default session.save_path
-	if(is_dir($path))
+	if(is_dir($path) && is_writable($path))
 		ini_set("session.save_path", $path);
-
+	else {
+		//Log warning only in index.php, not everytime
+		if(isset($_SERVER['SCRIPT_NAME']) && strpos($_SERVER['SCRIPT_NAME'], 'index.php'))
+			error_log("PHP Warning: Failed to extend PHP session. Permission issue, change owner to apache ($path)");
+	}
+	
 	// Set the chance to trigger the garbage collection.
 	ini_set("session.gc_probability", 1);
 	ini_set("session.gc_divisor", 100); // Should always be 100
