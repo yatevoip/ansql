@@ -1202,14 +1202,16 @@ to load for the operation. Possible values are:
 			"networkname" => array(
 				"comment" => "Network short name to be sent to MS.
 This parameter is applied on reload.
-Available only in the private YateBTS version",
-				"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 ]+$")
+Available only in the private YateBTS version.
+Allowed characters: 'a-zA-z', '0-9', ' ', '-' and '.'",
+				"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 \-\.]+$")
 			),
 			"networkname.full" => array(
 				"comment" => "Network full name to be sent to MS.
 This parameter is applied on reload.
-Available only in the private YateBTS version",
-				"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 ]+$")
+Available only in the private YateBTS version.
+Allowed characters: 'a-zA-z', '0-9', ' ', '-' and '.'",
+				"validity" => array("check_field_validity", false, false, "^[a-zA-Z0-9 \-\.]+$")
 			),
 			"networkname.ci" => array(
 				"display" => "checkbox",
