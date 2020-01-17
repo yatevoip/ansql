@@ -23,6 +23,11 @@ if(is_file("defaults.php"))
 elseif(is_file("../defaults.php"))
 	require_once("../defaults.php");
 
+if(is_file("config.php"))
+	require_once("config.php");
+elseif(is_file("../config.php"))
+	require_once("../config.php");
+
 //set $session_lifetime from defaults.php
 global $session_lifetime;
 
