@@ -28,8 +28,12 @@ if(is_file("config.php"))
 elseif(is_file("../config.php"))
 	require_once("../config.php");
 
-//set $session_lifetime from defaults.php
+//Set $session_lifetime from defaults.php
+//Also it can be set/override from config.php
 global $session_lifetime;
+
+if(!isset($session_lifetime))
+	$session_lifetime = null;
 
 if($session_lifetime) {
 	// Set the max lifetime
