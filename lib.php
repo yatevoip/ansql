@@ -1282,6 +1282,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "select":
 		case "mul_select":
 		case "select_without_non_selected":
+		case "tri_bool":
 	
 			if ($add_selected_to_dropdown_if_missing) {
 				$is_selected = false;
@@ -1296,7 +1297,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			else
 				print ' name="'.$form_identifier.$field_name.'"';
 			print '>';
-			if ($display != "mul_select" && $display != "select_without_non_selected")
+			//if ($display != "mul_select" && $display != "select_without_non_selected")
+			if ($display == "select")
 				print '<option value="">Not selected</option>';
 
 			// PREVIOUS implementation when only 0 key could be used for dropdown options
@@ -1329,6 +1331,28 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				$selected = $options["SELECTED"];
 			else
 				$selected = '';
+			
+			if($display == "tri_bool") {
+				//Default labels for data type tri_bool
+				$tri_bool_options = array("null"=>"Default","false" => "False","true"=>"True");
+				//Rewrite label if is specified
+				if(!empty($options)) {
+					foreach($options as $var => $opt) {
+						if(!is_array($opt))
+							continue;
+						foreach($tri_bool_options as $option => $label) {
+							if(isset($opt[$option]))
+								$tri_bool_options[$option] = $opt[$option];
+						}
+					}
+				}
+				//Build dropdown values
+				$new_options = array();
+				foreach($tri_bool_options as $option => $label)
+					$new_options[] = array("{$field_name}_id" => $option, $field_name => $label);
+					
+				$options = $new_options;
+			}
 
 			foreach ($options as $var=>$opt) {
 				if ($var === "selected" || $var === "SELECTED")
