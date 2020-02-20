@@ -3715,6 +3715,13 @@ class Model
 		$options = implode("','",$options);
 		return "'".$options."'";
 	}
+	
+	public function isPopulated()
+	{
+		if ($this->_set || $this->_retrieved) 
+			return true;
+		return false;
+	}
 }
 
 ?>
