@@ -1138,15 +1138,26 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if (isset($field_format["triggered_by"]))
 		$needs_trigger = true;
 
+	$display = (isset($field_format["display"])) ? $field_format["display"] : "text";
+	$form_display_elements = array("text","textarea","textarea-nonedit","tri_bool","select","mul_select","select_without_non_selected","radios","radio","checkbox","checkbox-readonly","password","file","text-nonedit" );
+
+	$def_val = (isset($field_format["value"])) ? $field_format["value"] : null;
 	if ($object) {
-		if (is_array($object))
-			$value = (!is_array($field_name) && isset($object[$field_name])) ? $object[$field_name] : NULL;
-		elseif (is_object($object))
-			$value = (!is_array($field_name) && isset($object->{$field_name})) ? $object->{$field_name} : NULL;
-	} else
-		$value = NULL;
-	if (isset($field_format["value"]))
-		$value = $field_format["value"];
+		if (is_array($object)) {
+			if (!is_array($field_name) && count($object) && in_array($display, $form_display_elements))
+				$value = (isset($object[$field_name])) ? $object[$field_name] : NULL;
+			else
+				// some of the fields contain fixed content set in value: objtitle, subtitle, fixed 
+				$value = $def_val;
+		} elseif (is_object($object))
+			//$value = (!is_array($field_name) && isset($object->{$field_name})) ? $object->{$field_name} : NULL;
+			$value = (!is_array($field_name) && $object->isPopulated()) ? $object->{$field_name} : $def_val;
+		else
+			$value = $def_val;
+	} else {
+		// this is an add type of form, there is no object/array with fields being edited
+		$value = $def_val;
+	}
 
 	if (!is_array($value) && !strlen($value) && isset($field_format["cb_for_value"]) && isset($field_format["cb_for_value"]["name"]) && is_callable($field_format["cb_for_value"]["name"])) {
 		if (count($field_format["cb_for_value"])==2) 
@@ -1188,12 +1199,11 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	// if $var_name is an array we won't use it
 	$var_name = (isset($field_format[0])) ? $field_format[0] : $field_name;
-	$display = (isset($field_format["display"])) ? $field_format["display"] : "text";
 
 	if ($object && !is_array($object)) {
 		$variable = (!is_array($var_name)) ? $object->variable($var_name) : NULL;
 		if ($variable) {
-			if ($variable->_type == "bool" && $display!="text")
+			if ($variable->_type == "bool" && $display!="text" && display!="tri_bool")
 				$display = "checkbox";
 		}
 	}
@@ -1279,10 +1289,37 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print $value;
 			print '</textarea>'.$field_comment;
 			break;
+		
+		case "tri_bool":
+			Debug::debug_message("tri_bool", $field_format);
+			$selected = tri_bool_value($value);
+			Debug::debug_message("tri_bool", "display_pair for $field_name with received value=$value, type=".gettype($value)." , selected=$selected");
+			
+			$options = array( ""=>"Default", "on"=>"True", "off"=>"False");			
+			$labels  = (isset($field_format["labels"]) && is_array($field_format["labels"])) ? $field_format["labels"] : array();
+			
+			print '<select class="'.$css.'" id="'.$form_identifier.$field_name.'" ';
+			if (isset($field_format["javascript"]))
+				print $field_format["javascript"];
+			print ' name="'.$form_identifier.$field_name.'"';
+			print '>';
+			
+			foreach ($options as $val=>$label) {
+				if (isset($labels[$val]))
+					$label = $labels[$val];
+				
+				print "<option value=\"$val\"";
+				if ($selected===$val)
+					print " SELECTED";
+				print ">$label</option>";
+			}
+			
+			print '</select>'.$field_comment;
+			break;
+			
 		case "select":
 		case "mul_select":
 		case "select_without_non_selected":
-		case "tri_bool":
 	
 			if ($add_selected_to_dropdown_if_missing) {
 				$is_selected = false;
@@ -1331,28 +1368,6 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				$selected = $options["SELECTED"];
 			else
 				$selected = '';
-			
-			if($display == "tri_bool") {
-				//Default labels for data type tri_bool
-				$tri_bool_options = array("null"=>"Default","false" => "False","true"=>"True");
-				//Rewrite label if is specified
-				if(!empty($options)) {
-					foreach($options as $var => $opt) {
-						if(!is_array($opt))
-							continue;
-						foreach($tri_bool_options as $option => $label) {
-							if(isset($opt[$option]))
-								$tri_bool_options[$option] = $opt[$option];
-						}
-					}
-				}
-				//Build dropdown values
-				$new_options = array();
-				foreach($tri_bool_options as $option => $label)
-					$new_options[] = array("{$field_name}_id" => $option, $field_name => $label);
-					
-				$options = $new_options;
-			}
 
 			foreach ($options as $var=>$opt) {
 				if ($var === "selected" || $var === "SELECTED")
@@ -1431,7 +1446,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				autocall_js($field_name, $field_format, $form_identifier);
 			}
 
-			break;
+			break;			
 		case "radios":
 		case "radio":
 			$options = (is_array($var_name)) ? $var_name : array();
@@ -5372,6 +5387,18 @@ function bool_value($value)
 	if ($value==="t" || $value==="1" || $value===1)
 		return true;
 	return false;
+}
+
+function tri_bool_value($value)
+{
+	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true)
+		$res = "on";
+	elseif ($value==="f" || $value==="0" || $value===0 || $value=="off" || $value===false)
+		$res = "off";
+	else
+		$res = "";
+	Debug::debug_message("tri_bool_value", "Mapping '$value' with type=".gettype($value)." to '$res'");
+	return $res;
 }
 
 function suffix_index($index)
