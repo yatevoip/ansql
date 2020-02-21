@@ -1203,7 +1203,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if ($object && !is_array($object)) {
 		$variable = (!is_array($var_name)) ? $object->variable($var_name) : NULL;
 		if ($variable) {
-			if ($variable->_type == "bool" && $display!="text" && display!="tri_bool")
+			if ($variable->_type == "bool" && $display!="text" && $display!="tri_bool")
 				$display = "checkbox";
 		}
 	}
