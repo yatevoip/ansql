@@ -514,14 +514,36 @@ class Debug
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
 				// check that file is writtable or if output would be stdout (force_update in cli mode)
-				if (is_writable($arr[$i]) || $arr[$i]=="php://stdout") {
-					if (!is_file($arr[$i]))
-						$fh = fopen($arr[$i], "w");
-					else
-						$fh = fopen($arr[$i], "a");
+				if (!is_file($arr[$i]) || $arr[$i]=="php://stdout") {
+					if ($arr[$i]!="php://stdout") {					
+						//explode path by / so we can remove filename from it
+						$dir_parts = explode("/", $arr[$i]);
+						// remove last element from array (the file name in this case)
+						array_pop($dir_parts);
+						// reconstruct path - this is the path to logs directory
+						$dir = implode("/", $dir_parts);
+						
+						if (!is_dir($dir) ) {
+							trigger_error("Error in Debug::output() - The logs directory $dir does not exist.", E_USER_NOTICE);
+							return;
+						}
+						if (!is_writable($dir) ) {
+							trigger_error("Error in Debug::output() - The logs directory $dir is not writable.", E_USER_NOTICE);
+							return;
+						}
+					}
+					$fh = fopen($arr[$i], "w");
 					fwrite($fh, $date.strtoupper($tag).": ".$msg."\n");
 					fclose($fh);
-				}
+				} else if (is_file($arr[$i])) {
+					if (!is_writable($arr[$i]) ) {
+						trigger_error("Error in Debug::output() - The logs file $arr[$i] is not writable.", E_USER_NOTICE);
+						return;
+					}
+					$fh = fopen($arr[$i], "a");
+					fwrite($fh, $date.strtoupper($tag).": ".$msg."\n");
+					fclose($fh);
+				} 
 			}
 		}
 	}
