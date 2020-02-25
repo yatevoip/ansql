@@ -1507,8 +1507,14 @@ class Model
 			if ($var) {
 				if($var->_type=="bool") {
 					$param_value = Model::sqlBool($param_value);
-					
+
 					if (Database::boolValue($param_value) !== Database::boolValue($this->{$param_name}))
+						$this->_modified_col[$param_name] = true;
+				
+				} elseif ($var->_type=="text" || substr($var->_type,0,7)=="varchar") {
+					$param_value = Model::sqlString($param_value);
+
+					if ($this->{$param_name} !== $param_value)
 						$this->_modified_col[$param_name] = true;
 					
 				} else {
@@ -2528,6 +2534,23 @@ class Model
 		if ($value===false || $value==='f' || $value==='0' || $value===0)
 			return 'f';
 		return $defval;
+	}
+
+	/**
+	 * Convert a given value to a SQL string
+	 * @param $value the Value to convert
+	 */
+	public static function sqlString($value)
+	{
+		Debug::func_start(__METHOD__,func_get_args(),"framework");
+
+		if ($value === "")
+			return NULL;
+
+		if (!is_string($value))
+			return strval($value);
+
+		return $value;
 	}
 
 	/**
