@@ -1149,10 +1149,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			else
 				// some of the fields contain fixed content set in value: objtitle, subtitle, fixed 
 				$value = $def_val;
-		} elseif (is_object($object))
+		} elseif (is_object($object)) {
 			//$value = (!is_array($field_name) && isset($object->{$field_name})) ? $object->{$field_name} : NULL;
-			$value = (!is_array($field_name) && $object->isPopulated()) ? $object->{$field_name} : $def_val;
-		else
+			$value = (!is_array($field_name) && isset($object->{$field_name}) && $object->isPopulated()) ? $object->{$field_name} : $def_val;
+		} else
 			$value = $def_val;
 	} else {
 		// this is an add type of form, there is no object/array with fields being edited
