@@ -1174,9 +1174,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	if (isset($field_format["error"]) && $field_format["error"]===true)
 		$css .= " error_field";
-	print ' class="'.$css.'"';
+	print ' class="'.$css;
 	if(isset($field_format["advanced"]))
 	{
+		print " advancedrow\"";
 		if(!$show_advanced) {
 			print ' style="display:none;" advanced="true" ';
 			if (isset($field_format["triggered_by"]))
@@ -1190,11 +1191,13 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		} else
 			print ' style="display:table-row;"';
 	} elseif (isset($field_format["triggered_by"])) {
+		print "\"";
 		if ($needs_trigger)
 			print ' style="display:none;" trigger=\"true\" ';
 		else
 			print ' style="display:table-row;" trigger=\"true\" ';
-	}
+	} else
+		print "\"";
 	print '>';
 
 	// if $var_name is an array we won't use it
@@ -1479,7 +1482,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print $field_comment;
 			break;
 		case "checkbox":
-		case "checkbox-readonly":
+		case "checkbox-readonly":			
 			print '<input class="'.$css.'" type="checkbox" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
 			if (bool_value($value) || $value=="on")
 				print " CHECKED ";
