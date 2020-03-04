@@ -895,8 +895,9 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
  * @param $form_identifier Text. Used to make the current fields unique(Used when this function is called more than once inside the same form with fields that can have the same name when being displayed)
  * @param $td_width Array or by default NULL. If Array("left"=>$value_left, "right"=>$value_right), force the widths to the ones provided. $value_left could be 20px or 20%.
  * @param $hide_advanced Bool default false. When true advanced fields will be always hidden when displaying form
+ * @param $scroll_top_advanced Bool. Default false. Scrool to top after advanced fields are displayed
  */
-function editObject($object, $fields, $title, $submit="Submit", $compulsory_notice=NULL, $no_reset=false, $css=NULL, $form_identifier='', $td_width=NULL, $hide_advanced=false)
+function editObject($object, $fields, $title, $submit="Submit", $compulsory_notice=NULL, $no_reset=false, $css=NULL, $form_identifier='', $td_width=NULL, $hide_advanced=false, $scroll_top_advanced=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");	
 	
@@ -974,6 +975,8 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 		$img_extension = "png";
 	else
 		$img_extension = "jpg";
+	
+	$scroll_top_advanced = ($scroll_top_advanced) ? "true" : "false";
 	if($have_advanced && !$compulsory_notice)
 	{
 		print '<tr class="'.$css.'">';
@@ -983,7 +986,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 			print " src=\"images/advanced.$img_extension\" title=\"Show advanced fields\"";
 		else
 			print " src=\"images/basic.$img_extension\" title=\"Hide advanced fields\"";
-		print ' onClick="advanced(\''.$form_identifier.'\');"/></td></tr>';
+		print ' onClick="advanced(\''.$form_identifier.'\','.$scroll_top_advanced.');"/></td></tr>';
 	}
 	if($compulsory_notice && $compulsory_notice !== true)
 	{
@@ -995,7 +998,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 			print "src=\"images/advanced.$img_extension\" title=\"Show advanced fields\"";
 		else
 			print "src=\"images/basic.$img_extension\" title=\"Hide advanced fields\"";
-		print ' onClick="advanced(\''.$form_identifier.'\');"/>'.$compulsory_notice.'</td>';
+		print ' onClick="advanced(\''.$form_identifier.'\','.$scroll_top_advanced.');"/>'.$compulsory_notice.'</td>';
 		print '</tr>';
 		}
 	}elseif($compulsory_notice === true){
@@ -1007,7 +1010,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 			print " class=\"advanced\" src=\"images/advanced.$img_extension\" title=\"Show advanced fields\"";
 		else
 			print " class=\"advanced\" src=\"images/basic.$img_extension\" title=\"Hide advanced fields\"";
-		print ' onClick="advanced(\''.$form_identifier.'\');"/>';
+		print ' onClick="advanced(\''.$form_identifier.'\','.$scroll_top_advanced.');"/>';
 		}
 		print 'Fields marked with <font class="compulsory">*</font> are required.</td>';
 		print '</tr>';

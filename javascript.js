@@ -94,7 +94,7 @@ function hide(element_id)
  * @param identifier String. In case there are multiple forms in a single page, 
  * all elements from a form should start with this identified
  */
-function advanced(identifier)
+function advanced(identifier, scroll_to_top)
 {
 	var myform;
 	
@@ -152,6 +152,9 @@ function advanced(identifier)
 		img.src = imgarray.join("/");
 	} else 
 		console.log("advanced() was called, but img is null and tagName='"+img.tagName+"'");
+	
+	if (true===scroll_to_top)
+		scrollToTop();
 }
 
 /**
