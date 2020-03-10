@@ -294,16 +294,25 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
  * @param $return_text the link to return to requested Path
  * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  */ 
-function errormess($text, $path=NULL, $return_text="Go back to application", $encode=true)
+function errormess($text, $path=NULL, $return_text="Go back to application", $encode=true, $details="")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module;
 
 	$text = ($encode) ? htmlentities($text) : $text;
 	print '<div class="notice error">'."\n";
+	print '<div class="hold_err_mess">';
 	print "<font class=\"error\"> Error!</font>"."\n";
 	print "<font style=\"font-weight:bold;\">". $text ."</font>"."\n";
-
+	print '</div>';
+	
+	if ($details) {
+		print ' <a class="llink" onclick="show_hide(\'error_details\');">More details<br/></a>';
+		print '<div id="error_details" class="error_details" style="display: none;">';
+		print $details;
+		print '</div>';
+	}
+	
 	if ($path == 'no') {
 		print '</div>';
 		return;
@@ -312,6 +321,11 @@ function errormess($text, $path=NULL, $return_text="Go back to application", $en
 	link_to_main_page($path, $return_text);
 	
 	print '</div>';
+}
+
+function error_with_details($message, $returnpath, $details)
+{
+	errormess($message, $returnpath, "Go back to application", true, $details);
 }
 
 /**
