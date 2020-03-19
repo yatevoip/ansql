@@ -509,6 +509,16 @@ function clean_node_types($installed_nodes)
 	}
 	return $nodes;
 }
+
+function valid_status_response($res)
+{
+	if (!isset($res["status"]) || !is_array($res["status"]))
+		return false;
+	if (!isset($res["status"]["state"]) || !isset($res["status"]["operational"]))
+		return false;
+	return true;
+}
+
 /**
  * Uses get_node_status API request to get the node status. 
  * Returns array("state":text,"color":red/green/yellow,"details":true/false)
@@ -548,6 +558,15 @@ function node_status($out=array(), $url="get_node_status", $extra=array())
 			"version"=>(isset($res["version"])) ? $res["version"] : null
 		));
 
+	if (!valid_status_response($res))
+		return array_merge($ret,  array(
+			"state"=>"Invalid status response", 
+			"color"=>"gray",
+			"details"=>false,
+			"version"=>(isset($res["version"])) ? $res["version"] : null
+		));
+
+
 	$node_status = array(
 		"details"=>true,
 		"version"=>(isset($res["version"])) ? $res["version"] : null,
@@ -555,7 +574,7 @@ function node_status($out=array(), $url="get_node_status", $extra=array())
 		"color" => "gray"
 	);
 
-	if ($res["status"]["level"]) {
+	if (isset($res["status"]["level"])) {
 		$all_colors = array(
 			"green"  => array("NOTE"), 
 			"red"    => array("WARN","FAIL","CRIT"),
@@ -571,8 +590,6 @@ function node_status($out=array(), $url="get_node_status", $extra=array())
 	}
 	elseif ($res["status"]["operational"])
 		$node_status["color"] = "green";
-	elseif ($res["status"]["level"] == "MILD")
-		$node_status["color"] = "yellow";
 	else
 		$node_status["color"] = "red";
 
