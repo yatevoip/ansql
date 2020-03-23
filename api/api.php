@@ -17,10 +17,12 @@ include_once "../../api/api_includes.php";
 
 $response = do_request();
 if ($log_status) {
-	log_request($response["params"], $response["data"]);
+	$extra = (isset($response["extra"])) ? $response["extra"] : "";
+	log_request($response["params"], $response["data"], $extra);
 }
 
-header("HTTP/1.1 " . $response["code"] . " " . $response["message"]);
+$mess = str_replace("\n","", $response["message"]);
+header("HTTP/1.1 " . $response["code"] . " " . $mess);
 if (isset($response["data"])) {
 	header("Content-Type: application/json");
 	echo json_encode($response["data"]);
@@ -43,7 +45,7 @@ function process_request($req, $params)
 
 function do_request($method = "POST")
 {
-	global $cors_origin, $log_status, $api_secret;
+	global $cors_origin, $log_status, $api_secret, $predefined_requests;
 
 	if (("OPTIONS" == $_SERVER["REQUEST_METHOD"]) 
 		&& isset($_SERVER["HTTP_ACCESS_CONTROL_REQUEST_METHOD"])
@@ -72,12 +74,12 @@ function do_request($method = "POST")
 	if (!valid_ctype($ctype))
 		return build_error(415, "Unsupported Media Type");
 
-	/* URI parsing example for '/v1/equipment/12'
-	 * 		[0]=> string(20) "/v1/equipment/12"
-	 * 		[1]=> string(2) "v1"
-	 * 		[2]=> string(9) "equipment"
-	 * 		[3]=> string(3) "/12"
-	 * 		[4]=> string(2) "12"
+	/* URI parsing example for '/v1/equipment/12'  | '/v1/np/series' (with predefined requests)
+	 * 		[0]=> string(20) "/v1/equipment/12"    | [0]=> string(20) "/v1/np/series"
+	 * 		[1]=> string(2) "v1"                   | [1]=> string(2) "v1"
+	 * 		[2]=> string(9) "equipment"            | [2]=> string(2) "np"
+	 * 		[3]=> string(3) "/12"                  | [3]=> string(3) "/series"
+	 * 		[4]=> string(2) "12"                   | [4]=> string(2) "series"
 	 *
 	 * Match indices are always the same, even if some of the subpatterns
 	 * are not present.
@@ -87,6 +89,65 @@ function do_request($method = "POST")
 
 	if ($match[1] != "v1")
 		return build_error(501, "Unsupported API version");
+
+	/*
+	 * Example: 
+	 * $predefined_requests = array(
+	 *     "broadcast" => array(
+	 *          "np" => array(
+	 *             "cb_get_api_nodes" => "custom_get_npdb_nodes", // if missing a default  get_api_nodes() will be called 
+	 *             "cb_format_params" => "custom_format_params",  // if missing a default function format_api_request() will be called
+	 *             "cb_run_request" => "custom_apply_request",    // if missing a default function run_api_requests() will be called
+	 *          )
+	 *      )
+	 *  );
+	 *
+	 */ 
+	if (isset($predefined_requests)) {
+		$uri = array(
+			"method"    => $_SERVER["REQUEST_METHOD"],
+			"ctype"     => $ctype,
+			"object"    => @$match[4],
+			"params"    => array()
+		);
+		parse_str($_SERVER["QUERY_STRING"], $uri["params"]);
+
+		$methods_allowed = array("GET","POST","PUT","DELETE");
+		if (!in_array($_SERVER["REQUEST_METHOD"], $methods_allowed))
+			return build_error(405, "Method Not Allowed");
+
+		foreach ($predefined_requests as $handling=>$types) {
+			foreach ($types as $type=>$methods) {
+				if ($type!=$match[2])
+					continue 2;
+
+				$req = "get_api_nodes";
+				if (isset($methods["cb_get_api_nodes"]))
+					$req = str_replace ("custom_","",$methods["cb_get_api_nodes"]);
+
+				if (!stream_resolve_include_path("api/" . $req . ".php"))
+					return build_error(401, "Request '$req' not implemented!");
+
+				require_once "api/" . $req . ".php";
+
+				// get the nodes where the requests will be send to
+				$ips = call_user_func_array($req, array($handling,$type));
+
+				// build the format for the new requests to be send to API using a custom function or the default function
+				if (isset($methods["cb_format_params"]))
+					$params_request = call_user_func_array(str_replace("custom_","",$methods["cb_format_params"]), array($handling,$type,$uri));
+				else
+					$params_request = call_user_func_array("format_api_request",array($handling,$type,$uri));
+
+				// return the response from API after running the custom function to process the API requests
+				if (isset($methods["cb_run_request"]))
+					return call_user_func_array(str_replace("custom_","",$methods["cb_run_request"]), array($handling,$type,$ips,$params_request));
+
+				// return the response from API after running the default function to process the API requests
+				return call_user_func_array("run_api_requests",array($handling,$type,$ips,$params_request));
+			}
+		}
+	}
 
 	$uri = array(
 		"object"	=> $match[2],

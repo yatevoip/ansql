@@ -1,5 +1,6 @@
 <?php
 
+include "../use_json_requests.php";
 
 function translate_error_to_code($res)
 {
@@ -16,17 +17,18 @@ function translate_error_to_code($res)
 	}
 }
 
-function build_success($data, $params)
+function build_success($data, $params, $extra="")
 {
 	return array(
 		"code"		=> 200,
 		"message"	=> "OK",
 		"params"	=> $params,
-		"data"		=> array_merge(array("code" => 0), $data)
+		"data"		=> array_merge(array("code" => 0), $data),
+		"extra"     => $extra
 	);
 }
 
-function build_error($code, $message, $params = array())
+function build_error($code, $message, $params = array(), $extra = "")
 {
 	return array(
 		"code"		=> $code, 
@@ -34,12 +36,13 @@ function build_error($code, $message, $params = array())
 		"params"	=> $params,
 		"data" 		=> array(
 			"code"      => $code,
-			"message"   => $message
+			"message"   => $message,
+			"extra"     => $extra // keeps more details of the broadcast aggregate data
 		)
 	);
 }
 
-function log_request($inp, $out = null)
+function log_request($inp, $out = null, $extra = "")
 {
 	global $logs_file;
 	global $logs_dir;
@@ -63,8 +66,132 @@ function log_request($inp, $out = null)
 			$out = "Response: ".json_encode($out)."\n";
 
 		fwrite($fh, "------ " . date("Y-m-d H:i:s") . ", ip=$addr\nURI: ".$_SERVER['REQUEST_URI']."\nRequest: ".json_encode($inp)."\n$out\n");
+		if (strlen($extra))
+			fwrite($fh, "------ " ."Extra: ".$extra);
 		fclose($fh);
 	}
 	else
 		print "\n// Can't write to $file";
+}
+
+$predefined_requests = array(
+	"broadcast" => array(
+		"np" => array(
+		//	example of the format of the custom callbacks
+		//	"cb_get_api_nodes" => "custom_get_npdb_nodes",   // if missing a default function get_api_nodes() will be called 
+		//	"cb_format_params" => "custom_format_params",   // if missing a default function format_api_request() will be called
+		//	"cb_run_request" => "custom_apply_request",    // if missing a default function run_api_requests() will be called
+		)
+	)
+);
+
+/**
+ * Return the actual format of the request that needs to be sent to equipment 
+ * @param $handling String: broadcast, failover, proxy etc
+ * @param $type String: np, subscriber etc
+ */ 
+function format_api_request($handling, $type, $request_params)
+{
+	$ctype = $request_params["ctype"];
+	$method = $request_params["method"];
+	$input = array(); 
+
+	if ($method == "POST" || $method == "PUT") {
+		if ($ctype == "application/json" || $ctype == "text/x-json") {
+			$input = json_decode(file_get_contents('php://input'), true);
+			if ($input === null)
+				return array("code"=>415, "message"=>"Unparsable JSON content");
+		} else {
+			if ($method == "put") {
+				$input = array();
+				parse_str(file_get_contents("php://input"), $input);
+				foreach ($input as $key=>$value) {
+					unset($input[$key]);
+					$input[str_replace('amp;', '', $key)] = $value;
+				}
+			} else
+				$input["params"] = $_POST;
+			$input = array_merge($input, $request_params["params"]);
+		}
+	} elseif ($method == "GET") {
+		$input["params"] = $_GET;
+	}
+	if ($type == "np")
+			$input["node"] = "npdb";
+
+	if (!isset($input["request"])) {
+		$input["request"] = strtolower($method) . "_" . $request_params["object"];
+		if ($type == "np") {
+			if ($method == "PUT" || $method == "POST")
+				$input["request"] = "set_".$request_params["object"];
+			if ($method == "DELETE")
+				$input["request"] = "del_".$request_params["object"];
+		}
+	}
+	// for npdb there are no ids, but will be used for other cases in the future
+	if (isset($request_params["id"]))
+		$input[$request_params["object"] . "_id"] = $request_params["id"];
+	return $input;
+}
+/**
+ * Depending on set $handling make request to $equipment and aggregate response (if needed)
+ * @param $handling String: broadcast, failover, proxy etc
+ * $equipment - list of IPs->name equipment returned from get_api_nodes
+ * $request_params - returned from format_api_request
+ */ 
+function run_api_requests($handling, $type, $equipment, $request_params)
+{
+	$equipment_ips = array_keys($equipment);
+
+	$extra = "";
+	$message = "";
+	$aggregate_response = array();
+	$have_errors = false;
+	if ($handling == "broadcast") {
+		foreach ($equipment_ips as $management_link) {
+			$equipment_name = $equipment[$management_link];
+
+			$out = array(
+				"node"    => $request_params["node"],
+				"request" => $request_params["request"],
+				"params"  => isset($request_params["params"]) ? $request_params["params"] : array()
+			);
+			$url = "http://$management_link/api.php";
+			$res = make_request($out,$url);
+			// request fails, aggregate the messages and put extra info about the fail 
+			if ($res["code"] != 0) {
+				$have_errors = true;
+				$code = $res["code"];
+				$extra .= $equipment_name.", ";
+				// Fixme: this should be a function that should see if the message is the same,
+				// concatenate the equipment names with the same erroe message
+			  	$message .= "Equipment: ".$equipment_name.": [".$code."]: " .$res["message"].". ";
+			} else {
+				// aggregate the successful requests
+				foreach ($res as $k=>$response) {
+					if ($k == "code")
+						continue;
+					if (is_array($response))
+						$aggregate_response[$k] = array_merge($aggregate_response,$response);
+					else {
+						// Ex: set_series (when adding a new series the resonse is count:1)
+						// Fixme: make a function to handle this case. Aggregate the response for all equipment
+						// and also the response should be clearer.
+						$aggregate_response[$k] = $response;
+					}
+				}
+				$extra .= $equipment_name.", "; 	
+			}
+		}
+	}
+
+	if ($have_errors) {
+		// Note: (FIXME) if there are multiple errors the codes received should be translated into something common
+		// for now just set the last err code that will be translated by the API for user 
+		$extra = "Request ".$request_params["request"]." failed for equipment:  ". $extra;
+		return build_error($code, $message, $request_params, $extra);
+	}
+
+	$extra .= "Request ".$request_params["request"]." was successfull for equipment: ".$extra;
+	return build_success($aggregate_response, $request_params, $extra);
 }
