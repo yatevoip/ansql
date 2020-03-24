@@ -267,24 +267,61 @@ function message($text, $path=NULL, $return_text="Go back to application", $enco
  * @param $return_text the link to return to requested Path
  * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  */ 
-function warning_mess($text, $path=NULL, $return_text="Go back to application", $encode=true)
+function warning_mess($text, $path=NULL, $return_text="Go back to application", $encode=true, $details="", $more_details_id="", $extra_css="", $print_text = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module,$method;
+	global $module,$method, $more_details_counter;
 
 	$text = ($encode) ? htmlentities($text) : $text;
 	
-	print '<div class="warning">'."\n";
-	print $text."\n";
-
+	$message =  '<div class="warning '. $extra_css.'">'."\n";
+	$message .=  '<div class="hold_err_mess">';
+	$message .=  $text."\n";
+	$message .=  '</div>';
+	if ($details) {
+		if (!$more_details_id) {
+			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
+			$more_details_id = "error_details".$more_details_counter;
+		}
+		$message .=  ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More details<br/></a>';
+		$message .=  '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
+		$message .=  $details;
+		$message .=  '</div>';
+	}
+	
 	if ($path == 'no') {
-		print '</div>';
+		$message .=  '</div>';
+		if (!$print_text)
+			return $message;
+			
+		print $message;
 		return;
 	}
 
-	link_to_main_page($path, $return_text);
+	$message .=  link_to_main_page($path, $return_text, $print_text);
 
-	print '</div>';
+	$message .=  '</div>';
+	
+	if (!$print_text)
+		return $message;
+	
+	print $message;	
+}
+
+/**
+ * Wrapper function for warning_mess()
+ * @param type $message The text to be displayed
+ * @param type $details
+ * @param type $extra_css
+ * @param type $print_text
+ * @param type $returnpath The path to use in link 
+ * @param type $return_text the link to return to requested Path
+ * @param Bool $encode True to use htmlentities on message before displaying, false for not using htmlentities.
+ * @param type $more_details_id
+ */
+function warning_mess_with_details($message, $details, $extra_css="", $print_text = true, $returnpath="no", $return_text="Go back to application", $encode=true, $more_details_id="")
+{
+	return warning_mess($message, $returnpath, $return_text, $encode, $details, $more_details_id, $extra_css, $print_text);
 }
 
 /**
@@ -294,38 +331,64 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
  * @param $return_text the link to return to requested Path
  * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  */ 
-function errormess($text, $path=NULL, $return_text="Go back to application", $encode=true, $details="")
+function errormess($text, $path=NULL, $return_text="Go back to application", $encode=true, $details="", $more_details_id="", $extra_css="", $print_text = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module;
+	global $module, $more_details_counter;
 
 	$text = ($encode) ? htmlentities($text) : $text;
-	print '<div class="notice error">'."\n";
-	print '<div class="hold_err_mess">';
-	print "<font class=\"error\"> Error!</font>"."\n";
-	print "<font style=\"font-weight:bold;\">". $text ."</font>"."\n";
-	print '</div>';
 	
+	$message =  '<div class="notice error '. $extra_css.'">'."\n";
+	$message .=  '<div class="hold_err_mess">';
+	$message .=  "<font class=\"error\"> Error!</font>"."\n";
+	$message .=  "<font style=\"font-weight:bold;\">". $text ."</font>"."\n";
+	$message .=  '</div>';
+
 	if ($details) {
-		print ' <a class="llink" onclick="show_hide(\'error_details\');">More details<br/></a>';
-		print '<div id="error_details" class="error_details" style="display: none;">';
-		print $details;
-		print '</div>';
+		if (!$more_details_id) {
+			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
+			$more_details_id = "error_details".$more_details_counter;
+		}
+		$message .=  ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More details<br/></a>';
+		$message .=  '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
+		$message .=  $details;
+		$message .=  '</div>';
 	}
 	
 	if ($path == 'no') {
-		print '</div>';
+		$message .=  '</div>';
+		if (!$print_text)
+			return $message;
+			
+		print $message;
 		return;
 	}
 
-	link_to_main_page($path, $return_text);
+	$message .= link_to_main_page($path, $return_text, $print_text);
 	
-	print '</div>';
+	$message .= '</div>';
+	
+	if (!$print_text)
+		return $message;
+	
+	print $message;		
 }
 
-function error_with_details($message, $returnpath, $details)
+/**
+ * 
+ * @param type $message
+ * @param type $details
+ * @param type $extra_css
+ * @param type $print_text
+ * @param type $returnpath
+ * @param type $return_text
+ * @param type $encode
+ * @param type $more_details_id
+ * @return type
+ */
+function error_with_details($message, $details, $extra_css="", $print_text = true, $returnpath="no", $return_text="Go back to application", $encode=true, $more_details_id="")
 {
-	errormess($message, $returnpath, "Go back to application", true, $details);
+	return errormess($message, $returnpath, $return_text, $encode, $details, $more_details_id, $extra_css, $print_text);
 }
 
 /**
@@ -386,7 +449,7 @@ function notify($res)
 /**
  * Displays a specific build link for application
  */ 
-function link_to_main_page($path, $return_text)
+function link_to_main_page($path, $return_text, $print_text = true)
 {
 	global $module;
 
@@ -399,7 +462,10 @@ function link_to_main_page($path, $return_text)
 	if ($path)
 		$link .= "&method=".$path;
 
-	print '<a class="information" href="'.$link.'">'.$return_text.'</a>';
+	if ($print_text)
+		print '<a class="information" href="'.$link.'">'.$return_text.'</a>';
+	else
+		return '<a class="information" href="'.$link.'">'.$return_text.'</a>';
 }
 
 /**
