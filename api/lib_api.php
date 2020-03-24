@@ -144,6 +144,7 @@ function run_api_requests($handling, $type, $equipment, $request_params)
 	$equipment_ips = array_keys($equipment);
 
 	$extra = "";
+	$extra_err = $extra_succ = "";
 	$message = "";
 	$aggregate_response = array();
 	$have_errors = false;
@@ -158,37 +159,28 @@ function run_api_requests($handling, $type, $equipment, $request_params)
 			);
 			$url = "http://$management_link/api.php";
 			$res = make_request($out,$url);
-			// request fails, aggregate the messages and put extra info about the fail 
+			// request fails, aggregate the messages and put extra info about the fail/success 
 			if ($res["code"] != 0) {
 				$have_errors = true;
 				$code = $res["code"];
-				$extra .= $equipment_name.", ";
-				// Fixme: this should be a function that should see if the message is the same,
-				// concatenate the equipment names with the same erroe message
-			  	$message .= "Equipment: ".$equipment_name.": [".$code."]: " .$res["message"].". ";
+				$extra_err .= $equipment_name.", ";
+			  	$message .= "Equipment: ".$equipment_name.": [".$code."]: " .$res["message"]." ";
 			} else {
 				// aggregate the successful requests
 				foreach ($res as $k=>$response) {
 					if ($k == "code")
 						continue;
-					if (is_array($response))
-						$aggregate_response[$k] = array_merge($aggregate_response,$response);
-					else {
-						// Ex: set_series (when adding a new series the resonse is count:1)
-						// Fixme: make a function to handle this case. Aggregate the response for all equipment
-						// and also the response should be clearer.
-						$aggregate_response[$k] = $response;
-					}
+					$aggregate_response[$k][][$equipment_name] = $response;
 				}
-				$extra .= $equipment_name.", "; 	
+				$extra_succ .= $equipment_name.", "; 	
 			}
 		}
 	}
 
 	if ($have_errors) {
-		// Note: (FIXME) if there are multiple errors the codes received should be translated into something common
-		// for now just set the last err code that will be translated by the API for user 
-		$extra = "Request ".$request_params["request"]." failed for equipment:  ". $extra;
+		$extra = "Request ".$request_params["request"]." failed for equipment:  ". $extra_err;
+		if (strlen($extra_succ))
+			$extra .= " succeeded for equipment: ".$extra_succ;
 		return build_error($code, $message, $request_params, $extra);
 	}
 
