@@ -277,7 +277,6 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
 	$message =  '<div class="warning '. $extra_css.'">'."\n";
 	$message .=  '<div class="hold_err_mess">';
 	$message .=  $text."\n";
-	$message .=  '</div>';
 	if ($details) {
 		if (!$more_details_id) {
 			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
@@ -288,7 +287,7 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
 		$message .=  $details;
 		$message .=  '</div>';
 	}
-	
+	$message .=  '</div>';
 	if ($path == 'no') {
 		$message .=  '</div>';
 		if (!$print_text)
@@ -342,8 +341,6 @@ function errormess($text, $path=NULL, $return_text="Go back to application", $en
 	$message .=  '<div class="hold_err_mess">';
 	$message .=  "<font class=\"error\"> Error!</font>"."\n";
 	$message .=  "<font style=\"font-weight:bold;\">". $text ."</font>"."\n";
-	$message .=  '</div>';
-
 	if ($details) {
 		if (!$more_details_id) {
 			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
@@ -354,7 +351,7 @@ function errormess($text, $path=NULL, $return_text="Go back to application", $en
 		$message .=  $details;
 		$message .=  '</div>';
 	}
-	
+	$message .=  '</div>';
 	if ($path == 'no') {
 		$message .=  '</div>';
 		if (!$print_text)
