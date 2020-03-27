@@ -80,8 +80,12 @@ function decode_post_put($ctype, $method, $uri)
 		$input = json_decode(file_get_contents('php://input'), true);
 		if ($input === null)
 			return array(null, null);
-		if (isset($input["request"]))
-			return array($input["request"], $input["params"]);
+		if (isset($input["request"])) {
+			if (isset($input["params"]))
+				return array($input["request"], $input["params"]);
+			else
+				return array($input["request"], array());
+		}
 	} else {
 		if ($method == "PUT") {
 			$input = array();
@@ -124,7 +128,8 @@ function format_api_request($handling, $type, $input)
 
 	if ($type == "np") {
 		$output["node"] = "npdb";
-		$method = strtoupper(explode("_", $output["request"])[0]);
+		$req = explode("_", $output["request"]); 
+		$method = strtoupper($req[0]);
 
 		if ($method == "PUT" || $method == "POST")
 			$output["request"] = "set_".$input["object"];
