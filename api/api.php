@@ -32,7 +32,6 @@ function process_request($req, $params)
 {
 	if (!stream_resolve_include_path("api/" . $req . ".php"))
 		return build_error(401, "Request '$req' not implemented!");
-	
 
 	require_once "api/" . $req . ".php";
 	$res = call_user_func($req, $params);
@@ -83,8 +82,18 @@ function do_request($method = "POST")
 	 *
 	 * Match indices are always the same, even if some of the subpatterns
 	 * are not present.
+	 *
+	 * ^\/([a-z][[:alnum:]_]*)\/([[:alnum:]_-]+)(\/([^\/]*))?(\/([^\/]*))?$
+	 *  starts with literal '/'
+	 *	1 lowercase letter                                      [a-z]
+	 *	any number of numbers, letters or literal '_'           [[:alnum:]_]
+	 *	literal '/'
+	 *	at least one number, letter or literal '_' or '-'       [:alnum:]_-]
+	 *  0-2 patterns consisting of a literal '/' followed by any number of
+	 *  any characters except '/'                               (\/([^\/]*))?(\/([^\/]*))?
+	 *  end of pattern                                          $ 					
 	 */
-	if (!preg_match('/^\/([a-z][[:alnum:]_]*)\/([[:alnum:]_-]+)(\/(.*))?$/', $_SERVER["PATH_INFO"], $match))
+	if (!preg_match('/^\/([a-z][[:alnum:]_]*)\/([[:alnum:]_-]+)(\/([^\/]*))?(\/([^\/]*))?$/', $_SERVER["PATH_INFO"], $match))
 		return build_error(400, "Invalid URI");
 
 	if ($match[1] != "v1")
@@ -108,6 +117,7 @@ function do_request($method = "POST")
 			"method"    => $_SERVER["REQUEST_METHOD"],
 			"ctype"     => $ctype,
 			"object"    => @$match[4],
+			"id"		=> @$match[6],
 			"params"    => array()
 		);
 		parse_str($_SERVER["QUERY_STRING"], $uri["params"]);
@@ -137,14 +147,15 @@ function do_request($method = "POST")
 				if (isset($methods["cb_format_params"]))
 					$params_request = call_user_func_array(str_replace("custom_","",$methods["cb_format_params"]), array($handling,$type,$uri));
 				else
-					$params_request = call_user_func_array("format_api_request",array($handling,$type,$uri));
-
+					$params_request = format_api_request($handling,$type,$uri);
+				if (isset($params_request["code"]))
+					return build_error($params_request["code"],$params_request["message"]);
 				// return the response from API after running the custom function to process the API requests
 				if (isset($methods["cb_run_request"]))
 					return call_user_func_array(str_replace("custom_","",$methods["cb_run_request"]), array($handling,$type,$ips,$params_request));
 
 				// return the response from API after running the default function to process the API requests
-				return call_user_func_array("run_api_requests",array($handling,$type,$ips,$params_request));
+				return run_api_requests($handling,$type,$ips,$params_request);
 			}
 		}
 	}
@@ -157,7 +168,7 @@ function do_request($method = "POST")
 	parse_str($_SERVER["QUERY_STRING"], $uri["params"]);
 
 	if ("POST" == $_SERVER["REQUEST_METHOD"] || "PUT" == $_SERVER["REQUEST_METHOD"])
-		return do_post_put($ctype, strtolower($_SERVER["REQUEST_METHOD"]), $uri);
+		return do_post_put($ctype, $_SERVER["REQUEST_METHOD"], $uri);
 
 	if ("GET" == $_SERVER["REQUEST_METHOD"])
 		return do_get($ctype, $uri);
@@ -176,28 +187,15 @@ function valid_ctype($ctype)
 
 function do_post_put($ctype, $method, $uri)
 {
-	if ($ctype == "application/json" || $ctype == "text/x-json") {
-		$input = json_decode(file_get_contents('php://input'), true);
-		if ($input === null)
-			return array("code"=>415, "message"=>"Unparsable JSON content");
-		if (isset($input["request"]))
-			return process_request($input["request"], $input["params"]);
-	} else {
-		if ($method == "put") {
-			$input = array();
-			parse_str(file_get_contents("php://input"), $input);
-			foreach ($input as $key => $value) {
-				unset($input[$key]);
-				$input[str_replace('amp;', '', $key)] = $value;
-			}
-		} else
-			$input = $_POST;
-		$input = array_merge($input, $uri["params"]);
-	}
+	list($method, $input) = decode_post_put($ctype, $method, $uri);
 
-	if ($uri["id"])
+	if ($input === null)
+		return array("code"=>415, "message"=>"Unparsable JSON content");
+
+	if (@$uri["id"])
 		$input[$uri["object"] . "_id"] = $uri["id"];
-	return process_request($method . "_" . $uri["object"], $input);
+
+	return process_request($method, $input);
 }
 
 function do_get($ctype, $uri)

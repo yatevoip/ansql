@@ -74,64 +74,68 @@ function log_request($inp, $out = null, $extra = "")
 		print "\n// Can't write to $file";
 }
 
-$predefined_requests = array(
-	"broadcast" => array(
-		"np" => array(
-		//	example of the format of the custom callbacks
-		//	"cb_get_api_nodes" => "custom_get_npdb_nodes",   // if missing a default function get_api_nodes() will be called 
-		//	"cb_format_params" => "custom_format_params",   // if missing a default function format_api_request() will be called
-		//	"cb_run_request" => "custom_apply_request",    // if missing a default function run_api_requests() will be called
-		)
-	)
-);
+function decode_post_put($ctype, $method, $uri)
+{
+	if ($ctype == "application/json" || $ctype == "text/x-json") {
+		$input = json_decode(file_get_contents('php://input'), true);
+		if ($input === null)
+			return array(null, null);
+		if (isset($input["request"]))
+			return array($input["request"], $input["params"]);
+	} else {
+		if ($method == "PUT") {
+			$input = array();
+			parse_str(file_get_contents("php://input"), $input);
+			foreach ($input as $key => $value) {
+				unset($input[$key]);
+				$input[str_replace('amp;', '', $key)] = $value;
+			}
+		} else
+			$input = $_POST;
+		$input = array_merge($input, $uri["params"]);
+	}
+
+	return array(strtolower($method) . "_" . $uri["object"], $input);
+}
 
 /**
  * Return the actual format of the request that needs to be sent to equipment 
  * @param $handling String: broadcast, failover, proxy etc
  * @param $type String: np, subscriber etc
  */ 
-function format_api_request($handling, $type, $request_params)
+function format_api_request($handling, $type, $input)
 {
-	$ctype = $request_params["ctype"];
-	$method = $request_params["method"];
-	$input = array(); 
+	$ctype = $input["ctype"];
+	$method = $input["method"];
+	$output = array(); 
 
 	if ($method == "POST" || $method == "PUT") {
-		if ($ctype == "application/json" || $ctype == "text/x-json") {
-			$input = json_decode(file_get_contents('php://input'), true);
-			if ($input === null)
-				return array("code"=>415, "message"=>"Unparsable JSON content");
-		} else {
-			if ($method == "put") {
-				$input = array();
-				parse_str(file_get_contents("php://input"), $input);
-				foreach ($input as $key=>$value) {
-					unset($input[$key]);
-					$input[str_replace('amp;', '', $key)] = $value;
-				}
-			} else
-				$input["params"] = $_POST;
-			$input = array_merge($input, $request_params["params"]);
-		}
+		list($output["request"], $output["params"]) =
+			decode_post_put($ctype, $method, $input);
+		if ($output["params"] === null)
+			return array("code"=>415, "message"=>"Unparsable JSON content");
 	} elseif ($method == "GET") {
-		$input["params"] = $_GET;
+		$output["request"] = "get_" . $input["object"];
+		$output["params"] = $_GET;
+	} elseif ($method == "DELETE") {
+		$output["request"] = "delete_" . $input["object"];
+		$output["params"] = $input["params"];
 	}
-	if ($type == "np")
-			$input["node"] = "npdb";
 
-	if (!isset($input["request"])) {
-		$input["request"] = strtolower($method) . "_" . $request_params["object"];
-		if ($type == "np") {
-			if ($method == "PUT" || $method == "POST")
-				$input["request"] = "set_".$request_params["object"];
-			if ($method == "DELETE")
-				$input["request"] = "del_".$request_params["object"];
-		}
+	if ($type == "np") {
+		$output["node"] = "npdb";
+		$method = strtoupper(explode("_", $output["request"])[0]);
+
+		if ($method == "PUT" || $method == "POST")
+			$output["request"] = "set_".$input["object"];
+		if ($method == "DELETE")
+			$output["request"] = "del_".$input["object"];
 	}
+
 	// for npdb there are no ids, but will be used for other cases in the future
-	if (isset($request_params["id"]))
-		$input[$request_params["object"] . "_id"] = $request_params["id"];
-	return $input;
+	if (isset($input["id"]))
+		$output[$input["object"] . "_id"] = $input["id"];
+	return $output;
 }
 /**
  * Depending on set $handling make request to $equipment and aggregate response (if needed)
@@ -164,7 +168,7 @@ function run_api_requests($handling, $type, $equipment, $request_params)
 				$have_errors = true;
 				$code = $res["code"];
 				$extra_err .= $equipment_name.", ";
-			  	$message .= "Equipment: ".$equipment_name.": [".$code."]: " .$res["message"]." ";
+			  	$message .= $equipment_name.": [".$code."]: " .$res["message"]." | ";
 			} else {
 				// aggregate the successful requests
 				foreach ($res as $k=>$response) {
