@@ -39,8 +39,12 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 	elseif ($method == 'post')
 		curl_setopt($curl, CURLOPT_POST, true);
 
-	if (!empty($content)) 
-		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($content));
+	if (!empty($content)) {
+		if (is_array($content))
+			$content = json_encode($content);
+		curl_setopt($curl, CURLOPT_POSTFIELDS,$content);
+		
+	}
 	elseif ($method == 'post')
 		curl_setopt($curl, CURLOPT_POSTFIELDS, "");
 
