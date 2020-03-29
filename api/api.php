@@ -46,6 +46,9 @@ function do_request($method = "POST")
 {
 	global $cors_origin, $log_status, $api_secret, $predefined_requests;
 
+	if (!$api_secret)
+		$api_secret = "mmi_secret";
+
 	if (("OPTIONS" == $_SERVER["REQUEST_METHOD"]) 
 		&& isset($_SERVER["HTTP_ACCESS_CONTROL_REQUEST_METHOD"])
 		&& ($_SERVER["HTTP_ACCESS_CONTROL_REQUEST_METHOD"] == $method)) {
