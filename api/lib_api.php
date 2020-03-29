@@ -183,6 +183,11 @@ function run_api_requests($handling, $type, $equipment, $request_params)
 				}
 				$extra_succ .= $equipment_name.", "; 	
 			}
+
+			// GET requests will not be broadcast to all NPDB nodes, unless $out["params"]["broadcast"] = true
+			// it is assumed that all the NPDB nodes are kept in synchronization
+			if ($type == "np" && substr($out["request"],0,3) == "get" && (!isset($out["params"]["broadcast"]) || !$out["params"]["broadcast"]))
+				break;	
 		}
 	}
 
