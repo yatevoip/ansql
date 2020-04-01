@@ -693,20 +693,40 @@ function build_link_request($exclude_params=array(), $additional_url_elements=ar
 /**
  * Displays number on page that are links which will
  * make a reload of page with a new limit request
+ * @param $total Integer contains the number of items
  * @param $nrs Array contains the number of items to be displayed
+ * This function was adapted to work also for the old version when $total didn't exist
+ * Old function argument: items_on_page($nrs = array(20,50,100), $additional_url_elements=null)
  */ 
-function items_on_page($nrs = array(20,50,100), $additional_url_elements=null)
+function items_on_page($total = null, $nrs = array(20,50,100), $additional_url_elements = null)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $limit;
+	
+	//Detect if old argument is used
+	//Below are the cases where the old argument is used
+	//1. First parameter is an array -> Ex: items_on_page(array(60,120,240));
+	//2. First parameter is null and second parameter is an array and first element from array is string -> Ex: items_on_page(null, array("performer","operation"));
+	if (is_array($total) || (is_null($total) && is_array($nrs) && count($nrs) && is_string($nrs[0]))) {
+		$additional_url_elements = $nrs;
+		$nrs = $total;
+		$total = null;
+	}
 
 	if (!$nrs)
 		$nrs = array(20,50,100);
+	
+	//Force total to integer
+	$total = (is_numeric($total)) ? intval($total) : null;
+	
+	//Display limit links only if $total is bigger than the first limit
+	if (is_int($total) && $total<=$nrs[0])
+		return;
 
 	if ($additional_url_elements)
 		$additional_url_elements = array_merge($additional_url_elements, array("total"));
 	$link = build_link_request(array("limit"), $additional_url_elements);
-
+	
 	print "<div class=\"items_on_page\">";
 	for($i=0; $i<count($nrs); $i++)
 	{
