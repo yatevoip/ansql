@@ -1245,7 +1245,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if ($object) {
 		if (is_array($object)) {
 			if (!is_array($field_name) && count($object) && in_array($display, $form_display_elements))
-				$value = (isset($object[$field_name])) ? $object[$field_name] : NULL;
+				$value = (isset($object[$field_name])) ? $object[$field_name] : $def_val;
 			else
 				// some of the fields contain fixed content set in value: objtitle, subtitle, fixed 
 				$value = $def_val;
