@@ -1344,3 +1344,95 @@ function scrollToTop()
 	document.body.scrollTop = 0; // For Safari
 	document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
 }
+
+/**
+ * Builds an HTML element
+ * @param object elem. This parameter is used to set the attributes for the HTML element.
+ * Example: elem = {"tag":"input","type":"text","class":"margintop","id":"test_input", "name":"test_input", "placeholder": "item1, item2"};
+ * returns the HTML element created 
+ */
+function build_html_element(elem)
+{
+	//Check if elem is object
+	if(!isObject(elem)) {
+		console.log("Invalid parameter in argument.");
+		return;
+	}
+	
+	//Check if element tag was defined
+	if (undefined === elem.tag || null === elem.tag) {
+		console.log("Missing element tag.");
+		return;
+	}
+	
+	//Default element name
+	var tag = elem.tag;
+	
+	//Define element attributes
+	var general_attributes = ["class","id","name","style"];
+	
+	//Define attributes for each tag
+	//TBI: select, textarea, etc
+	var standard_attributes = {
+		"input" : ["type","value","maxlength","disabled","checked","readonly","placeholder"]
+	};
+	
+	//Check if element tag is implemented
+	if (undefined === standard_attributes[tag] || null === standard_attributes[tag]) {
+		console.log("Missing element implementation for tag '" + tag + "'");
+		return;
+	}
+	
+	//All attributes for a HTML element
+	var all_attributes = general_attributes.concat(standard_attributes[tag]);
+	
+	//New HTML Element
+	var new_elem = document.createElement(tag);
+	
+	//Set element attributes
+	var atr;
+	for (var i=0; i<all_attributes.length; i++) {
+		atr = all_attributes[i];
+		if (undefined !== elem[atr] && null !== elem[atr])
+			new_elem.setAttribute(atr,elem[atr]);
+	}
+	
+	return new_elem;
+}
+
+function display_custom_field(custom_value, table_id)
+{
+	var custom_id = "custom_" + table_id;
+	var checkbox_id = table_id + "_custom_ck";
+	var checkbox = (undefined !== document.getElementById(checkbox_id) && null !== document.getElementById(checkbox_id)) ? document.getElementById(checkbox_id) : null;
+	if (checkbox === null) {
+		console.log("No checkbox found.");
+		return;
+	}
+	var custom_field = (undefined !== document.getElementById(custom_id) && null !== document.getElementById(custom_id)) ? document.getElementById(custom_id) : null;
+	if (checkbox.checked) {
+		//Check if HTML element exists
+		if (custom_field === null) {
+			var custom_elem = {"tag":"input","type":"text","class":"margintop","id":custom_id, "name":custom_id, "placeholder": "item1, item2, ..."};
+			if (custom_value !== "" && custom_value !== null) {
+				custom_elem["value"] = custom_value;
+			}
+			var parent_td = document.getElementById(checkbox_id).parentNode;
+			
+			//Create HTML element
+			var custom_input = build_html_element(custom_elem,parent_td.id);
+			
+			//Add element to parent
+			parent_td.rowSpan = "2";
+			parent_td.style = "vertical-align:top;";
+			parent_td.appendChild(document.createElement("br"));
+			parent_td.appendChild(custom_input);
+		} else {
+			//Display HTML element
+			document.getElementById(custom_id).style.display = "initial";
+		}
+	} else if (custom_field!==null && custom_field.style.display!=="none") {
+		//Hide HTML element
+		document.getElementById(custom_id).style.display = "none";
+	}
+}
