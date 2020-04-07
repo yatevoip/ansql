@@ -1335,12 +1335,20 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	}
 
 	print '<td class="'.$css.' left_td ';
-	if (isset($field_format["custom_css_left"]))
+	$ident = false;
+	if (isset($field_format["custom_css_left"])) {
 		print $field_format["custom_css_left"];
+		if (substr($field_format["custom_css_left"],0,15)=="indentation_css")
+			$ident = true;
+	}
 	print '"';
 	if (isset($td_width["left"]))
 		print ' style="width:'.$td_width["left"].'"';
 	print '>';
+	$close_div = false;
+	if ($ident) {
+		print "<div class=\"indentation_css\">";	
+	}
 	if (!isset($field_format["column_name"]))
 		print ucfirst(str_replace("_","&nbsp;",$field_name));
 	else
@@ -1353,6 +1361,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		if($field_format["compulsory"]===true || $field_format["compulsory"]=="yes" || bool_value($field_format["compulsory"]) || $field_format["compulsory"]=="true")
 			print '<font class="compulsory">*</font>';
 	
+	if ($ident)
+		print "</div>";
 	// check if the error icon is set in fields
 	if (isset($field_format["error_icon"])) {
 		if($field_format["error_icon"]===true || $field_format["error_icon"]=="yes" || bool_value($field_format["error_icon"]) || $field_format["error_icon"]=="true")
