@@ -1420,7 +1420,7 @@ function display_custom_field(custom_value, table_id)
 			var parent_td = document.getElementById(checkbox_id).parentNode;
 			
 			//Create HTML element
-			var custom_input = build_html_element(custom_elem,parent_td.id);
+			var custom_input = build_html_element(custom_elem);
 			
 			//Add element to parent
 			parent_td.rowSpan = "2";
