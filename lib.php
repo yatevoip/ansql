@@ -1602,6 +1602,71 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print " disabled=''";
 			print '/>'.$field_comment;
 			break;
+		case "checkbox-group":
+			$options = (is_array($var_name)) ? $var_name : array();
+			
+			if (isset($field_format["selected"]))
+				$selected = $field_format["selected"];
+			elseif (isset($options["selected"]))
+				$selected = $options["selected"];
+			elseif (isset($options["SELECTED"]))
+				$selected = $options["SELECTED"];
+			else
+				$selected = array();
+			
+			if (!is_array($selected))
+				$selected = (array)$selected;
+				
+			$max_col_items = isset($field_format["max_col_items"]) ? $field_format["max_col_items"] : 3;
+			$col = 1;
+			$row = 1;
+			$checkboxes = array();
+
+			foreach ($options as $var => $opt) {
+				if ($var === "selected" || $var === "SELECTED")
+					continue;
+				
+				$checkboxes[$row][$col]["name"] = $form_identifier.$field_name.'[]';
+				$checkboxes[$row][$col]["label"] = (is_array($opt)) ? $opt["label"] : $opt;
+				$checkboxes[$row][$col]["value"] = (is_array($opt)) ? $opt["value"] : $opt;
+				$checkboxes[$row][$col]["id"] = $form_identifier.$field_name.'_'.strtolower(str_replace(" ", "_",$checkboxes[$row][$col]["value"])).'_ck';
+				$checkboxes[$row][$col]["selected"] = (in_array($checkboxes[$row][$col]["value"], $selected)) ? true : false;
+				$checkboxes[$row][$col]["javascript"] = (isset($field_format["javascript"])) ? " ".$field_format["javascript"] : "";
+				if (isset($opt["javascript"]))
+					$checkboxes[$row][$col]["javascript"] = " ".$opt["javascript"];
+				
+				$row++;
+				if ($row > $max_col_items) {
+					$row=1;
+					$col++;
+				}
+			}
+			$autocall = array();
+			print '<table class="checkbox-group" id="'.$form_identifier.$field_name.'">';
+			foreach ($checkboxes as $row => $content) {
+				print '<tr class="checkbox-group">';
+				foreach ($content as $col => $opt) {
+					print '<td class="checkbox-group">';
+					print '<input class="checkbox-group" type="checkbox" name="'.$opt["name"].'" id="'.$opt["id"].'"'.$opt["javascript"];
+					print " value=".html_quotes_escape($opt["value"]);
+					if ($opt["selected"])
+						print " CHECKED ";
+					print  '/>';
+					print '<label for="'.$opt["id"].'">'.$opt["label"].'</label>';
+					print '</td>';
+				}
+				print '</tr>';
+				if (is_array($selected) && in_array("Custom", $selected) && $opt["value"]=="Custom" && isset($opt["javascript"])) {
+					$opt["js_autocall"] = true;
+					$autocall = array($field_name, $opt, $form_identifier);
+				}
+			}
+			print '</table><div style="float:right;">'.$field_comment.'</div>';
+			
+			if (!empty($autocall)) {
+				call_user_func_array("autocall_js", $autocall);
+			}
+			break;
 		case "text":
 		case "password":
 		case "file":
