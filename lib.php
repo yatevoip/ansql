@@ -1744,6 +1744,28 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			if ($display == 'file' && !isset($field_format["file_example"])) 
 				Debug::trigger_report('critical', "For input type file a file example must be given as parameter.");
 			break;
+		case "password-toggle":
+		case "password-toggle-fa":
+			print '<input  class="'.$css.'" type="password" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
+			if (is_string($value))
+				print " value=".html_quotes_escape($value);
+			if (isset($field_format["javascript"]))
+				print $field_format["javascript"];
+			if (isset($field_format["maxlength"]))
+				print " maxlength='".$field_format["maxlength"]."'";
+			if (isset($field_format["autocomplete"]))
+				print " autocomplete=\"".$field_format["autocomplete"]."\"";
+			print '>'.$field_comment;
+			
+			//To use toggle-password-fa make sure that your project has font-awsome
+			if ($display==="password-toggle-fa") {
+				$toggle_style = "cursor:pointer; position:relative; z-index:2; margin-left:-30px; color:blue; font-size:15px;";
+				print '<span id="'.$form_identifier.$field_name.'_toggle" style="'.$toggle_style.'" class="fa fa-eye-slash password-toggle-fa" onClick="display_password(this);"></span>';
+			} else {
+				print '<br><input id="'.$form_identifier.$field_name.'_toggle" class="password-toggle" type="checkbox" onclick="display_password(this);">';
+				print '<label for="'.$form_identifier.$field_name.'_toggle">Show Password</label>';
+			}
+			break;
 		case "fixed":
 			if (strlen($value))
 				print $value;
@@ -4784,6 +4806,28 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 					$res .= '&nbsp;&nbsp;<font style="cursor:pointer;" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"> ? </font>';
 			} else
 				$res .= '>';
+			break;
+		case "password-toggle":
+		case "password-toggle-fa":
+			$res .= '<input  class="'.$css.'" type="password" style="padding-right:20px;" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
+			if (is_string($value))
+				$res .= " value=".html_quotes_escape($value);
+			if (isset($field_format["javascript"]))
+				$res .= $field_format["javascript"];
+			if (isset($field_format["maxlength"]))
+				$res .= " maxlength='".$field_format["maxlength"]."'";
+			if (isset($field_format["autocomplete"]))
+				$res .= " autocomplete=\"".$field_format["autocomplete"]."\"";
+			$res .= '>';
+			
+			//To use toggle-password-fa make sure that your project has font-awsome
+			if ($display==="password-toggle-fa") {
+				$toggle_style = "cursor:pointer; position:relative; z-index:2; margin-left:-15px; color:blue; font-size:15px;";
+				$res .= '<span id="'.$form_identifier.$field_name.'_toggle" style="'.$toggle_style.'" class="fa fa-eye-slash password-toggle-slash" onClick="display_password(this);"></span>';
+			} else {
+				$res .= '<br><input id="'.$form_identifier.$field_name.'_toggle" class="password-toggle" type="checkbox" onclick="display_password(this);">';
+				$res .= '<label for="'.$form_identifier.$field_name.'_toggle">Show Password</label>';
+			}
 			break;
 		case "fixed":
 			if(strlen($value))

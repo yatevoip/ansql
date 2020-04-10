@@ -1436,3 +1436,22 @@ function display_custom_field(custom_value, table_id)
 		document.getElementById(custom_id).style.display = "none";
 	}
 }
+
+function display_password(toggle)
+{
+	//Toggle items
+	var toggle_id = toggle.id;
+	var toggle_class = toggle.className;
+	var toggle_tag = toggle.tagName;
+	
+	//Get Input Password
+	var password_id = toggle_id.replace("_toggle","");
+	var input = document.getElementById(password_id);
+	
+	//Change input type
+	input.type = (input.type==="password") ? "text" : "password";
+	
+	//Change the font-awsome element class
+	if (toggle_tag.toLowerCase()==="span")
+		toggle.className = (input.type==="password") ? toggle_class.replace("fa-eye","fa-eye-slash") : toggle_class.replace("fa-eye-slash","fa-eye");
+}
