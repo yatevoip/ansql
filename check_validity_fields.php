@@ -145,4 +145,11 @@ function check_valid_geolocation($field_name, $field_value)
 		return array(false, "Field $field_name is not valid. $field_value doesn't match format dd.dddddd,ddd.dddddd!");
 	return array(true);
 }
+
+function check_valid_length($field_name, $field_value, $maxlength)
+{
+	if (strlen($field_value) > $maxlength)
+		return array(false, "Field $field_name is not valid. It must have maximum $maxlength character(s).");
+	return array(true);
+}
 ?>
