@@ -1242,16 +1242,18 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	$form_display_elements = array("text","textarea","textarea-nonedit","tri_bool","select","mul_select","select_without_non_selected","radios","radio","checkbox","checkbox-readonly","password","file","text-nonedit" );
 
 	$def_val = (isset($field_format["value"])) ? $field_format["value"] : null;
-	if ($object) {
-		if (is_array($object)) {
+	if (isset($field_format["form_val"])) {
+		$value = $field_format["form_val"];
+	} elseif ($object) {
+		if (is_array($object)) {			
 			if (!is_array($field_name) && count($object) && in_array($display, $form_display_elements))
-				$value = (isset($object[$field_name])) ? $object[$field_name] : $def_val;
+				$value = (array_key_exists($field_name,$object)) ? $object[$field_name] : $def_val; 
 			else
 				// some of the fields contain fixed content set in value: objtitle, subtitle, fixed 
 				$value = $def_val;
 		} elseif (is_object($object)) {
 			//$value = (!is_array($field_name) && isset($object->{$field_name})) ? $object->{$field_name} : NULL;
-			$value = (!is_array($field_name) && isset($object->{$field_name}) && $object->isPopulated()) ? $object->{$field_name} : $def_val;
+			$value = (!is_array($field_name) && property_exists($object,$field_name) && $object->isPopulated()) ? $object->{$field_name} : $def_val;
 		} else
 			$value = $def_val;
 	} else {
@@ -1383,7 +1385,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	$field_comment = comment_field($field_format, $form_identifier, $field_name, $category_id, $display);
 
 	if ($htmlentities_onvalue && !isset($field_format["no_escape"]))
-		$value = htmlentities($value);
+		$value = (!is_array($value)) ? htmlentities($value) : array_map("htmlentities",$value);
 	switch($display) {
 		case "textarea":
 		case "textarea-nonedit":
@@ -1433,7 +1435,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "select":
 		case "mul_select":
 		case "select_without_non_selected":
-	
+			
 			if ($add_selected_to_dropdown_if_missing) {
 				$is_selected = false;
 				$arr_is_selected = array();
@@ -1453,7 +1455,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 			// PREVIOUS implementation when only 0 key could be used for dropdown options
 			// $options = (is_array($var_name)) ? $var_name : array();
-
+			
 			if ($display != "mul_select") {
 				// try gettting it from value
 				if ($value && is_array($value))
@@ -1472,16 +1474,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				else
 					$options = array();
 			}
-
-			if (isset($field_format["selected"]))
-				$selected = $field_format["selected"];
-			elseif (isset($options["selected"]))
-				$selected = $options["selected"];
-			elseif (isset($options["SELECTED"]))
-				$selected = $options["SELECTED"];
-			else
-				$selected = '';
-
+			
+			$selected = selected_option($display, $field_name, $field_format, $options, $object);
+			
 			foreach ($options as $var=>$opt) {
 				if ($var === "selected" || $var === "SELECTED")
 					continue;
@@ -1534,8 +1529,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 							elseif (is_array($selected))
 								$arr_is_selected[] = $opt;
 						}
-					} else
+					} else {
 						print '<option '.$css.'>' . $opt . '</option>';
+					}
 				}
 			}
 
@@ -1563,12 +1559,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "radios":
 		case "radio":
 			$options = (is_array($var_name)) ? $var_name : array();
-			if (isset($options["selected"]))
-				$selected = $options["selected"];
-			elseif (isset($options["SELECTED"]))
-				$selected = $options["SELECTED"];
-			else
-				$selected = "";
+			$selected = selected_option($display, $field_name, $field_format, $options, $object);	
 			foreach ($options as $var=>$opt) {
 				if ($var === "selected" || $var === "SELECTED")
 					continue;
@@ -1592,7 +1583,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print $field_comment;
 			break;
 		case "checkbox":
-		case "checkbox-readonly":			
+		case "checkbox-readonly":
 			print '<input class="'.$css.'" type="checkbox" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
 			if (bool_value($value) || $value=="on")
 				print " CHECKED ";
@@ -1604,16 +1595,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			break;
 		case "checkbox-group":
 			$options = (is_array($var_name)) ? $var_name : array();
-			
-			if (isset($field_format["selected"]))
-				$selected = $field_format["selected"];
-			elseif (isset($options["selected"]))
-				$selected = $options["selected"];
-			elseif (isset($options["SELECTED"]))
-				$selected = $options["SELECTED"];
-			else
-				$selected = array();
-			
+			$selected = selected_option($display, $field_name, $field_format, $options, $object);	
 			if (!is_array($selected))
 				$selected = (array)$selected;
 				
@@ -1790,6 +1772,86 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	print '</td>';
 	print '</tr>';
+}
+
+/**
+ * Used in display_pair()
+ * Get the selected option for a field type dropdown/checkbox-group/radio
+ * @param string $display
+ * @param string $field_name
+ * @param array $field_format
+ * @param array $options
+ * @param array/object/null $object
+ * @return string
+ */
+function selected_option($display, $field_name, $field_format, $options, $object)
+{		
+	Debug::debug_message("field_format",$field_format);
+	Debug::debug_message("field_format",$object);
+	
+	//default value
+	if (isset($field_format["selected"]))
+		$selected = $field_format["selected"];
+	elseif (isset($options["selected"]))
+		$selected = $options["selected"];
+	elseif (isset($options["SELECTED"]))
+		$selected = $options["SELECTED"];
+	else
+		$selected = '';
+	
+	//form value
+	if (isset($field_format["form_val"]))
+		return $field_format["form_val"];
+	
+	//value from object
+	if ($object) {
+		if (!is_array($field_name)) {
+			if (is_array($object) && count($object) && array_key_exists($field_name,$object)) {
+				$selected = $object[$field_name];
+				if ($display == "mul_select"  ||  $display == "checkbox-group")
+					$selected = explode(",",$selected);
+			} elseif (is_object($object) && property_exists($object,$field_name) && $object->isPopulated()) {
+				$selected = $object->{$field_name};
+				if ($display == "mul_select"  ||  $display == "checkbox-group")
+					$selected = explode(",",$selected);
+			}
+		}
+		//else default will be returned
+		
+		// value from object returned
+		return $selected;
+	}
+	
+	// default returned
+	return $selected;
+}
+	
+/**
+ * Verify if form was submitted
+ * Recommended: set $keep_form_values in defaults.php so by default we try   
+ *		detecting if form was submitted by verifying if "action" field 
+ *		is equal to "database" value
+ * @param string $apply_conditions Conditions that must be accomplished in order to consider that form was submitted. Ex: $apply_conditions = array("method"=>"edit_apn_db");
+ * @return boolean. False if not submitted, true otherwise.
+ */
+function is_form_submited($apply_conditions=array())
+{
+	global $keep_form_values;
+
+	// if keep_form_values activated but no condition given
+	// try detecting if form was submited by verifying if "action" field is equal to "database" value
+	if ($keep_form_values && !count($apply_conditions))
+		$apply_conditions = array("action"=>"database");
+	
+	$form_submited = true;
+	foreach ($apply_conditions as $field=>$value) {
+		if (isset($_REQUEST[$field]) && $_REQUEST[$field]==$value)
+			continue;
+		
+		$form_submited = false;
+	}
+	
+	return $form_submited;
 }
 
 // Call js associated to a field
@@ -3883,13 +3945,21 @@ function set_default_object($fields, $selected, $method, $message)
 
 /**
  * Sets the fields value by using getparam() to take the data set in FORM
- */ 
-function set_form_fields(&$fields, $error_fields, $field_prefix='', $use_urldecode=false)
+ * @param type $fields
+ * @param array $error_fields
+ * @param type $field_prefix
+ * @param type $use_urldecode
+ * @param type $apply_conditions. Array used to detect if form was submitted.
+ *				  Examples:
+ *					- array("method"=>{name_of_the_method_used_for_validate_form}) - if method used for validate is not {$method."_".$action}
+ *					- array("action"=>{name_of_the_action}) - when action is not "database" and method used for validate is {$method."_".$action}
+ */
+function set_form_fields(&$fields, $error_fields, $field_prefix='', $use_urldecode=false, $apply_conditions=array())
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	if (!$error_fields)
 		$error_fields = array();
-
+	
 	foreach ($fields as $name=>$def) {
 		if (!isset($def["display"]))
 			$def["display"] = "text";
@@ -3904,14 +3974,26 @@ function set_form_fields(&$fields, $error_fields, $field_prefix='', $use_urldeco
 
 		if ($use_urldecode)
 			$val = urldecode($val);
-
+		
+		//if form_val already set don't override it
+		if (isset($fields[$name]["form_val"]))
+			continue;
+			
 		if ($val!==NULL) {
-			if (isset($fields[$name][0]) && is_array($fields[$name][0]))
-				$fields[$name][0]["selected"] = $val;
-			elseif ($def["display"] == "checkbox")
-				$fields[$name]["value"] = ($val == "on") ? "t" : "f";
-			else 
-				$fields[$name]["value"] = $val;
+			if ($def["display"] == "checkbox")
+				$fields[$name]["form_val"] = ($val == "on") ? "t" : "f";
+			else
+				$fields[$name]["form_val"] = $val;
+		} else {
+			// keep checkbox unchecked and mul_select or checkbox-group unselected
+			// will return false also if {$apply_conditions is empty && $keep_form_values not defined in defaults.php}
+			if (is_form_submited($apply_conditions)) {
+				if ($def["display"]=="checkbox")
+					$fields[$name]["form_val"] = "f";
+				
+				if ($def["display"]=="mul_select" || $def["display"]=="checkbox-group")
+					$fields[$name]["form_val"] = "";
+			}
 		}
 	}
 }
@@ -3946,20 +4028,31 @@ function set_error_fields($error, &$error_fields)
 }
 
 /**
- * Handle the errors by displaing the error using errormess();
+ * Handle the errors by displaying the error using errormess();
  * sets the errors in array fields and then sets the data in form fields
- */ 
-function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_urldecode=false, $encode_error_text=true)
+ * @param type $error. True if encountered errors. False otherwise.
+ * @param type $fields. Array containing the form fields (with the default values in "value" key)
+ * @param type $error_fields. Array containing the fields with errors.
+ * @param type $field_prefix. Defaults to empty string.
+ * @param type $use_urldecode. Defaults to false.
+ * @param type $encode_error_text. Defaults to true.
+ * @param type $apply_conditions. Used in set_form_fields().
+ *				  Conditions to detect form submit. Defaults to empty array.
+ *				  Examples:
+ *					- array("method"=>{name_of_the_method_used_for_validate_form}) - if method used for validate is not {$method."_".$action}
+ *					- array("action"=>{name_of_the_action}) - when action is not "database" and method used for validate is {$method."_".$action}
+ */
+function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_urldecode=false, $encode_error_text=true, $apply_conditions=array())
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	if ($error) {
 		errormess($error,"no","Go back to application", $encode_error_text);
 		set_error_fields($error, $error_fields);
-		set_form_fields($fields, $error_fields, $field_prefix, $use_urldecode);
+		set_form_fields($fields, $error_fields, $field_prefix, $use_urldecode, $apply_conditions);
 	}
 	if ($error===false) {
 		set_error_fields($error, $error_fields);
-		set_form_fields($fields, $error_fields, $field_prefix, $use_urldecode);
+		set_form_fields($fields, $error_fields, $field_prefix, $use_urldecode, $apply_conditions);
 	}
 }
 
@@ -5606,14 +5699,14 @@ function fill_td($total)
 
 function bool_value($value) 
 {
-	if ($value==="t" || $value==="1" || $value===1)
+	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true || $value=== "true" )
 		return true;
 	return false;
 }
 
 function tri_bool_value($value)
 {
-	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true)
+	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true || $value=== "true" )
 		$res = "on";
 	elseif ($value==="f" || $value==="0" || $value===0 || $value=="off" || $value===false)
 		$res = "off";
