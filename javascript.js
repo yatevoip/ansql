@@ -110,10 +110,16 @@ function advanced(identifier, scroll_to_top)
 	var elem_name;
 	
 	console.log("Found "+elems.length+" elements in form.");
+	//If checkbox-group is used, all the checkboxes in that group will have the same name (duplicates)
+	//Solution: Use this array to skip duplicates
+	var unique_form_elems = [];
 	
 	for (var i=0;i<elems.length;i++) {
-		elem_name = elems[i].name;
-		if (identifier.length>elem_name.length && elem_name.substr(0,identifier.length)!=identifier)
+		//Added .replace() because the names of mul_select and checkbox-group have suffix []
+		elem_name = elems[i].name.replace("[]","");
+		
+		//Skip if identifier doesn't match or find duplicate form items
+		if (identifier.length>elem_name.length && elem_name.substr(0,identifier.length)!=identifier || unique_form_elems.indexOf(elem_name) > -1)
 			continue;
 		
 		var elem = document.getElementById("tr_"+elem_name);
@@ -123,6 +129,7 @@ function advanced(identifier, scroll_to_top)
 		if (elem.getAttribute("trigger") == "\\\"true\\\"" || elem.getAttribute("trigger")=="true")
 			continue;
 		show_hide("tr_"+elem_name);
+		unique_form_elems.push(elem_name);
 	}
 
 	// show objtitles that were marked as advanced and are not for objects with specific index (_$index)
