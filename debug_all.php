@@ -26,6 +26,11 @@ if (is_file("../defaults.php"))
 if (is_file("../config.php"))
 	require_once "../config.php";
 
+global $allow_code_comment,$use_comments_docs;
+
+$allow_code_comment = true;
+$use_comments_docs = false;
+
 ?>
 <html>
 <head>
