@@ -1239,7 +1239,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		$needs_trigger = true;
 
 	$display = (isset($field_format["display"])) ? $field_format["display"] : "text";
-	$form_display_elements = array("text","textarea","textarea-nonedit","tri_bool","select","mul_select","select_without_non_selected","radios","radio","checkbox","checkbox-readonly","password","file","text-nonedit" );
+	$form_display_elements = array("text","textarea","textarea-nonedit","tri_bool","select","mul_select","select_without_non_selected","radios","radio","checkbox","checkbox-readonly","password","file","text-nonedit","checkbox-group" );
 
 	$def_val = (isset($field_format["value"])) ? $field_format["value"] : null;
 	if (isset($field_format["form_val"])) {
