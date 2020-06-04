@@ -71,10 +71,12 @@ $call();
 
 function debug()
 {
-	global $array, $logs_in, $debug_modules;
+	global $array, $logs_in, $debug_modules, $debug_filters;
 
 	if (!is_array($debug_modules))
 		$debug_modules = array();
+	if (!is_array($debug_filters))
+		$debug_filters = array();
 	
 	$error = ini_get("error_reporting");
 	$errors = $array;
@@ -92,6 +94,7 @@ function debug()
 	$display_logs_on_web = (isset($_SESSION["display_logs_on_web"])) ? $_SESSION["display_logs_on_web"] : false;
 	$enable_debug_buttons = (isset($_SESSION["enable_debug_buttons"])) ? $_SESSION["enable_debug_buttons"] : false;
 	$debug_modules = (isset($_SESSION["debug_modules"])) ? $_SESSION["debug_modules"] : implode(",", $debug_modules);
+	$impl_filters = (isset($_SESSION["debug_filters"])) ? $_SESSION["debug_filters"]  : implode(",", $debug_filters);
 	
 	$log_errors = (ini_get("log_errors")) ? "t" : "f";
 	$error_log = ($a = ini_get("error_log")) ? $a : '';
@@ -105,6 +108,7 @@ function debug()
 		"debug_queries"=>array("value"=>$debug_queries, "display"=>"checkbox", "comment"=>"Dump query log in log file."),
 		"display_logs_on_web"=>array("column_name"=>"Display debug in web page","value"=>$display_logs_on_web, "display"=>"checkbox", "comment"=>"If checked the logs will be displayed on screen. If 'dump_xdebug'/'debug_queries' is not checked, just module logs will be displayed. By default logs are added in " . implode(",", $logs_in)),
 	  	"debug_modules"=>array("value"=>$debug_modules,  "comment"=>"Comma delimited list of tags for which the values must be displayed. Overwrites critical_tags, debug_tags value with provided value and debug_all variable becomes false."),
+		"debug_filters"=>array("value"=>$impl_filters, "comment"=>"Comma separated list of filters: tags or pieces of messages"),
 	  	// Setting php ini 
 		"objtitle2"=>array("display"=> "objtitle" , "value"=> "Settings overwriting php ini"),
 		"error_reporting"=>array($errors, "display"=>"select", "comment"=>"Controls php error_reporting. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."), 
@@ -186,6 +190,12 @@ function debug_database()
 		$_SESSION["debug_modules"] = $debug_modules;
 	} else 
 		unset($_SESSION["debug_modules"]);
+	
+	if (getparam("debug_filters")) {
+		$debug_filters = getparam("debug_filters");
+		$_SESSION["debug_filters"] = $debug_filters;
+	} else 
+		unset($_SESSION["debug_filters"]);
 	
 	if (getparam("enable_debug_buttons") == "on")
 		$_SESSION["enable_debug_buttons"] = "on";

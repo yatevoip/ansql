@@ -42,6 +42,10 @@ if (!isset($critical_tags))
 if (!isset($max_xdebug_mess))
 	$max_xdebug_mess = 50;
 
+// filters that match the message: Example: entered editObject
+if (!isset($debug_filters))
+	$debug_filters = array();
+
 /*
 // options to notify in case a report was triggered
 $debug_notify = array(
@@ -362,7 +366,7 @@ class Debug
 				$msg = $date . strtoupper($tag) . ": " . $msg;
 				
 				if (!isset($_SESSION["dump_xdebug"])) {
-					print "<br/>\n" . "<pre> " .  htmlentities($msg) . "</pre>" . "<br/>\n";
+					print "\n<p class='debugmess'>". htmlentities($msg) . "</p>" . "\n";
 				}
 			}
 
@@ -431,6 +435,7 @@ class Debug
 		global $debug_tags;
 		global $max_xdebug_mess;
 		global $critical_tags;
+		global $debug_filters;
 
 		if ($message==null && strpos($tag," ")) {
 			$message = $tag;
@@ -440,17 +445,29 @@ class Debug
 			self::output("critical","Error in Debug::debug() tag=$tag, empty message in .",false);
 			return;
 		}
-
+		$orig = $message;
 		if (!in_array($tag, $critical_tags) &&  $max_xdebug_mess && strlen($message)>$max_xdebug_mess)
 			$message = substr($message,0,$max_xdebug_mess)." - (truncated)";
-		
+		$outputted = false;
 		if ( ($debug_all==true && !in_array($tag,$debug_tags)) || 
-		     ($debug_all==false && in_array($tag,$debug_tags)) ) {
+		     ($debug_all==false && in_array($tag,$debug_tags)) ) { 
 			$date = gmdate("[D M d H:i:s Y]");
 			if (!isset($_SESSION["dump_xdebug"]))
 				self::concat_xdebug("\n$date".strtoupper($tag).": ".$message);
-			else
+			else {
+				$outputted = true;
+				$message = $orig;
 				self::output($tag, $message, false);
+			}
+		} 
+		if (!$outputted) {
+			foreach ($debug_filters as $filter) {
+				if (false!==stripos($message,$filter)) {
+					$message = $orig;
+					self::output($tag, $message, false);
+					break;
+				}
+			}
 		}
 	}
 
@@ -510,7 +527,7 @@ class Debug
 
 		for ($i=0; $i<count($arr); $i++) {
 			if ($arr[$i] == "web") {
-				print "<br/>\n<br/>\n<pre>$msg</pre><br/>\n<br/>\n";
+				print "\n<p class='debugmess'>$msg</p>\n";
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
 				// check that file is writtable or if output would be stdout (force_update in cli mode)
@@ -843,7 +860,7 @@ function clean_xdebug_session()
 
 function config_globals_from_session()
 {
-	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags;;
+	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags, $debug_filters;
 	
 	if (isset($_SESSION["enable_debug_buttons"]))
 		$enable_debug_buttons = true;
@@ -853,9 +870,14 @@ function config_globals_from_session()
 	if (isset($_SESSION["display_logs_on_web"])) {
 		if (!is_array($logs_in))
 			$logs_in = array();
-		$logs_in[] = "web";
+		if (!in_array("web",$logs_in))
+			$logs_in[] = "web";
 	}
-
+	
+	if (isset($_SESSION["debug_filters"])) {
+		$debug_filters = explode(",", $_SESSION["debug_filters"]);
+		$debug_filters = array_map("trim",$debug_filters);
+	}
 	//verify if debug modules has values and if so make the necessary  configurations	
 	if (isset($_SESSION["debug_modules"])) {
 		$debug_modules = explode(",",  $_SESSION["debug_modules"]);
