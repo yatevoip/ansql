@@ -1891,7 +1891,7 @@ function autocall_js($field_name, $field_format, $form_identifier)
 				elseif (false!==strpos($js,'""'))
 					$js = str_replace('""', '"'.getparam("custom_".$form_identifier.$field_name).'"',$js);
 			}
-			print "<script> $js </script>";	
+			print "<script> window.addEventListener('load', function(){ $js });</script>";
 		}
 	}
 }
@@ -6515,6 +6515,37 @@ function get_request_protocol()
 	       return 'https';
 	
 	return 'http';
+}
+
+/**
+* Get dropdown options 
+* @param array $options Options of the dropdown
+* Ex: Simple options: $options = array("test1", "test2")
+*      Assoc options: $options = array(array("opt_id"=>"test1","opt"=>"Test Nr. 1"), array("opt_id"=>"test2","opt"=>"Test Nr. 2"))
+* @param string/null $option_id The option ID / dropdown name used in assoc options 
+* Ex: dropdown name: $option_id = "opt" // the function will add suffix _id and look for "opt_id" options
+*         option id: $option_id = "opt_id" // function will look for "opt_id" options
+* @return array of options ex: array("test1", "test2")
+*/
+function get_dropdown_options($options, $option_id = null)
+{
+	$dropdown_options = array();
+	if ($option_id && substr($option_id,-3) !== "_id")
+		$option_id .= "_id";
+	
+	foreach($options as $key => $option) {
+		if ($key === "selected")
+			continue;
+		if ($option_id && isset($option[$option_id])) {
+			//assoc options
+			$dropdown_options[] = $option[$option_id];
+		} else {
+			//simple options
+			$dropdown_options[] = $option;
+		}
+	}
+	
+	return $dropdown_options;
 }
 
 ?>
