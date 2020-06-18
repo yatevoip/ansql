@@ -4107,7 +4107,7 @@ function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_u
 /**
  * Display a link in a div with the build link from previous page data
  */ 
-function return_button($method=null, $_module=null, $align="right", $name="Return", $div_container=true)
+function return_button($method=null, $_module=null, $align="right", $name="Return", $div_container=true, $css="llink")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module;
@@ -4126,11 +4126,16 @@ function return_button($method=null, $_module=null, $align="right", $name="Retur
 	} else
 		$link = $_SESSION["main"]. "?"."module=".$module;
 	
+	$fa_icon = "";
+	if (is_dir(__DIR__ . "/../addons/font-awesome-4.7.0/")) {
+		$fa_icon = "<i class='fa  fa-arrow-left $css' aria-hidden='true'>&nbsp;</i>";
+	}
+
 	if ($div_container) {
-		print '<div style="float:'.$align.'"><a class="llink" href="'.$link.'">'.$name.'</a></div>';
+		print '<div style="float:'.$align.'"><a class="'.$css.'" href="'.$link.'">'.$fa_icon.$name.'</a></div>';
 		br();
 	} else
-		print '<a class="llink" href="'.$link.'">'.$name.'</a>';
+		print '<a class="'.$css.'" href="'.$link.'">'.$fa_icon.$name.'</a>';
 }
 
 /**
