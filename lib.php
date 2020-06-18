@@ -1648,24 +1648,40 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				if (isset($opt["javascript"]))
 					$checkboxes[$row][$col]["javascript"] = " ".$opt["javascript"];
 				
+				$checkboxes[$row][$col]["disabled"] = (isset($opt["disabled"]) && $opt["disabled"]) ? true : false;
+				$checkboxes[$row][$col]["css"] = (isset($opt["css"]) && $opt["css"]) ? " ".$opt["css"] : "";	
+				
+				if (!isset($field_format["limit_col_items"])) {
 					$row++;
 					if ($row > $max_col_items) {
 						$row=1;
 						$col++;
 					}
+				} else {
+					$col++;
+					if ($col > $max_col_items) {
+						$col=1;
+						$row++;
 					}
+				}
+			}
 			$autocall = array();
 			print '<table class="checkbox-group" id="'.$form_identifier.$field_name.'">';
 			foreach ($checkboxes as $row => $content) {
 				print '<tr class="checkbox-group">';
 				foreach ($content as $col => $opt) {
 					print '<td class="checkbox-group">';
-					print '<input class="checkbox-group" type="checkbox" name="'.$opt["name"].'" id="'.$opt["id"].'"'.$opt["javascript"];
+					print '<input class="checkbox-group'. $opt["css"].'" type="checkbox" name="'.$opt["name"].'" id="'.$opt["id"].'"'.$opt["javascript"];
 					print " value=".html_quotes_escape($opt["value"]);
 					if ($opt["selected"])
 						print " CHECKED ";
+					if ($opt["disabled"])
+						print " disabled=''";
 					print  '/>';
-					print '<label for="'.$opt["id"].'">'.$opt["label"].'</label>';
+					print '<label for="'.$opt["id"] . '"';
+					if ($opt["css"])
+						print ' class="' . $opt["css"] . '"' ;
+					print '>'.$opt["label"].'</label>';
 					print '</td>';
 				}
 				print '</tr>';
