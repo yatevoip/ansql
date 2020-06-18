@@ -263,10 +263,15 @@ function message($text, $path=NULL, $return_text="Go back to application", $enco
 /**
  * Displays a given text.
  * @param $text String The text to be displayed
- * @param $path String The path to use in link 
- * @param $return_text the link to return to requested Path
+ * @param $path String The path to use in link. No link provided if value is "no"
+ * @param $return_text The link to return to requested Path
  * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
- */ 
+  * @param $details String Extra details to be displayed after click on "More details" link
+  * @param $more_details_id String If provided this will be the id of the html container holding the More Details text
+  * @param $extra_css String. Css class. If provided this css class will be aplied on the entire warning box
+  * @param $print_text Bool. If true prints the warning directly. Otherwise returns the html code for the warning message.
+  * @return string if $print_text is false
+ */
 function warning_mess($text, $path=NULL, $return_text="Go back to application", $encode=true, $details="", $more_details_id="", $extra_css="", $print_text = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
@@ -297,7 +302,7 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
 		return;
 	}
 
-	$message .=  link_to_main_page($path, $return_text, $print_text);
+	$message .=  " " . link_to_main_page($path, $return_text, false);
 
 	$message .=  '</div>';
 	
@@ -309,34 +314,40 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
 
 /**
  * Wrapper function for warning_mess()
- * @param type $message The text to be displayed
- * @param type $details
- * @param type $extra_css
- * @param type $print_text
- * @param type $returnpath The path to use in link 
- * @param type $return_text the link to return to requested Path
- * @param Bool $encode True to use htmlentities on message before displaying, false for not using htmlentities.
- * @param type $more_details_id
+ * @param $text The text to be displayed
+ * @param $details String Extra details to be displayed after click on "More details" link
+ * @param $extra_css String. Css class. If provided this css class will be aplied on the entire warning box
+ * @param $print_text Bool. If true prints the warning directly. Otherwise returns the html code for the warning message.
+ * @param $path String The path to use in link.  No link provided if value is "no" 
+ * @param $return_text the link to return to requested Path
+ * @param Bool $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
+ * @param $more_details_id String If provided this will be the id of the html container holding the More Details text
+ * @return string if $print_text is false
  */
-function warning_mess_with_details($message, $details, $extra_css="", $print_text = true, $returnpath="no", $return_text="Go back to application", $encode=true, $more_details_id="")
+function warning_mess_with_details($text, $details, $extra_css="", $print_text = true, $path="no", $return_text="Go back to application", $encode=true, $more_details_id="")
 {
-	return warning_mess($message, $returnpath, $return_text, $encode, $details, $more_details_id, $extra_css, $print_text);
+	return warning_mess($text, $path, $return_text, $encode, $details, $more_details_id, $extra_css, $print_text);
 }
 
 /**
  * Displays a given text with a specific css for errors
  * @param $text String The text to be displayed
- * @param $path String The path to use in link
+ * @param $path String The path to use in link.  No link provided if value is "no"
  * @param $return_text the link to return to requested Path
  * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
- */ 
+ * @param $details String Extra details to be displayed after click on "More details" link
+ * @param $more_details_id String If provided this will be the id of the html container holding the More Details text
+ * @param $extra_css String. Css class. If provided this css class will be aplied on the entire error box
+ * @param $print_text Bool. If true prints the error directly. Otherwise returns the html code for the error message.
+ * @return string if $print_text is false
+ */
 function errormess($text, $path=NULL, $return_text="Go back to application", $encode=true, $details="", $more_details_id="", $extra_css="", $print_text = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module, $more_details_counter;
 
 	$text = ($encode) ? htmlentities($text) : $text;
-	
+
 	$message =  '<div class="notice error '. $extra_css.'">'."\n";
 	$message .=  '<div class="hold_err_mess">';
 	$message .=  "<font class=\"error\"> Error!</font>"."\n";
@@ -361,7 +372,7 @@ function errormess($text, $path=NULL, $return_text="Go back to application", $en
 		return;
 	}
 
-	$message .= link_to_main_page($path, $return_text, $print_text);
+	$message .= " " . link_to_main_page($path, $return_text, false);
 	
 	$message .= '</div>';
 	
@@ -372,20 +383,23 @@ function errormess($text, $path=NULL, $return_text="Go back to application", $en
 }
 
 /**
- * 
- * @param type $message
- * @param type $details
- * @param type $extra_css
- * @param type $print_text
- * @param type $returnpath
- * @param type $return_text
- * @param type $encode
- * @param type $more_details_id
- * @return type
+ * Wrapper function for errormess()
+ * @param type $text String The text to be displayed
+ * @param type $details String Extra details to be displayed after click on "More details" link
+ * @param type $extra_css String. Css class. If provided this css class will be aplied on the entire error box
+ * @param type $print_text Bool. If true prints the error directly. Otherwise returns the html code for the error message.
+ * @param type $path String The path to use in link.  No link provided if value is "no"
+ * @param type $return_text the link to return to requested Path
+ * @param type $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
+ * @param $details String Extra details to be displayed after click on "More details" link
+ * @param $more_details_id String If provided this will be the id of the html container holding the More Details text
+ * @param $extra_css String. Css class. If provided this css class will be aplied on the entire error box
+ * @param $print_text Bool. If true prints the error directly. Otherwise returns the html code for the error message.
+ * @return String if $print_text is false
  */
-function error_with_details($message, $details, $extra_css="", $print_text = true, $returnpath="no", $return_text="Go back to application", $encode=true, $more_details_id="")
+function error_with_details($text, $details, $extra_css="", $print_text = true, $path="no", $return_text="Go back to application", $encode=true, $more_details_id="")
 {
-	return errormess($message, $returnpath, $return_text, $encode, $details, $more_details_id, $extra_css, $print_text);
+	return errormess($text, $path, $return_text, $encode, $details, $more_details_id, $extra_css, $print_text);
 }
 
 /**
@@ -394,22 +408,39 @@ function error_with_details($message, $details, $extra_css="", $print_text = tru
  * @param $next_cb Callable/String. Setting it to 'no' stops the performing of the callback.  
  * @param $no_error Boolean If is true a message id displayed else an error type message is displayed. Defaults to true.
  * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
- */ 
-function notice($message, $next_cb=NULL, $no_error = true, $encode=true)
+ * @param $details String Extra details to be displayed after click on "More details" link
+ * @param $more_details_id String If provided this will be the id of the html container holding the More Details text
+ * @param $extra_css String. Css class. If provided this css class will be aplied on the entire notice box
+ * @return string if $print_text is false
+ */
+function notice($message, $next_cb=NULL, $no_error = true, $encode=true, $details="", $more_details_id="", $extra_css="")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module;
-
+	global $module, $more_details_counter;
+	
 	if (!$next_cb)
 		$next_cb = $module;
 	
 	$message = ($encode) ? htmlentities($message) : $message;
 
 	if ($no_error)
-		print '<div class="notice">'.$message.'</div>';
+		print '<div class="notice '.$extra_css.'">'.$message;
 	else
-		print '<div class="notice error"><font class="error">Error! </font>'.$message.'</div>';
+		print '<div class="notice error '.$extra_css.'"><font class="error">Error! </font>'.$message;
 
+	if ($details) {
+		if (!$more_details_id) {
+			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
+			$more_details_id = "error_details".$more_details_counter;
+		}
+		print ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More details<br/></a>';
+		print '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
+		print $details;
+		print '</div>';
+	}
+	
+	print "</div>";
+	
 	if ($next_cb != "no" && is_callable($next_cb))
 		call_user_func($next_cb);
 }
@@ -1335,7 +1366,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		print " />";
 		return;
 	}
-
+	
 	print '<td class="'.$css.' left_td ';
 	$ident = false;
 	if (isset($field_format["custom_css_left"])) {
@@ -1362,7 +1393,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if (isset($field_format["compulsory"]))
 		if($field_format["compulsory"]===true || $field_format["compulsory"]=="yes" || bool_value($field_format["compulsory"]) || $field_format["compulsory"]=="true")
 			print '<font class="compulsory">*</font>';
-	
+
 	if ($ident)
 		print "</div>";
 	// check if the error icon is set in fields
@@ -1598,7 +1629,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			$selected = selected_option($display, $field_name, $field_format, $options, $object);	
 			if (!is_array($selected))
 				$selected = (array)$selected;
-				
+			
 			$max_col_items = isset($field_format["max_col_items"]) ? $field_format["max_col_items"] : 3;
 			$col = 1;
 			$row = 1;
@@ -1617,12 +1648,12 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				if (isset($opt["javascript"]))
 					$checkboxes[$row][$col]["javascript"] = " ".$opt["javascript"];
 				
-				$row++;
-				if ($row > $max_col_items) {
-					$row=1;
-					$col++;
-				}
-			}
+					$row++;
+					if ($row > $max_col_items) {
+						$row=1;
+						$col++;
+					}
+					}
 			$autocall = array();
 			print '<table class="checkbox-group" id="'.$form_identifier.$field_name.'">';
 			foreach ($checkboxes as $row => $content) {
@@ -3959,7 +3990,7 @@ function set_form_fields(&$fields, $error_fields, $field_prefix='', $use_urldeco
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	if (!$error_fields)
 		$error_fields = array();
-	
+
 	foreach ($fields as $name=>$def) {
 		if (!isset($def["display"]))
 			$def["display"] = "text";
@@ -4030,23 +4061,24 @@ function set_error_fields($error, &$error_fields)
 /**
  * Handle the errors by displaying the error using errormess();
  * sets the errors in array fields and then sets the data in form fields
- * @param type $error. True if encountered errors. False otherwise.
- * @param type $fields. Array containing the form fields (with the default values in "value" key)
- * @param type $error_fields. Array containing the fields with errors.
- * @param type $field_prefix. Defaults to empty string.
- * @param type $use_urldecode. Defaults to false.
- * @param type $encode_error_text. Defaults to true.
- * @param type $apply_conditions. Used in set_form_fields().
+ * @param string $error. True if encountered errors. False otherwise.
+ * @param array $fields. Array containing the form fields (with the default values in "value" key)
+ * @param array $error_fields. Array containing the fields with errors.
+ * @param string $field_prefix. Defaults to empty string.
+ * @param bool $use_urldecode. Defaults to false.
+ * @param bool $encode_error_text. Defaults to true.
+ * @param array $apply_conditions. Used in set_form_fields().
  *				  Conditions to detect form submit. Defaults to empty array.
  *				  Examples:
  *					- array("method"=>{name_of_the_method_used_for_validate_form}) - if method used for validate is not {$method."_".$action}
  *					- array("action"=>{name_of_the_action}) - when action is not "database" and method used for validate is {$method."_".$action}
+ * @param string $extra_css Name(s) of css class(es) to be added for error messages. Separate classes by space.
  */
-function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_urldecode=false, $encode_error_text=true, $apply_conditions=array())
+function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_urldecode=false, $encode_error_text=true, $apply_conditions=array(), $extra_css="")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	if ($error) {
-		errormess($error,"no","Go back to application", $encode_error_text);
+		errormess($error,"no","Go back to application", $encode_error_text, "", "", $extra_css);
 		set_error_fields($error, $error_fields);
 		set_form_fields($fields, $error_fields, $field_prefix, $use_urldecode, $apply_conditions);
 	}
