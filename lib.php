@@ -1630,8 +1630,13 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			if (!is_array($selected))
 				$selected = (array)$selected;
 			
-			$max_col_items = isset($field_format["max_col_items"]) ? $field_format["max_col_items"] : 3;
-			$col = 1;
+			$max = 3;
+			if (isset($field_format["max_rows"]))
+				$max = $field_format["max_rows"];
+			else if (isset($field_format["max_cols"]))
+				$max = $field_format["max_cols"];
+			
+			$col = 1;			
 			$row = 1;
 			$checkboxes = array();
 
@@ -1651,17 +1656,17 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				$checkboxes[$row][$col]["disabled"] = (isset($opt["disabled"]) && $opt["disabled"]) ? true : false;
 				$checkboxes[$row][$col]["css"] = (isset($opt["css"]) && $opt["css"]) ? " ".$opt["css"] : "";	
 				
-				if (!isset($field_format["limit_col_items"])) {
-					$row++;
-					if ($row > $max_col_items) {
-						$row=1;
-						$col++;
-					}
-				} else {
+				if (isset($field_format["max_cols"])) {
 					$col++;
-					if ($col > $max_col_items) {
+					if ($col > $max) {
 						$col=1;
 						$row++;
+					}
+				} else {
+					$row++;
+					if ($row > $max) {
+						$row=1;
+						$col++;
 					}
 				}
 			}
