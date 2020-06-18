@@ -1462,3 +1462,12 @@ function display_password(toggle)
 	if (toggle_tag.toLowerCase()==="span")
 		toggle.className = (input.type==="password") ? toggle_class.replace("fa-eye","fa-eye-slash") : toggle_class.replace("fa-eye-slash","fa-eye");
 }
+
+function isJson(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
