@@ -6606,4 +6606,34 @@ function get_dropdown_options($options, $option_id = null)
 	return $dropdown_options;
 }
 
+/** SCROLL TO functions **/
+
+/**
+ * Add anchor anywhere in project so when scroll_anchor() function is called it will scroll directly to this anchor.
+ * Note: Function was created to be used in combination with scroll_anchor()
+ * 
+ * @param string $id The anchor id
+ */
+function add_scroll_anchor($id = "bottom")
+{
+	$inline_scroll_css = "visibility:hidden; font-size:1px;padding:0px;margin:0px;height:1px;width:1px;";
+	$inline_container_css = "height:1px;clear:left;padding:0px;margin:0px;";
+	
+	echo "<div class=\"scroll_anchor\" style=\"{$inline_container_css}\" >"
+		. "<a id=\"{$id}\" href=\"#{$id}\" style=\"{$inline_scroll_css}\" class=\"scroll_anchor\">&nbsp;</a>"
+	. "</div>";
+}
+
+/**
+ * Use this function to scroll to specified anchor.
+ * Note: You must use this function in combination with add_scroll_anchor().
+ * 
+ * @param string $id  The anchor id
+ */
+function scroll_anchor($id = "bottom")
+{
+	echo "<script>window.addEventListener('load', function(){  window.location = \"#{$id}\"; });</script>";
+}
+
+/**End SCROLL TO functions **/
 ?>
