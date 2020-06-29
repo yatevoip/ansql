@@ -1471,3 +1471,27 @@ function isJson(str) {
     }
     return true;
 }
+
+// Check if a parameter is present (defined and not null)
+function isPresent(val)
+{
+	return (undefined !== val && null !== val);
+}
+ 
+// Check if a parameter is missing (undefined or null)
+function isMissing(val)
+{
+	return (undefined === val || null === val);
+}
+ 
+// Check if a parameter is filled (defined, not empty and not null)
+function isFilled(val)
+{
+	return ("" != val && null !== val);
+}
+ 
+// Check if a parameter is empty (undefined, empty string or null)
+function isEmpty(val)
+{
+	return ("" == val || null === val);
+}
