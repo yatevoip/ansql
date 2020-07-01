@@ -1495,3 +1495,46 @@ function isEmpty(val)
 {
 	return ("" == val || null === val);
 }
+
+/**
+ * Displays element when pivot element's height exceeds the specified height.
+ * @param {string} pivot_id The id of the pivot element which height is to be evaluated;
+ * @param {string} elem_id The id of the element to be displayed if pivot height is greater than specified one.
+ * @param {number} height Default value: 295; the height in pixels of the pivot element, after which the specified element will be displayed.
+ */ 
+function display_elem_on_height(pivot_id, elem_id, height = 295)
+{
+	if (isEmpty(pivot_id)) {
+		console.log("display_elem_on_height: pivot_id argument is missing.");
+		return;
+	}
+	
+	if (isEmpty(elem_id)) {
+		console.log("display_elem_on_height: elem_id argument is missing.");
+		return;
+	}
+		
+	if (!Number.isInteger(height)) {
+		console.log("display_elem_on_height: height argument is not integer");
+		return;
+	}
+	
+	var pivot = document.getElementById(pivot_id);
+	var elem = document.getElementById(elem_id);
+	
+	if (isEmpty(pivot)) {
+		console.log("display_elem_on_height: No HTML element found with id'" + pivot_id + "'.");
+		return;
+	}
+	
+	if (isEmpty(elem)) {
+		console.log("display_elem_on_height: No HTML element found with id'" + elem_id + "'.");
+		return;
+	}
+	
+	if (pivot.scrollHeight < height) {
+		return;
+	}
+	
+	elem.style.display = 'block';
+}
