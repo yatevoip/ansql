@@ -1650,11 +1650,11 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				$checkboxes[$row][$col]["id"] = $form_identifier.$field_name.'_'.strtolower(str_replace(" ", "_",$checkboxes[$row][$col]["value"])).'_ck';
 				$checkboxes[$row][$col]["selected"] = (in_array($checkboxes[$row][$col]["value"], $selected)) ? true : false;
 				$checkboxes[$row][$col]["javascript"] = (isset($field_format["javascript"])) ? " ".$field_format["javascript"] : "";
-				if (isset($opt["javascript"]))
+				if (is_array($opt) && isset($opt["javascript"]))
 					$checkboxes[$row][$col]["javascript"] = " ".$opt["javascript"];
 				
-				$checkboxes[$row][$col]["disabled"] = (isset($opt["disabled"]) && $opt["disabled"]) ? true : false;
-				$checkboxes[$row][$col]["css"] = (isset($opt["css"]) && $opt["css"]) ? " ".$opt["css"] : "";	
+				$checkboxes[$row][$col]["disabled"] = (is_array($opt) && isset($opt["disabled"]) && $opt["disabled"]) ? true : false;
+				$checkboxes[$row][$col]["css"] = (is_array($opt) && isset($opt["css"]) && $opt["css"]) ? " ".$opt["css"] : "";	
 				
 				if (isset($field_format["max_cols"])) {
 					$col++;
