@@ -287,7 +287,7 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
 			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
 			$more_details_id = "error_details".$more_details_counter;
 		}
-		$message .=  ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More details<br/></a>';
+		$message .=  ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More&nbsp;details<br/></a>';
 		$message .=  '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
 		$message .=  $details;
 		$message .=  '</div>';
@@ -320,7 +320,7 @@ function warning_mess($text, $path=NULL, $return_text="Go back to application", 
  * @param $print_text Bool. If true prints the warning directly. Otherwise returns the html code for the warning message.
  * @param $path String The path to use in link.  No link provided if value is "no" 
  * @param $return_text the link to return to requested Path
- * @param Bool $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
+ * @param $encode Bool True to use htmlentities on message before displaying, false for not using htmlentities.
  * @param $more_details_id String If provided this will be the id of the html container holding the More Details text
  * @return string if $print_text is false
  */
@@ -357,7 +357,7 @@ function errormess($text, $path=NULL, $return_text="Go back to application", $en
 			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
 			$more_details_id = "error_details".$more_details_counter;
 		}
-		$message .=  ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More details<br/></a>';
+		$message .=  ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More&nbsp;details<br/></a>';
 		$message .=  '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
 		$message .=  $details;
 		$message .=  '</div>';
@@ -433,7 +433,7 @@ function notice($message, $next_cb=NULL, $no_error = true, $encode=true, $detail
 			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
 			$more_details_id = "error_details".$more_details_counter;
 		}
-		print ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More details<br/></a>';
+		print ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More&nbsp;details<br/></a>';
 		print '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
 		print $details;
 		print '</div>';
