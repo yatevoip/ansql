@@ -6636,4 +6636,39 @@ function scroll_anchor($id = "bottom")
 }
 
 /**End SCROLL TO functions **/
+
+/**
+ * Verifies if error occurred after json encode/decode and 
+ * returns corresponding error message or false if no error occurred
+ */
+function translate_preg_match_err_codes() 
+{
+        switch (preg_last_error()) {
+                case PREG_NO_ERROR:
+                        $msg = 'No errors';
+                        break;
+                case PREG_INTERNAL_ERROR:
+                        $msg = 'There was an internal PCRE error';
+                        break;
+                case PREG_BACKTRACK_LIMIT_ERROR:
+                        $msg = 'Backtrack limit was exhausted';
+                        break;
+                case PREG_RECURSION_LIMIT_ERROR:
+                        $msg = 'Recursion limit was exhausted';
+                        break;
+                case PREG_BAD_UTF8_ERROR:
+                        $msg = 'The offset didn\'t correspond to the begin of a valid UTF-8 code point';
+                        break;
+                case PREG_BAD_UTF8_OFFSET_ERROR:
+                        $msg = 'Malformed UTF-8 data';
+                        break;
+                default:
+                        $msg = 'Unknown error';
+        }
+
+	if ($msg == 'No errors')
+		return false;
+	
+        return $msg;
+}
 ?>
