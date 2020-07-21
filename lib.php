@@ -1942,8 +1942,23 @@ function autocall_js($field_name, $field_format, $form_identifier)
 					$js = str_replace("''", "'".getparam("custom_".$form_identifier.$field_name)."'",$js);
 				elseif (false!==strpos($js,'""'))
 					$js = str_replace('""', '"'.getparam("custom_".$form_identifier.$field_name).'"',$js);
+			} elseif (isset($field_format["custom_field_value"]) && strlen($field_format["custom_field_value"])) {
+				if (false!==strpos($js,"''"))
+					$js = str_replace("''", "'".$field_format["custom_field_value"]."'",$js);
+				elseif (false!==strpos($js,'""'))
+					$js = str_replace('""', '"'.$field_format["custom_field_value"].'"',$js);
 			}
-			print "<script> window.addEventListener('load', function(){ $js });</script>";
+			
+			if (isset($field_format['js_execution']) &&  $field_format['js_execution'] === "page_loaded") {
+				//Execute JS after the entire page has been loaded
+				print "<script> window.addEventListener('load', function(){ $js });</script>";
+			} elseif (isset($field_format['js_execution']) && $field_format['js_execution'] === "dom_loaded") {
+				//Execute JS after DOM is loaded and parsed without waiting for stylesheets, images, and subframes to finish loading
+				print "<script> document.addEventListener('DOMContentLoaded', function(){ $js });</script>";
+			} else {
+				//Execute JS now
+				print "<script>$js</script>";
+			}
 		}
 	}
 }
