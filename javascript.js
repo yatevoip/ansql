@@ -897,6 +897,9 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 		if (tr_element.getAttribute("advanced")=="true" && show_advanced==false)
 			continue;
 		
+		if (hasClass(tr_element, 'hidden_tr'))
+			continue;
+		
 		show(id_tr_element);
 	}
 
@@ -1496,6 +1499,41 @@ function isEmpty(val)
 	return ("" == val || null === val);
 }
 
+function is_substr(substring,string)
+{
+	return string.indexOf(substring) !== -1;
+}
+
+function is_array(arr)
+{
+	return (arr.constructor===Array);
+}
+
+function in_array(value, array)
+{
+	return array.indexOf(value) > -1;
+}
+
+function bool_value(value) 
+{
+	if (value==="t" || value==="1" || value===1 || value==="on" || value===true || value=== "true" )
+		return true;
+	return false;
+}
+
+// Check if an HTML element contains a specific class
+// ex: hasClass(document.getElementById('field_id'), 'class_name')
+function hasClass(element, className) 
+{
+	return (' ' + element.className + ' ').indexOf(' ' + className+ ' ') > -1;
+}
+
+//Function used to make the first letter uppercase
+function ucfirst(string) 
+{
+	return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 /**
  * Displays element when pivot element's height exceeds the specified height.
  * @param {string} pivot_id The id of the pivot element which height is to be evaluated;
@@ -1537,4 +1575,78 @@ function display_elem_on_height(pivot_id, elem_id, height = 295)
 	}
 	
 	elem.style.display = 'block';
+}
+
+function get_form_parameters(form_id, form_identifier = '', exceptions = [])
+{
+	if (isMissing(document.getElementById(form_id))) {
+		console.log('Could not find form with form_id=' + form_id);
+		return;
+	}
+	
+	var form_elements = document.getElementById(form_id).elements;
+	var form_parameters = {};
+	
+	var tags = ['input', 'textarea', 'select'];
+	var tag_name;
+	var json_field;
+	for (var i=0; i<form_elements.length; i++) {
+		if (exceptions.length > 0 && in_array(form_elements[i].id, exceptions))
+			continue;
+		tag_name = form_elements[i].tagName.toLowerCase();
+		if (!in_array(tag_name, tags))
+			continue;
+		json_field = form_elements[i].id;
+		if (form_identifier.length > 0 && json_field.substr(0, form_identifier.length) === form_identifier)
+			json_field = json_field.substr(form_identifier.length);
+		if(tag_name === "input") {
+			switch(form_elements[i].type) {
+				case "checkbox":
+					form_parameters[json_field] = document.getElementById(form_elements[i].id).checked;
+					break;
+				default:
+					form_parameters[json_field] = document.getElementById(form_elements[i].id).value;
+			}
+		} else
+			form_parameters[json_field] = document.getElementById(form_elements[i].id).value;
+	}
+	
+	return form_parameters;
+}
+
+function fill_form_parameters(form_id, parameters, form_identifier = '')
+{
+	if (isMissing(document.getElementById(form_id))) {
+		console.log('Could not find form with form_id=' + form_id);
+		return;
+	}
+	
+	if (typeof parameters === "string")
+		parameters = JSON.parse(parameters);
+	
+	if (form_identifier.length > 0) {
+		var modified_parameters = {};
+		for(var key in parameters)
+			modified_parameters[form_identifier + key] = parameters[key];
+		parameters = modified_parameters;
+	}
+	
+	var form_elements = document.getElementById(form_id).elements;
+	var tag_name;
+	
+	for (var i=0; i<form_elements.length; i++) {
+		if (isMissing(parameters[form_elements[i].id]))
+			continue;
+		tag_name = form_elements[i].tagName.toLowerCase();
+		if (tag_name === "input") {
+			switch(form_elements[i].type) {
+				case "checkbox":
+					document.getElementById(form_elements[i].id).checked = bool_value(parameters[form_elements[i].id]);
+					break;
+				default:
+					document.getElementById(form_elements[i].id).value = parameters[form_elements[i].id];
+			}
+		} else 
+			document.getElementById(form_elements[i].id).value = parameters[form_elements[i].id];
+	}
 }

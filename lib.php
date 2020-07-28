@@ -1308,6 +1308,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if (isset($field_format["error"]) && $field_format["error"]===true)
 		$css .= " error_field";
 	print ' class="'.$css;
+	if (isset($field_format["tr_extra_css"]))
+		print " ".$field_format["tr_extra_css"];
 	if(isset($field_format["advanced"]))
 	{
 		print " advancedrow\"";
