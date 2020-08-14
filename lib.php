@@ -4127,13 +4127,37 @@ function error_handle($error, &$fields, &$error_fields, $field_prefix='', $use_u
 }
 
 /**
- * Display a link in a div with the build link from previous page data
+ * Display return button with the built link from previous page data or with a custom return link specified on 'onclick' event.
+ * 
+ * @param string $method Default is null. The method specified in the return link. If not set, return link is built from information stored in "previous_page" from session. If not found in session return link will contain only the value of the global $module.
+ * @param string $_module Default is null. If set, return link will be built with specified module instead of the one stored in the global $module.
+ * @param string $align Default is "right". Is the alignment of the container div, if container div is set.
+ * @param string $name Default is "Return". Is the name of the return button.
+ * @param bool $div_container Default is true. When true, button is displayed inside a container div.
+ * @param string $css Default is "llink". Is the css class used for the button.
+ * @param string $onclick Default is null. When set button uses onclick event instead of href, with the value of the $onclick parameter.
  */ 
-function return_button($method=null, $_module=null, $align="right", $name="Return", $div_container=true, $css="llink")
+function return_button($method=null, $_module=null, $align="right", $name="Return", $div_container=true, $css="llink", $onclick=null)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module;
 
+	$fa_icon = "";
+	if (is_dir(__DIR__ . "/../addons/font-awesome-4.7.0/")) {
+		$fa_icon = "<i class='fa  fa-arrow-left $css' aria-hidden='true'>&nbsp;</i>";
+	}
+	
+	if ($onclick) {
+		if ($div_container) {
+			print "<div style='float:".$align."'><a class='{$css}' onclick=\"$onclick\">".$fa_icon.$name."</a></div>";
+			br(2);
+			return;
+		} else {
+			print "<a class='{$css}' onclick=\"$onclick\">".$fa_icon.$name."</a>";
+			return;
+		}
+	}
+	
 	if ($method) {
 		if (!$_module)
 			$_module = $module;
@@ -4148,14 +4172,9 @@ function return_button($method=null, $_module=null, $align="right", $name="Retur
 	} else
 		$link = $_SESSION["main"]. "?"."module=".$module;
 	
-	$fa_icon = "";
-	if (is_dir(__DIR__ . "/../addons/font-awesome-4.7.0/")) {
-		$fa_icon = "<i class='fa  fa-arrow-left $css' aria-hidden='true'>&nbsp;</i>";
-	}
-
 	if ($div_container) {
 		print '<div style="float:'.$align.'"><a class="'.$css.'" href="'.$link.'">'.$fa_icon.$name.'</a></div>';
-		br();
+		br(2);
 	} else
 		print '<a class="'.$css.'" href="'.$link.'">'.$fa_icon.$name.'</a>';
 }
@@ -6047,6 +6066,9 @@ function open_html_iframe()
 	print "<html>";
 	print "<head>";
 	print "<meta http-equiv='content-type' content='text/html; charset=UTF-8'/>";
+	if (is_dir(__DIR__ . "/../addons/font-awesome-4.7.0/")) {
+		print "<link type=\"text/css\" rel=\"stylesheet\" href=\"addons/font-awesome-4.7.0/css/font-awesome.min.css\"/>";
+	}
 	print "<link type=\"text/css\" rel=\"stylesheet\" href=\"" . set_file_version("css/main.css") . "\" />";
 	print "<link type=\"text/css\" rel=\"stylesheet\" href=\"" . set_file_version("css/wizard.css") . "\" />";
 	print "<script type=\"text/javascript\" src=\"" . set_file_version("javascript/lib_wizard.js") . "\"></script>";
@@ -6687,5 +6709,179 @@ function translate_preg_match_err_codes()
 		return false;
 	
         return $msg;
+}
+
+/**
+ * Return true if module/method was found in the $exceptions_return_button array or method is the main tab (module = method)
+ */
+function exception_return_button()
+{
+	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	global $method, $module, $exceptions_return_button, $custom_return_button;
+
+	if (isset($exceptions_return_button) && isset($exceptions_return_button[$_SESSION["level"]]) && isset($exceptions_return_button[$_SESSION["level"]]["$module"]) && (in_array($method, $exceptions_return_button[$_SESSION["level"]]["$module"]) || (in_array("__all", $exceptions_return_button[$_SESSION["level"]]["$module"]))))
+		return true;
+	
+	if (isset($exceptions_return_button) && isset($exceptions_return_button[$_SESSION["level"]]) && isset($exceptions_return_button[$_SESSION["level"]]["methods"]) && (in_array($method, $exceptions_return_button[$_SESSION["level"]]["methods"])))
+		return true;
+	
+	if (!isset($_SESSION["level"]) && isset($exceptions_return_button["default"][$method]))
+		return true;
+
+	//do not display return button in the first page of a tab (module is the same with method)
+	//!! button is displayed if method is mentioned in the $custom_return_button array
+	if (($module == $method) && (!isset($custom_return_button[$method])))
+		return true;
+	
+	return false;
+}
+
+/**
+ * This is a wrapper function for return_button().<br>
+ * Use this function to automatically display return button for multiple methods.<br>
+ * Exceptions from applying return button are discussed in exceptions_return_button() function.<br>
+ * In order to customize the return button value, global $custom_return_button array should be set.
+ * 
+ * @param string $button_name Default is "Return". Is the name set on the return button.
+ * @param bool $container_div Default true. If true return button is contained inside a div element.
+ * @param string $alignment Default is "right". Is the alignment of the return button inside div_container element. If $container_div is false, the alignment is not used.
+ * @param string $additional_css Default is "return" css class. If specified, is the second css class given to the return button element, besides "llink" css class.
+ * 
+ * @return - By default return button is a link to previous page. <br>
+ * If return button is applied for methods from pages.php, the "onclick" event is used with the following value: <br>
+ * 	    &nbsp;&nbsp; onclick = make_request('pages.php?method=$method&extra_param=$extra_param', {callback_request, param:'$cb_param'});<br>
+ * Custom return button is always set on 'onclick' event and can have the following structures:<br>
+ *	1. onclick = "location.href='main.php?module=...";
+ *	2. onclick = function_name();
+ *	3. onclick = function_name(param_1, param_2, param_3....param_n);
+ *	4. onclick = function_name('function_name2', {'cb_param_name1':'cb_param_value1', 'cb_param_name2':'cb_param_value2'....});
+ *	5. onclick = function_name('request_url'/'request_url?url_param_name=url_param_value&url_param_name=url_param_value&...', {'cb_param_name1':'cb_param_value1', 'cb_param_name2':'cb_param_value2'....});
+ *	!If not specified, default function on onclick is 'make_request'. 
+ */ 
+function auto_return_button($button_name = "Return", $container_div = true, $alignment = "right", $additional_css = "return") 
+{
+	global $module, $method, $custom_return_button;
+
+	$method = getparam("method") ? getparam("method") : $method;
+
+	//do not display return button for modules/methods specified in the exceptions array or if methods is a main tabs
+	if (exception_return_button()) {
+		return;
+	}
+	
+	//set custom return button for methods specified in the global $custom_return_button array -->
+	
+	if (isset($custom_return_button[$method])) {
+		//default function on onclick is 'make_request'
+		$onclick = (isset($custom_return_button[$method]["onclick_func"])) ? $custom_return_button[$method]["onclick_func"] : "make_request";
+		
+		//build arguments for onclick function (cases: multiple arguments, function with callback or request link)
+		if (isset($custom_return_button[$method]["func_params"])) {
+			$onclick .= "(";
+			if (isset($custom_return_button[$method]["cb_params"]) || isset($custom_return_button[$method]["cb_get_params"]))
+				$onclick .= "'";
+			$onclick .= implode(",", $custom_return_button[$method]["func_params"]);
+		} else if (isset($custom_return_button[$method]["request_url"])) {
+			$onclick .= "('".$custom_return_button[$method]["request_url"];
+			//"request_url_params" is set for parameters for which the value is obtained with getparam()
+			if (isset($custom_return_button[$method]["request_url_params"])) {
+				$onclick .= (strpos($custom_return_button[$method]["request_url"], "?") == false) ? "?" : "&";
+				foreach ($custom_return_button[$method]["request_url_params"] as $key=>$param) {
+					$onclick .= $param."=".getparam($param)."&";
+				}
+			}
+		} else if ((isset($custom_return_button[$method]["href_params"])) || (isset($custom_return_button[$method]["href_custom_params"])))  {
+			if (isset($custom_return_button[$method]["href_params"])) {
+				$onclick .= (strpos($custom_return_button[$method]["onclick_func"], "?") == false) ? "?" : "&";
+				foreach ($custom_return_button[$method]["href_params"] as $key=>$param) {
+					if(is_numeric($key))
+						$onclick .= $param."=".getparam($param)."&";
+					else
+						$onclick .= $key."=".$param."&";
+				}
+			}
+
+			$onclick .= "'";
+		}
+		
+		//build cb argument as json
+		if (isset($custom_return_button[$method]["cb_params"])) {
+			$onclick .= "', {";
+			$temp = array();
+			foreach ($custom_return_button[$method]["cb_params"] as $key=>$value) {
+				if(is_numeric($key))
+					$temp[] = "'".$value."':'".getparam($value)."'";
+				else
+					$temp[] = $key.":".$value;
+			}
+			$onclick .= implode(",", $temp)."}";
+		}
+		
+		//close onclick function if arguments were passed to the function
+		if (isset($custom_return_button[$method]["request_url"]) || isset($custom_return_button[$method]["func_params"]))
+			$onclick .= ")";
+
+		//overwrite default/general parameters if specified in custom array
+		$custom_css = (isset($custom_return_button[$method]["css"])) ? "llink ".$custom_return_button[$method]["css"] : "llink ".$additional_css;
+		$custom_button_name = (isset($custom_return_button[$method]["button_name"])) ? ($custom_return_button[$method]["button_name"]) : $button_name;
+		$custom_alignment = (isset($custom_return_button[$method]["alignment"])) ? ($custom_return_button[$method]["alignment"]) : $alignment;
+		$custom_div_container = (isset($custom_return_button[$method]["div_container"])) ? ($custom_return_button[$method]["div_container"]) : $container_div;
+		
+		return_button(null, null, $custom_alignment, $custom_button_name, $custom_div_container, $custom_css, $onclick);
+		return;
+	} 
+	
+	//set return button for normal modules loaded from main.php -->
+	
+	if ((isset($_SERVER['REQUEST_URI'])) && (strpos($_SERVER['REQUEST_URI'], "pages.php") == false )) {
+		$css = "llink ".$additional_css;
+		
+		return_button(null, null, $alignment, $button_name, $container_div, $css, null);
+		return;
+	} 
+	
+	//set default return button for methods used in wizard steps -->
+	
+	//recreate the name of the function to be called when return button is accessed
+	$ajax_method = null;
+	if ((strpos($method, "form_edit") !== false ) && (strpos($method, "_db") !== false)) {
+		$display_method = str_replace ("form_edit", "display", $method);
+		$ajax_method = get_plural_form(str_replace ("_db", "", $display_method));
+	} elseif ((strpos($method, "form_") !== false ) && (strpos($method, "_db") !== false)) {
+		$display_method = str_replace ("form", "display", $method);
+		$ajax_method = get_plural_form(str_replace ("_db", "", $display_method));
+	} elseif (strpos($method, "form_edit") !== false ) {
+		$ajax_method = get_plural_form(str_replace ("form_edit", "display", $method));
+	} elseif (strpos($method, "form_import") !== false ) {
+		$ajax_method = get_plural_form(str_replace ("form_import", "display", $method));
+	} elseif (strpos($method, "form") !== false ) {
+		$ajax_method = get_plural_form(str_replace ("form", "display", $method));
+	} elseif (strpos($method, "_db") !== false) {
+		$ajax_method = "display_".get_plural_form(str_replace ("_db", "", $method));
+	}
+	
+	if (empty($ajax_method)) {
+		return;
+	}
+		
+	if(!is_callable($ajax_method)) {
+		return;
+	}
+	
+	//get the default extra params, set in the global $custom_return_button array
+	$extra_params = "";
+	if (isset($custom_return_button["url_default_params"])) {
+		foreach ($custom_return_button["url_default_params"] as $request_url_param) {
+			$extra_params .= "&".$request_url_param."=".getparam($request_url_param);
+		}
+	}
+	//build request link
+	$request_link = "pages.php?method=".$ajax_method.$extra_params;
+	//get cb param if different from default ("custom_step_0)
+	$cb_param = (getparam("fieldname")) ? getparam("fieldname") : "custom_step_0";
+	$onclick = "make_request('".$request_link."', {name:callback_request, param:'".$cb_param."'})";
+	$css = "llink ".$additional_css;
+	
+	return_button(null, null, $alignment, $button_name, $container_div, $css, $onclick);
 }
 ?>
