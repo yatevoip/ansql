@@ -35,6 +35,21 @@ global $session_lifetime;
 if(!isset($session_lifetime))
 	$session_lifetime = null;
 
+//Executed only in CLI mode when running ./force_update.php with root privilege
+if($session_lifetime && php_sapi_name() == "cli") {
+	$session_path = ini_get("session.save_path")."/session_{$session_lifetime}sec";
+	if(is_dir($session_path)) {
+		$file_owner = posix_getpwuid(fileowner($session_path));
+		//Change permission to apache for the existing session files
+		if(isset($file_owner["name"]) && $file_owner["name"]!=="apache") {
+			$res = chown($session_path, "apache");
+			if($res === FALSE)
+				error_log("PHP Warning: Failed to change permission to apache ($session_path)");
+		}
+	}
+	$session_lifetime = null;
+}
+
 if($session_lifetime) {
 	// Set the max lifetime
 	ini_set("session.gc_maxlifetime", $session_lifetime);
@@ -47,20 +62,18 @@ if($session_lifetime) {
 	// used for all. Therefore, for this to work, the session
 	// must be stored in a directory where only sessions sharing
 	// it's lifetime are. Best to just dynamically create on.
-	$separator = strstr(strtoupper(substr(PHP_OS, 0, 3)), "WIN") ? "\\" : "/";
-	$path = ini_get("session.save_path")."{$separator}session_{$session_lifetime}sec";
-	
-	if(!file_exists($path)) {
-		@mkdir($path);
+	$session_path = ini_get("session.save_path")."/session_{$session_lifetime}sec";
+	if(!file_exists($session_path)) {
+		@mkdir($session_path);
 	}
 
 	//If the new path exists, set it, otherwise PHP will use the default session.save_path
-	if(is_dir($path) && is_writable($path))
-		ini_set("session.save_path", $path);
+	if(is_dir($session_path) && is_writable($session_path))
+		ini_set("session.save_path", $session_path);
 	else {
 		//Log warning only in index.php, not everytime
 		if(isset($_SERVER['SCRIPT_NAME']) && strpos($_SERVER['SCRIPT_NAME'], 'index.php'))
-			error_log("PHP Warning: Failed to extend PHP session. Permission issue, change owner to apache ($path)");
+			error_log("PHP Warning: Failed to extend PHP session. Permission issue, run force_update.php to change permission to apache ($session_path)");
 	}
 	
 	// Set the chance to trigger the garbage collection.
