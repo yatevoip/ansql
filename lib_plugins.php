@@ -166,9 +166,9 @@ abstract class Plugin
 
 		if (isset($plugin_hooks[$hook_name]["hooks"])) {
 			foreach ($plugin_hooks[$hook_name]["hooks"] as $cb_hook) {
-				if (is_callable($cb_hook))
+				if (is_callable($cb_hook)) { 
 					call_user_func_array($cb_hook,$params);
-				else {
+				} else {
 					Debug::trigger_report("critical", "Tried to call hook '$cb_hook', but it's not callable.");
 				}
 			}
@@ -228,7 +228,7 @@ function register_hook($hook_name, $hook_handler, $plugin_name=NULL, $unicity_ta
 	Plugin::registerHook($hook_name, $hook_handler, $unicity_tags, $plugin_name);
 }
 
-function call_hooks($hook_name)
+function call_hooks($hook_name,$params=array())
 {
-	Plugin::callHooks($hook_name);
+	Plugin::callHooks($hook_name,$params);
 }
