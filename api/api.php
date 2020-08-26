@@ -16,6 +16,7 @@
 include_once "../../api/api_includes.php";
 
 $response = do_request();
+//var_dump($response);
 if ($log_status) {
 	$extra = (isset($response["extra"])) ? $response["extra"] : "";
 	log_request($response["params"], $response["data"], $extra);
@@ -46,8 +47,8 @@ function do_request($method = "POST")
 {
 	global $cors_origin, $log_status, $api_secret, $predefined_requests;
 
-	if (!$api_secret)
-		$api_secret = "mmi_secret";
+//	if (!$api_secret)
+//		$api_secret = "mmi_secret";
 
 	if (("OPTIONS" == $_SERVER["REQUEST_METHOD"]) 
 		&& isset($_SERVER["HTTP_ACCESS_CONTROL_REQUEST_METHOD"])
