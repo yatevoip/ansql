@@ -858,6 +858,24 @@ function clean_xdebug_session()
 		$_SESSION["xdebug"] = "";
 }
 
+function auto_clean_xdebug_session()
+{	
+	global $xdebug_max_memory;
+	
+	if (!isset($xdebug_max_memory) || !strlen($xdebug_max_memory))
+		$xdebug_max_memory = 52428800; //50 MB
+	
+	if (!function_exists("memory_get_usage"))
+		return;
+	
+	$mem_alloc = memory_get_usage();
+	if (isset($_SESSION["xdebug"]) && $mem_alloc > $xdebug_max_memory) {
+		clean_xdebug_session ();
+		$mem_alloc_mb = round($mem_alloc/1024/1024, 3);
+		error_log("PHP Notice: Triggered xdebug cleaner ({$mem_alloc_mb} MB)");
+	}
+}
+
 function config_globals_from_session()
 {
 	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags, $debug_filters;
