@@ -1694,7 +1694,7 @@ class Model
 	 * @param $verifications Array with conditions trying to specify if this object can be modified or not
 	 * @return Array(BOOL value, String, Array, Int), boolean markes whether the update succeeded or not, String is a default message that might be printed, Array with name of fields there was a problem with, Int shows the number of affected rows
 	 */
-	public function update($conditions = array(), $verifications = array())
+	public function update($conditions = array(), $verifications = array(), $keep_log = true)
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 
@@ -1770,7 +1770,8 @@ class Model
 			if ($affected != 1)
 				$message .= 's';
 			$update_log = "updated ".$this->getNameInLogs().": $update_log $where";
-			self::writeLog($update_log,$query);
+			if ($keep_log === true)
+				self::writeLog($update_log,$query);
 			return array(true,$message,array(),$affected);
 		}
 	}
