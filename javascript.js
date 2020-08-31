@@ -332,7 +332,9 @@ function show_docs(category_id, comment_id)
 		iframe_doc.getElementById(document.last_comment_id+"_id").className = "docs_lost_focus";
 
 	/* set the new last_reference_id */
-	document.last_comment_id = comment_id;
+	document.last_comment_id = category_id;
+	if (iframe_doc.getElementById(comment_id+"_id"))
+		document.last_comment_id = comment_id;
 
 	show("iframe_param");
 	show("docs_iframe");
@@ -417,12 +419,33 @@ function show_hide_docs(category_id, comment_id)
 	window.scroll(0,0);
 }
 
-function resize_iframe(obj) 
+/**
+ * Resize iframe and optionally scroll it to the specified element.
+ * @param obj Object. The object to be resized based on parent page element with id "page_id".
+ * @param scroll_to String. Id of the element to scroll to. Default is null.
+ */
+function resize_iframe(obj, scroll_to = null) 
 {
    	obj.style.height = document.getElementById("page_id").scrollHeight-47 + 'px';
+	
+	if (scroll_to === null)
+		return;
+	
+	var iframe = document.getElementById('iframe_param');
+	var iframe_doc = get_iframe_doc(iframe);
+	var iframe_win = get_iframe_win(iframe);
+	var element = iframe_doc.getElementById(scroll_to);
+	if (element) 
+		iframe_win.scroll(0, get_offset_top(element));
 }
 
-function resize_left_iframe(obj, elem)
+/**
+ * Resize iframe and optionally scroll it to the specified element.
+ * @param obj Object. The object to be resized.
+ * @param elem String. The Id of the iframe element based on which the iframe height is adjusted. If not found, iframe height is set to 110px.
+ * @param scroll_to String. Id of the iframe element to scroll to. Default is null.
+ */
+function resize_left_iframe(obj, elem, scroll_to = null)
 {
 	var iframe = document.getElementById('left_iframe');
 	var iframe_doc = get_iframe_doc(iframe);
@@ -430,6 +453,15 @@ function resize_left_iframe(obj, elem)
 		obj.style.height = iframe_doc.getElementById(elem).scrollHeight + 'px';
 	else
 		obj.style.height = "110px";
+	
+	if (scroll_to === null)
+		return;
+	
+	var iframe_win = get_iframe_win(iframe);
+	var element = iframe_doc.getElementById(scroll_to);
+	if (element) 
+		iframe_win.scroll(0, get_offset_top(element));
+	
 }
 
 function closeFrame() {
