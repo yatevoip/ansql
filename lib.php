@@ -6932,7 +6932,6 @@ function get_file_properties($path)
 		if (isset($opts["posix_func"]) && function_exists($opts["posix_func"])) {
 			$res = call_user_func($opts["posix_func"],$opts["posix_func_param"]);
 			if (isset($res["name"])) {
-				print "da";
 				$file_properties[$param] = $res["name"];
 				continue;
 			}
@@ -6949,6 +6948,20 @@ function get_file_properties($path)
 	}
 	
 	return $file_properties;
+}
+
+function remove_dir($path) 
+{
+	$files = glob($path . '/*');
+	if (!$files)
+		return;
+	
+	foreach ($files as $file) {
+		is_dir($file) ? remove_dir($file) : unlink($file);
+	}
+	rmdir($path);
+
+	return;
 }
 
 ?>
