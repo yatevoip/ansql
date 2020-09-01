@@ -6884,4 +6884,71 @@ function auto_return_button($button_name = "Return", $container_div = true, $ali
 	
 	return_button(null, null, $alignment, $button_name, $container_div, $css, $onclick);
 }
+
+/*
+ * Returns the properties of a directory/file (permissions, owner, group)
+ * @param $path String. Path to the desired directory/file
+ * @return array of file properties if path is valid, otherwise return null.
+ */
+function get_file_properties($path)
+{
+	if (!file_exists($path))
+		return null;
+	
+	$file_params = array(
+		"permissions" => array(
+			"bash_output_index" => 0
+		),
+		"owner" => array(
+			"posix_func" => "posix_getpwuid",
+			"posix_func_param" => fileowner($path),
+			"bash_output_index" => 2
+		), 
+		"group" => array(
+			"posix_func" => "posix_getgrgid",
+			"posix_func_param" => filegroup($path),
+			"bash_output_index" => 3
+		)
+	);
+	
+	//Get the last file/directory from path
+	$split_index = strrpos($path, "/");
+	$file_path = substr($path, 0, $split_index);
+	$file_name = substr($path, intval($split_index) + 1);
+	
+	//Extract file option from ls -l command
+	$command = "cd {$file_path}; ls -l | grep {$file_name}";
+	$output = array();
+	exec($command,$output);
+	$bash_line = null;
+	if (isset($output[0]))
+		$bash_line = preg_replace('/\s+/', ' ', $output[0]);
+	
+	//Default file options
+	$file_properties = array();
+	
+	foreach ($file_params as $param => $opts) {
+		//If posix extension is active, return desired option using posix function
+		if (isset($opts["posix_func"]) && function_exists($opts["posix_func"])) {
+			$res = call_user_func($opts["posix_func"],$opts["posix_func_param"]);
+			if (isset($res["name"])) {
+				print "da";
+				$file_properties[$param] = $res["name"];
+				continue;
+			}
+		}
+		
+		if ($bash_line) {
+			$results = explode(" ", $bash_line);
+			$bash_output_index = $opts["bash_output_index"];
+			$file_properties[$param] = $results[$bash_output_index];
+			continue;
+		}
+	
+		$file_properties[$param] = null;
+	}
+	
+	return $file_properties;
+}
+
 ?>
