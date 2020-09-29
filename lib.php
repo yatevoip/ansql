@@ -6964,4 +6964,46 @@ function remove_dir($path)
 	return;
 }
 
+/**
+ * The function highlights the specify needle in the specified haystack.
+ * @param string $haystack The string in which $needle should be highlighted.
+ * @param string $needle The string that should be highlighted.
+ * @param bool $insensitive The search case type. Default is true. If true case type is insensitive. If false, case type is sensitive.
+ * @param string $match_type Is the type of the match. Possible values: 'starts', 'ends', 'exact' and empty string. Default is empty string. <br>
+ *	empty string -> is the default value. Matches the string everywhere inside the haystack. (ex. EIR will be highlighted in 'theirs') <br>
+ *	'starts' -> search in haystack the string that starts with the specified needle. (ex. 'param' will be highlighted both in 'param' as in 'params') <br>
+ *	'ends' -> search in haystack the string that ends with the specified needle <br>
+ *	'exact' -> search in haystack the exact needle string. (ex. EIR won't be highlighted in 'theirs')
+ * @param string $bg_color The background-color to apply where the $needle is found. Default is '#76FBF5'.
+ * @return string The inputed $haystack string, highlighted where $needle was found. 
+ */
+function highlight($haystack, $needle, $insensitive = true, $match_type = "", $bg_color = "#76FBF5")
+{
+	$case = ($insensitive) ? "/i" : "/";
+	$words = array();
+	preg_match_all("/".$needle.$case, $haystack, $words);
+	$result = $haystack;
+	$found_words = array_unique($words[0]);
+	foreach($found_words as $word) {
+		//do not highlight strings inside <a> html tag links
+		$search = "/<a[\S\s]+?<\/a>(*SKIP)(*FAIL)|";
+		switch($match_type) {
+			case "starts":
+				$search .= "\b".$word."/";
+				break;
+			case "ends":
+				$search .= $word."\b/";
+				break;
+			case "exact":
+				$search .= "\b".$word."\b/";
+				break;
+			default:
+				$search .= $word."/";
+		}
+		
+		$result = preg_replace($search, "<span style='background-color:".$bg_color.";'>".$word."</span>", $result);
+	}
+	return $result;
+}
+
 ?>
