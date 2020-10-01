@@ -6981,12 +6981,18 @@ function highlight($haystack, $needle, $insensitive = true, $match_type = "", $b
 {
 	$case = ($insensitive) ? "/i" : "/";
 	$words = array();
+	$needle = preg_quote($needle, '/');
 	preg_match_all("/".$needle.$case, $haystack, $words);
 	$result = $haystack;
+	
+	if (!isset($words[0]))
+		return $result;
 	$found_words = array_unique($words[0]);
 	foreach($found_words as $word) {
 		//do not highlight strings inside <a> html tag links
 		$search = "/<a[\S\s]+?<\/a>(*SKIP)(*FAIL)|";
+		$original_word = $word;
+		$word = preg_quote($word, '/');
 		switch($match_type) {
 			case "starts":
 				$search .= "\b".$word."/";
@@ -7001,7 +7007,7 @@ function highlight($haystack, $needle, $insensitive = true, $match_type = "", $b
 				$search .= $word."/";
 		}
 		
-		$result = preg_replace($search, "<span style='background-color:".$bg_color.";'>".$word."</span>", $result);
+		$result = preg_replace($search, "<span style='background-color:".$bg_color.";'>".$original_word."</span>", $result);
 	}
 	return $result;
 }
