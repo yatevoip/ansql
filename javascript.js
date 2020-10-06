@@ -433,13 +433,20 @@ function show_hide_docs(category_id, comment_id)
 }
 
 /**
- * Resize iframe and optionally scroll it to the specified element.
- * @param obj Object. The object to be resized based on parent page element with id "page_id".
+ * Resize iframe to fit page size and optionally scroll iframe content to the specified element.
+ * @param obj Object. The object to be resized based on parent page element with id "page_id" or on window size.
  * @param scroll_to String. Id of the element to scroll to. Default is null.
  */
 function resize_iframe(obj, scroll_to = null) 
 {
-   	obj.style.height = document.getElementById("page_id").scrollHeight-47 + 'px';
+	var win_height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+	var pag_scroll = document.getElementById("page_id").scrollHeight-47;
+	
+	if ( pag_scroll < win_height-250) {
+		obj.style.height = win_height-250 + 'px';
+	} else {
+		obj.style.height = pag_scroll + 'px';
+	}
 	
 	if (scroll_to === null)
 		return;
