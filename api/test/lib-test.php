@@ -19,6 +19,7 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 {
 	// for tests purpose use the next line and in terminal 'ngrep -d lo -W byline host 127.0.0.1 and port 80'
 	// $_SERVER['HTTP_HOST'] = '127.0.0.1';
+	$_SERVER['REQUEST_SCHEME'] = "http";
 	$url = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] .
 		preg_replace('/\/test\/.*/', '/', $_SERVER["REQUEST_URI"]) . $url;
 	$curl = curl_init($url);

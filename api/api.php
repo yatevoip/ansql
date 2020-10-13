@@ -31,11 +31,25 @@ if (isset($response["data"])) {
 
 function process_request($req, $params)
 {
-	if (!stream_resolve_include_path("api/" . $req . ".php"))
-		return build_error(401, "Request '$req' not implemented!");
-
-	require_once "api/" . $req . ".php";
-	$res = call_user_func($req, $params);
+	// in case POST/PUT type of HTTP requests was used, rename them to mare readable add_ / edit_ ..
+	// GET and DELETE are clear enough
+	$renamed_req = str_replace(array("post_", "put_", "delete_"), array("add_", "edit_", "del_"), $req);
+	$filename = "api/requests/" . $renamed_req . ".php";
+	if (stream_resolve_include_path($filename)) {
+		$req = $renamed_req;
+	} else {
+		$filename = "api/requests/" . $req . ".php";
+		if (!stream_resolve_include_path($filename))
+			return build_error(405, "Method not allowed");
+	}
+	
+	require_once $filename;
+	
+	// in some cases function with same name as request, exits in one of the included libs
+	// before calling function with same name as request, see if api_$req exists 
+	$func_name = (is_callable("api_".$req)) ? "api_".$req : $req;
+	
+	$res = call_user_func($func_name, $params);
 	$log_params = array("request"=>$req,"params"=>$params);
 	if ($res[0])
 		return build_success($res[1], $log_params);
@@ -95,16 +109,32 @@ function do_request($method = "POST")
 	 *	at least one number, letter or literal '_' or '-'       [:alnum:]_-]
 	 *  0-2 patterns consisting of a literal '/' followed by any number of
 	 *  any characters except '/'                               (\/([^\/]*))?(\/([^\/]*))?
-	 *  end of pattern                                          $ 					
+	 *  end of pattern  
+	 * 
+	 * Example of parsing when uri is /v1 -- mmi/api/v1
+	 * array(2) {
+	 *  [0]=>
+	 *  string(3) "/v1"
+	 *  [1]=>
+	 *  string(2) "v1"
+	 * }
+	 *                                         $ 					
 	 */
-	if (!preg_match('/^\/([a-z][[:alnum:]_]*)\/([[:alnum:]_-]+)(\/([^\/]*))?(\/([^\/]*))?$/', $_SERVER["PATH_INFO"], $match))
-		return build_error(400, "Invalid URI");
+	
+	// see the type of URI that was used: if long uri (mmi/api/v1/equipment/12 or mmi/api/v1/no  ) or short uri ( mmi/api/v1 - common for all requests )
+	if (!preg_match('/^\/([a-z][[:alnum:]_]*)\/([[:alnum:]_-]+)(\/([^\/]*))?(\/([^\/]*))?$/', $_SERVER["PATH_INFO"], $match)) {
+		
+		if (!preg_match('/^\/([a-z][[:alnum:]_]*)(\/([^\/]*))?$/', $_SERVER["PATH_INFO"], $match)) {
+			return build_error(400, "Invalid URI");
+		}
+
+	}
 
 	if ($match[1] != "v1")
 		return build_error(501, "Unsupported API version");
 
 	/*
-	 * Example: 
+	 * Example: ump
 	 * $predefined_requests = array(
 	 *     "broadcast" => array(
 	 *          "np" => array(
@@ -121,7 +151,7 @@ function do_request($method = "POST")
 			"method"    => $_SERVER["REQUEST_METHOD"],
 			"ctype"     => $ctype,
 			"object"    => @$match[4],
-			"id"		=> @$match[6],
+			"id"	    => @$match[6],
 			"params"    => array()
 		);
 		parse_str($_SERVER["QUERY_STRING"], $uri["params"]);
@@ -131,29 +161,43 @@ function do_request($method = "POST")
 			return build_error(405, "Method Not Allowed");
 
 		foreach ($predefined_requests as $handling=>$types) {
+			
 			foreach ($types as $type=>$methods) {
-				if ($type!=$match[2])
+				
+				// in case type of api was not specified in the path, try to guess to type 
+				// WE SHOULD NOT have same request name in multiple types
+				if (isset($match[2]) && $type!=@$match[2])
 					continue 2;
 
-				$req = "get_api_nodes";
+				$cb = "get_api_nodes";
 				if (isset($methods["cb_get_api_nodes"]))
-					$req = str_replace ("custom_","",$methods["cb_get_api_nodes"]);
+					$cb = str_replace ("custom_","",$methods["cb_get_api_nodes"]);
 
-				if (!stream_resolve_include_path("api/" . $req . ".php"))
-					return build_error(401, "Request '$req' not implemented!");
-
-				require_once "api/" . $req . ".php";
-
-				// get the nodes where the requests will be send to
-				$ips = call_user_func_array($req, array($handling,$type));
+				// get the ips of the nodes where the requests will be sent to
+				$ips = call_user_func_array($cb, array($handling,$type));
 
 				// build the format for the new requests to be send to API using a custom function or the default function
 				if (isset($methods["cb_format_params"]))
 					$params_request = call_user_func_array(str_replace("custom_","",$methods["cb_format_params"]), array($handling,$type,$uri));
 				else
 					$params_request = format_api_request($handling,$type,$uri);
+
+				
+				// if node_type was not specified in uri, make sure it was added in JSON, otherwise all requests will be prisoners 					
+				$node = null;
+				if (isset($match[2]))
+					$node = $match[2];
+				elseif (array_key_exists("node_type", $params_request))
+					$node = $params_request["node_type"];
+				
+				if (!$node || $node!=$type)
+					continue 2;
+				
+				$params_request["node"] = $node;
+				
 				if (isset($params_request["code"]))
 					return build_error($params_request["code"],$params_request["message"]);
+				
 				// return the response from API after running the custom function to process the API requests
 				if (isset($methods["cb_run_request"]))
 					return call_user_func_array(str_replace("custom_","",$methods["cb_run_request"]), array($handling,$type,$ips,$params_request));
@@ -165,7 +209,7 @@ function do_request($method = "POST")
 	}
 
 	$uri = array(
-		"object"	=> $match[2],
+		"object"	=> @$match[2],
 		"id"		=> @$match[4],
 		"params"	=> array()
 	);
@@ -191,7 +235,7 @@ function valid_ctype($ctype)
 
 function do_post_put($ctype, $method, $uri)
 {
-	list($method, $input) = decode_post_put($ctype, $method, $uri);
+	list($method, $input, $node_type) = decode_post_put($ctype, $method, $uri);
 
 	if ($input === null)
 		return array("code"=>415, "message"=>"Unparsable JSON content");

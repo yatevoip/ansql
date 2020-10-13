@@ -10,36 +10,45 @@ function translate_error_to_code($res)
 		return array(true, "0", $res[1]); // success
 	
 	if (isset($res[1])) {
-		if (substr($res[1], -12)==" is required" || substr($res[1], -9)==" not set.")
-			return array(false, "402", "Missing or empty parameters ". $res[1]);
+		if (strpos($res[1], " is required")!==false || strpos($res[1]," not set.")!==false)
+			return array(false, "402", "Missing or empty parameters. ". $res[1]);
+		elseif (strpos($res[1], "is already defined")!==false)
+			return array(false, "403", "Duplicate entity. ". $res[1]);
+		elseif (strpos($res[1], "invalid")!==false)
+			return array(false, "401", "Invalid parameter(s) value. ".$res[1]);
 		else
-			return array(false, "500", "Internal Server Error: database generated: ".$res[1] );
+			return array(false, "400", "Generic error. ".$res[1] );
 	}
 }
 
-function build_success($data, $params, $extra="")
+function build_success($data, $params, $extra=null)
 {
-	return array(
+	$res = array(
 		"code"		=> 200,
 		"message"	=> "OK",
 		"params"	=> $params,
-		"data"		=> array_merge(array("code" => 0), $data),
-		"extra"     => $extra
+		"data"		=> array_merge(array("code" => 0), $data)
 	);
+	if ($extra)
+		$res["extra"] = $extra;
+	return $res;
 }
 
-function build_error($code, $message, $params = array(), $extra = "")
+function build_error($code, $message, $params=array(), $extra=null)
 {
-	return array(
+	$res = array(
 		"code"		=> $code, 
 		"message"	=> $message,
 		"params"	=> $params,
 		"data" 		=> array(
 			"code"      => $code,
-			"message"   => $message,
-			"extra"     => $extra // keeps more details of the broadcast aggregate data
+			"message"   => $message
 		)
 	);
+	if ($extra)
+		$res["data"]["extra"] = $extra; // keeps more details of the broadcast aggregate data
+	return $res;
+	
 }
 
 function log_request($inp, $out = null, $extra = "")
@@ -82,9 +91,9 @@ function decode_post_put($ctype, $method, $uri)
 			return array(null, null);
 		if (isset($input["request"])) {
 			if (isset($input["params"]))
-				return array($input["request"], $input["params"]);
+				return array($input["request"], $input["params"],@$input["node_type"]);
 			else
-				return array($input["request"], array());
+				return array($input["request"], array(),@$input["node_type"]);
 		}
 	} else {
 		if ($method == "PUT") {
@@ -109,12 +118,14 @@ function decode_post_put($ctype, $method, $uri)
  */ 
 function format_api_request($handling, $type, $input)
 {
+	global $requests_with_set;
+	
 	$ctype = $input["ctype"];
 	$method = $input["method"];
 	$output = array(); 
 
 	if ($method == "POST" || $method == "PUT") {
-		list($output["request"], $output["params"]) =
+		list($output["request"], $output["params"], $output["node_type"]) =
 			decode_post_put($ctype, $method, $input);
 		if ($output["params"] === null)
 			return array("code"=>415, "message"=>"Unparsable JSON content");
@@ -122,21 +133,19 @@ function format_api_request($handling, $type, $input)
 		$output["request"] = "get_" . $input["object"];
 		$output["params"] = $_GET;
 	} elseif ($method == "DELETE") {
-		$output["request"] = "delete_" . $input["object"];
+		$output["request"] = "del_" . $input["object"];
 		$output["params"] = $input["params"];
 	}
-
-	if ($type == "np") {
-		$output["node"] = "npdb";
+	
+	if (in_array($type, $requests_with_set)) {
+		//$output["node"] = "npdb";
 		$req = explode("_", $output["request"]); 
 		$method = strtoupper($req[0]);
 
 		if ($method == "PUT" || $method == "POST")
 			$output["request"] = "set_".$input["object"];
-		if ($method == "DELETE")
-			$output["request"] = "del_".$input["object"];
 	}
-
+	
 	// for npdb there are no ids, but will be used for other cases in the future
 	if (isset($input["id"]))
 		$output[$input["object"] . "_id"] = $input["id"];
@@ -186,7 +195,7 @@ function run_api_requests($handling, $type, $equipment, $request_params)
 
 			// GET requests will not be broadcast to all NPDB nodes, unless $out["params"]["broadcast"] = true
 			// it is assumed that all the NPDB nodes are kept in synchronization
-			if ($type == "np" && substr($out["request"],0,3) == "get" && (!isset($out["params"]["broadcast"]) || !$out["params"]["broadcast"]))
+			if (substr($out["request"],0,3) == "get" && (!isset($out["params"]["broadcast"]) || !$out["params"]["broadcast"]))
 				break;	
 		}
 	}
