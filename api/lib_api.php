@@ -88,12 +88,12 @@ function decode_post_put($ctype, $method, $uri)
 	if ($ctype == "application/json" || $ctype == "text/x-json") {
 		$input = json_decode(file_get_contents('php://input'), true);
 		if ($input === null)
-			return array(null, null);
+			return array(null, null, null);
 		if (isset($input["request"])) {
 			if (isset($input["params"]))
-				return array($input["request"], $input["params"],@$input["node_type"]);
+				return array($input["request"], $input["params"],@$input["node"]);
 			else
-				return array($input["request"], array(),@$input["node_type"]);
+				return array($input["request"], array(),@$input["node"]);
 		}
 	} else {
 		if ($method == "PUT") {
@@ -108,7 +108,7 @@ function decode_post_put($ctype, $method, $uri)
 		$input = array_merge($input, $uri["params"]);
 	}
 
-	return array(strtolower($method) . "_" . $uri["object"], $input);
+	return array(strtolower($method) . "_" . $uri["object"], $input,@$input["node"]);
 }
 
 /**
@@ -125,7 +125,7 @@ function format_api_request($handling, $type, $input)
 	$output = array(); 
 
 	if ($method == "POST" || $method == "PUT") {
-		list($output["request"], $output["params"], $output["node_type"]) =
+		list($output["request"], $output["params"], $output["node"]) =
 			decode_post_put($ctype, $method, $input);
 		if ($output["params"] === null)
 			return array("code"=>415, "message"=>"Unparsable JSON content");

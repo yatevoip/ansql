@@ -187,8 +187,8 @@ function do_request($method = "POST")
 				$node = null;
 				if (isset($match[2]))
 					$node = $match[2];
-				elseif (array_key_exists("node_type", $params_request))
-					$node = $params_request["node_type"];
+				elseif (array_key_exists("node", $params_request))
+					$node = $params_request["node"];
 				
 				if (!$node || $node!=$type)
 					continue 2;
