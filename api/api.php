@@ -167,7 +167,7 @@ function do_request($method = "POST")
 				// in case type of api was not specified in the path, try to guess to type 
 				// WE SHOULD NOT have same request name in multiple types
 				if (isset($match[2]) && $type!=@$match[2])
-					continue 2;
+					continue;
 
 				$cb = "get_api_nodes";
 				if (isset($methods["cb_get_api_nodes"]))
@@ -181,8 +181,7 @@ function do_request($method = "POST")
 					$params_request = call_user_func_array(str_replace("custom_","",$methods["cb_format_params"]), array($handling,$type,$uri));
 				else
 					$params_request = format_api_request($handling,$type,$uri);
-
-				
+	
 				// if node_type was not specified in uri, make sure it was added in JSON, otherwise all requests will be prisoners 					
 				$node = null;
 				if (isset($match[2]))
@@ -191,10 +190,10 @@ function do_request($method = "POST")
 					$node = $params_request["node"];
 				
 				if (!$node || $node!=$type)
-					continue 2;
+					continue;
 				
 				$params_request["node"] = $node;
-				
+			
 				if (isset($params_request["code"]))
 					return build_error($params_request["code"],$params_request["message"]);
 				
@@ -202,6 +201,13 @@ function do_request($method = "POST")
 				if (isset($methods["cb_run_request"]))
 					return call_user_func_array(str_replace("custom_","",$methods["cb_run_request"]), array($handling,$type,$ips,$params_request));
 
+				// if not all requests are forwarded for this node, verify that this request is set in accepted requests list
+				if (!isset($methods["requests"]) || (!is_array($methods["requests"]) && $methods["requests"]!="*"))
+					return build_error(500,"Internal server error");
+			
+				if (is_array($methods["requests"]) && !in_array($params_request["request"], $methods["requests"]) )
+					return build_error(405, "Method not allowed");
+				
 				// return the response from API after running the default function to process the API requests
 				return run_api_requests($handling,$type,$ips,$params_request);
 			}
