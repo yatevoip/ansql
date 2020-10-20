@@ -27,10 +27,10 @@ function build_success($data, $params, $extra=null)
 		"code"		=> 200,
 		"message"	=> "OK",
 		"params"	=> $params,
-		"data"		=> array_merge(array("code" => 0), $data)
+		"data"		=> array("code" => 0, "answer_list"=>$data)
 	);
 	if ($extra)
-		$res["extra"] = $extra;
+		$res["data"]["extra"] = $extra;
 	return $res;
 }
 
@@ -166,47 +166,91 @@ function run_api_requests($handling, $type, $equipment, $request_params)
 	$message = "";
 	$aggregate_response = array();
 	$have_errors = false;
+	
+	$answer = array();
 	if ($handling == "broadcast") {
 		foreach ($equipment_ips as $management_link) {
 			$equipment_name = $equipment[$management_link];
-
-			$out = array(
-				"node"    => $request_params["node"],
-				"request" => $request_params["request"],
-				"params"  => isset($request_params["params"]) ? $request_params["params"] : array()
-			);
-			$url = "http://$management_link/api.php";
-			$res = make_request($out,$url);
+			$res = send_api_request($request_params,$management_link);
+			
 			// request fails, aggregate the messages and put extra info about the fail/success 
 			if ($res["code"] != 0) {
 				$have_errors = true;
 				$code = $res["code"];
-				$extra_err .= $equipment_name.", ";
-			  	$message .= $equipment_name.": [".$code."]: " .$res["message"]." | ";
+				if (strlen($extra_err))
+					$extra_err .= ", ";
+				$extra_err .= $equipment_name;
+				/* // Not needed. It used a aggregate message 
+				 if (strlen($message))
+					$message .= " | ";
+			  	$message .= $equipment_name.": [".$code."]: " .$res["message"];*/
 			} else {
-				// aggregate the successful requests
-				foreach ($res as $k=>$response) {
+				// Not needed. Used to aggregate the successful requests
+				/*foreach ($res as $k=>$response) {
 					if ($k == "code")
 						continue;
-					$aggregate_response[$k][][$equipment_name] = $response;
-				}
-				$extra_succ .= $equipment_name.", "; 	
-			}
+					//$aggregate_response[$k][][$equipment_name] = $response;
+					$aggregate_response[$k][$equipment_name] = $response;
+				}*/
+				if (strlen($extra_succ))
+					$extra_succ .= ", ";
+				$extra_succ .= $equipment_name; 	
+			} 
+			
+			$answer[] = array_merge(array("equipment_name"=>$equipment_name), $res);
 
 			// GET requests will not be broadcast to all NPDB nodes, unless $out["params"]["broadcast"] = true
 			// it is assumed that all the NPDB nodes are kept in synchronization
-			if (substr($out["request"],0,3) == "get" && (!isset($out["params"]["broadcast"]) || !$out["params"]["broadcast"]))
+			if (substr($request_params["request"],0,3) == "get" && (!isset($request_params["params"]["broadcast"]) || !$request_params["params"]["broadcast"]))
 				break;	
 		}
-	}
+		
+		if ($have_errors) {
+			$extra = "Request ".$request_params["request"]." failed for equipment:  ". $extra_err;
+			if (strlen($extra_succ))
+				$extra .= " succeeded for equipment: ".$extra_succ;
+			/*return build_error($code, $message, $request_params, $extra);*/
+			
+		} else {
 
-	if ($have_errors) {
-		$extra = "Request ".$request_params["request"]." failed for equipment:  ". $extra_err;
-		if (strlen($extra_succ))
-			$extra .= " succeeded for equipment: ".$extra_succ;
-		return build_error($code, $message, $request_params, $extra);
+			$extra .= "Request ".$request_params["request"]." was successfull for equipment: ".$extra_succ;
+			/*return build_success($aggregate_response, $request_params, $extra);*/
+		}
+		
+		return build_success($answer, $request_params, $extra);
+		
+	} elseif ($handling == "failover") {
+		
+		foreach ($equipment_ips as $management_link) {
+			$equipment_name = $equipment[$management_link];
+			$res = send_api_request($request_params,$management_link);
+			
+			// simulate positive response for query_data because actual data registration in UCN is needed to get this answer
+			//if ($equipment_name=="ucn136")
+			//	$res = array("code"=>0, "data_session"=>array("imsi"=>"aaa", "msisdn"=>"aaa", "apn"=>"internet"));
+			
+			// return response from first server that returns a positive response
+			if ($res["code"] === 0) {
+				$answer[] = array_merge(array("equipment_name"=>$equipment_name), $res);
+				return build_success($answer, $request_params, "Request ".$request_params["request"]." was successfull from equipment $equipment_name");
+			}
+		}
+		
+		// return the last received error inside a positive MMI response
+		$answer[] = array_merge(array("equipment_name"=>$equipment_name), $res);
+		return build_success($answer, $request_params, "Request ".$request_params["request"]." failed: ".$res["message"]);
+		
+		/*return build_error($res["code"], $res["message"], $request_params);*/
 	}
+}
 
-	$extra .= "Request ".$request_params["request"]." was successfull for equipment: ".$extra;
-	return build_success($aggregate_response, $request_params, $extra);
+function send_api_request($request_params,$management_link)
+{
+	$out = array(
+		"node"    => $request_params["node"],
+		"request" => $request_params["request"],
+		"params"  => isset($request_params["params"]) ? $request_params["params"] : array()
+	);
+	$url = "http://$management_link/api.php";
+	return make_request($out,$url);	
 }

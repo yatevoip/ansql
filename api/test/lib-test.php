@@ -27,7 +27,7 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 		exit;
 	}
 	if ($print_url)
-		print $url;
+		print "<pre>URL:".$url. "</pre>";
 
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
 	//curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); # maybe needs to be set to 0 or 1 
@@ -64,6 +64,8 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 	curl_setopt($curl,CURLOPT_TIMEOUT,40);
 	curl_setopt($curl,CURLOPT_HEADER, true);
 
+	print "Sent: <pre>$content</pre>";
+	print "Received: ";
 	$ret = curl_exec($curl);
 	if ($ret === false) {
 		print " FAIL";
