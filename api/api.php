@@ -209,7 +209,7 @@ function do_request($method = "POST")
 					return build_error(405, "Method not allowed");
 				
 				// return the response from API after running the default function to process the API requests
-				return run_api_requests($handling,$type,$ips,$params_request);
+				return run_api_requests($handling,$type,$ips,$params_request,$methods);
 			}
 		}
 	}

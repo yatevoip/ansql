@@ -154,10 +154,12 @@ function format_api_request($handling, $type, $input)
 /**
  * Depending on set $handling make request to $equipment and aggregate response (if needed)
  * @param $handling String: broadcast, failover, proxy etc
- * $equipment - list of IPs->name equipment returned from get_api_nodes
- * $request_params - returned from format_api_request
+ * @param $node_type
+ * @param $equipment - list of IPs->name equipment returned from get_api_nodes
+ * @param $request_params - returned from format_api_request
+ * @param $methods - array that customizes handling for this node_type -- from $predefined_requests
  */ 
-function run_api_requests($handling, $type, $equipment, $request_params)
+function run_api_requests($handling, $node_type, $equipment, $request_params, $methods=array())
 {
 	$equipment_ips = array_keys($equipment);
 
@@ -201,7 +203,8 @@ function run_api_requests($handling, $type, $equipment, $request_params)
 
 			// GET requests will not be broadcast to all NPDB nodes, unless $out["params"]["broadcast"] = true
 			// it is assumed that all the NPDB nodes are kept in synchronization
-			if (substr($request_params["request"],0,3) == "get" && (!isset($request_params["params"]["broadcast"]) || !$request_params["params"]["broadcast"]))
+			$cb = (isset($methods["cb_exception_to_broadcast"])) ? $methods["cb_exception_to_broadcast"] : "exception_to_broadcast";
+			if (is_callable($cb) && call_user_func_array($cb, array($request_params,$handling,$node_type)))
 				break;	
 		}
 		
@@ -253,4 +256,14 @@ function send_api_request($request_params,$management_link)
 	);
 	$url = "http://$management_link/api.php";
 	return make_request($out,$url);	
+}
+
+function exception_to_broadcast($request_params,$handling,$node_type)
+{
+	// GET requests will not be broadcast to all NPDB nodes, unless $out["params"]["broadcast"] = true
+	// it is assumed that all the NPDB nodes are kept in synchronization
+	if (substr($request_params["request"],0,3) == "get" && (!isset($request_params["params"]["broadcast"]) || !$request_params["params"]["broadcast"]))
+		return true;
+
+	return false;
 }
