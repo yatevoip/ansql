@@ -16,7 +16,6 @@
 include_once "../../api/api_includes.php";
 
 $response = do_request();
-//var_dump($response);
 if ($log_status) {
 	$extra = (isset($response["extra"])) ? $response["extra"] : "";
 	log_request($response["params"], $response["data"], $extra);
@@ -31,6 +30,7 @@ if (isset($response["data"])) {
 
 function process_request($req, $params)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	// in case POST/PUT type of HTTP requests was used, rename them to mare readable add_ / edit_ ..
 	// GET and DELETE are clear enough
 	$renamed_req = str_replace(array("post_", "put_", "delete_"), array("add_", "edit_", "del_"), $req);
@@ -39,8 +39,10 @@ function process_request($req, $params)
 		$req = $renamed_req;
 	} else {
 		$filename = "api/requests/" . $req . ".php";
-		if (!stream_resolve_include_path($filename))
+		if (!stream_resolve_include_path($filename)) {
+			Debug::xdebug("api", "Filename $filename doesn't exist.");
 			return build_error(405, "Method not allowed");
+		}
 	}
 	
 	require_once $filename;
@@ -59,6 +61,8 @@ function process_request($req, $params)
 
 function do_request($method = "POST")
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
+
 	global $cors_origin, $log_status, $api_secret, $predefined_requests;
 
 //	if (!$api_secret)
@@ -105,11 +109,11 @@ function do_request($method = "POST")
 	 *  starts with literal '/'
 	 *	1 lowercase letter                                      [a-z]
 	 *	any number of numbers, letters or literal '_'           [[:alnum:]_]
-	 *	literal '/'
+	 *	literal char                                            '/'
 	 *	at least one number, letter or literal '_' or '-'       [:alnum:]_-]
 	 *  0-2 patterns consisting of a literal '/' followed by any number of
 	 *  any characters except '/'                               (\/([^\/]*))?(\/([^\/]*))?
-	 *  end of pattern  
+	 *  end of pattern                                          $  
 	 * 
 	 * Example of parsing when uri is /v1 -- mmi/api/v1
 	 * array(2) {
@@ -127,17 +131,18 @@ function do_request($method = "POST")
 		if (!preg_match('/^\/([a-z][[:alnum:]_]*)(\/([^\/]*))?$/', $_SERVER["PATH_INFO"], $match)) {
 			return build_error(400, "Invalid URI");
 		}
-
 	}
 
 	if ($match[1] != "v1")
 		return build_error(501, "Unsupported API version");
 
+	Debug::xdebug("api", "The relevant part from the URI that was taken from 'PATH_INFO' (".$_SERVER["PATH_INFO"]."): \n".print_r($match,true));
+	
 	/*
-	 * Example: ump
+	 * Example: npdb
 	 * $predefined_requests = array(
 	 *     "broadcast" => array(
-	 *          "np" => array(
+	 *          "npdb" => array(
 	 *             "cb_get_api_nodes" => "custom_get_npdb_nodes", // if missing a default  get_api_nodes() will be called 
 	 *             "cb_format_params" => "custom_format_params",  // if missing a default function format_api_request() will be called
 	 *             "cb_run_request" => "custom_apply_request",    // if missing a default function run_api_requests() will be called
@@ -156,9 +161,13 @@ function do_request($method = "POST")
 		);
 		parse_str($_SERVER["QUERY_STRING"], $uri["params"]);
 
+		Debug::xdebug("api", "The builded data from the URI that will be used with the predefined requests: \n".print_r($uri,true));
+
 		$methods_allowed = array("GET","POST","PUT","DELETE");
-		if (!in_array($_SERVER["REQUEST_METHOD"], $methods_allowed))
+		if (!in_array($_SERVER["REQUEST_METHOD"], $methods_allowed)) {
+			Debug::xdebug("api", "The REQUEST_METHOD received is not allowed: ".$_SERVER["REQUEST_METHOD"]);
 			return build_error(405, "Method Not Allowed");
+		}
 
 		foreach ($predefined_requests as $handling=>$types) {
 			
@@ -193,7 +202,9 @@ function do_request($method = "POST")
 					continue;
 				
 				$params_request["node"] = $node;
-			
+
+				Debug::xdebug("api", "The parameters of the request: \n".print_r($params_request,true));
+
 				if (isset($params_request["code"]))
 					return build_error($params_request["code"],$params_request["message"]);
 				
@@ -205,8 +216,10 @@ function do_request($method = "POST")
 				if (!isset($methods["requests"]) || (!is_array($methods["requests"]) && $methods["requests"]!="*"))
 					return build_error(500,"Internal server error");
 			
-				if (is_array($methods["requests"]) && !in_array($params_request["request"], $methods["requests"]) )
+				if (is_array($methods["requests"]) && !in_array($params_request["request"], $methods["requests"]) ) {
+					Debug::xdebug("api", "Request ".$params_request["request"]." is not set in the predefined requests: \n".print_r($methods["requests"],true));
 					return build_error(405, "Method not allowed");
+				}
 				
 				// return the response from API after running the default function to process the API requests
 				return run_api_requests($handling,$type,$ips,$params_request,$methods);
@@ -241,6 +254,7 @@ function valid_ctype($ctype)
 
 function do_post_put($ctype, $method, $uri)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	list($method, $input, $node_type) = decode_post_put($ctype, $method, $uri);
 
 	if ($input === null)
@@ -254,6 +268,7 @@ function do_post_put($ctype, $method, $uri)
 
 function do_get($ctype, $uri)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	$input = $_GET;
 	if ($uri["id"])
 		$input[$uri["object"] . "_id"] = $uri["id"];
@@ -262,6 +277,7 @@ function do_get($ctype, $uri)
 
 function do_delete($ctype, $uri)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	$input = array();
 	if ($uri["id"])
 		$input[$uri["object"] . "_id"] = $uri["id"];

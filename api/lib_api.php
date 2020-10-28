@@ -85,6 +85,7 @@ function log_request($inp, $out = null, $extra = "")
 
 function decode_post_put($ctype, $method, $uri)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	if ($ctype == "application/json" || $ctype == "text/x-json") {
 		$input = json_decode(file_get_contents('php://input'), true);
 		if ($input === null)
@@ -114,10 +115,11 @@ function decode_post_put($ctype, $method, $uri)
 /**
  * Return the actual format of the request that needs to be sent to equipment 
  * @param $handling String: broadcast, failover, proxy etc
- * @param $type String: np, subscriber etc
+ * @param $type String: npdb, subscriber etc
  */ 
 function format_api_request($handling, $type, $input)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	global $requests_with_set;
 	
 	$ctype = $input["ctype"];
@@ -149,6 +151,8 @@ function format_api_request($handling, $type, $input)
 	// for npdb there are no ids, but will be used for other cases in the future
 	if (isset($input["id"]))
 		$output[$input["object"] . "_id"] = $input["id"];
+
+	Debug::xdebug("api", "Builded params with the format of the request: \n".print_r($output,true));
 	return $output;
 }
 /**
@@ -161,6 +165,7 @@ function format_api_request($handling, $type, $input)
  */ 
 function run_api_requests($handling, $node_type, $equipment, $request_params, $methods=array())
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	$equipment_ips = array_keys($equipment);
 
 	$extra = "";
@@ -173,6 +178,7 @@ function run_api_requests($handling, $node_type, $equipment, $request_params, $m
 	if ($handling == "broadcast") {
 		foreach ($equipment_ips as $management_link) {
 			$equipment_name = $equipment[$management_link];
+			Debug::xdebug("api", "Type of request: 'broadcast' send to equipment '$management_link' with request_params: \n".print_r($request_params,true));
 			$res = send_api_request($request_params,$management_link);
 			
 			// request fails, aggregate the messages and put extra info about the fail/success 
@@ -226,6 +232,7 @@ function run_api_requests($handling, $node_type, $equipment, $request_params, $m
 		
 		foreach ($equipment_ips as $management_link) {
 			$equipment_name = $equipment[$management_link];
+			Debug::xdebug("api", "Type of request: 'failover' send to equipment: '$management_link' with request_params: \n".print_r($request_params,true));
 			$res = send_api_request($request_params,$management_link);
 			
 			// simulate positive response for query_data because actual data registration in UCN is needed to get this answer
@@ -249,6 +256,7 @@ function run_api_requests($handling, $node_type, $equipment, $request_params, $m
 
 function send_api_request($request_params,$management_link)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	$out = array(
 		"node"    => $request_params["node"],
 		"request" => $request_params["request"],
