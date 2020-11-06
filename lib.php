@@ -5193,6 +5193,12 @@ function load_page($page, $timeout=0)
 		header("Location: $page");
 }
 
+/**
+ * Builds link substituting last current link position (after "/") with given page path; 
+ * example: build_link('main.php?module=home&method=home')  =>  'http(s)://ip:port/{$_SERVER["PHP_SELF"] without last elem}/main.php?module=home&method=home'
+ * @param string $page The page path for which the link is built.
+ * @return string The builded link.
+ */
 function build_link($page)
 {
 	if (substr($page,0,7)=="http://" || substr($page,0,8)=="https://")
@@ -5207,7 +5213,7 @@ function build_link($page)
 		$page = $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$current;
 	else
 		$page = $_SERVER["SERVER_NAME"].$current;
-	$page = (!isset($_SERVER["HTTPS"])) ? "http://".$page : "https://".$page;
+	$page = get_request_protocol()."://".$page;
 
 	return $page;
 }
