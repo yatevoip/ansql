@@ -15,10 +15,20 @@
  */ 
 include_once "../../api/api_includes.php";
 
+// enable dump_xdebug in session if debug is set
+if (isset($debug))
+	$_SESSION["dump_xdebug"] = "on";
+
 $response = do_request();
 if ($log_status) {
 	$extra = (isset($response["extra"])) ? $response["extra"] : "";
 	log_request($response["params"], $response["data"], $extra);
+}
+
+if (isset($debug)) {
+	Debug::xdebug("api", "The response of the request when debug is activated from api_config.php: \n".print_r($response["data"],true));
+	// we don't want to register other debug after request is registered in file
+	unset($_SESSION["dump_xdebug"],$_SESSION["xdebug"]);
 }
 
 $mess = str_replace("\n","", $response["message"]);
