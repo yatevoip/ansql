@@ -1794,7 +1794,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print '>'.$field_comment;
 			
 			//To use toggle-password-fa make sure that your project has font-awsome
-			if ($display==="password-toggle-fa") {
+			if ($display==="password-toggle-fa" && is_addon("font-awesome")) {
 				$toggle_style = "cursor:pointer; position:relative; z-index:2; margin-left:-30px; color:blue; font-size:15px;";
 				print '<span id="'.$form_identifier.$field_name.'_toggle" style="'.$toggle_style.'" class="fa fa-eye-slash password-toggle-fa" onClick="display_password(this);"></span>';
 			} else {
@@ -4143,8 +4143,8 @@ function return_button($method=null, $_module=null, $align="right", $name="Retur
 	global $module;
 
 	$fa_icon = "";
-	if (is_dir(__DIR__ . "/../addons/font-awesome-4.7.0/")) {
-		$fa_icon = "<i class='fa  fa-arrow-left $css' aria-hidden='true'>&nbsp;</i>";
+	if (is_addon("font-awesome")) {
+		$fa_icon = "<i class='fa fa-arrow-left $css' aria-hidden='true'>&nbsp;</i>";
 	}
 	
 	if ($onclick) {
@@ -5008,7 +5008,7 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 			$res .= '>';
 			
 			//To use toggle-password-fa make sure that your project has font-awsome
-			if ($display==="password-toggle-fa") {
+			if ($display==="password-toggle-fa" && is_addon("font-awesome")) {
 				$toggle_style = "cursor:pointer; position:relative; z-index:2; margin-left:-15px; color:blue; font-size:15px;";
 				$res .= '<span id="'.$form_identifier.$field_name.'_toggle" style="'.$toggle_style.'" class="fa fa-eye-slash password-toggle-slash" onClick="display_password(this);"></span>';
 			} else {
@@ -6072,8 +6072,8 @@ function open_html_iframe()
 	print "<html>";
 	print "<head>";
 	print "<meta http-equiv='content-type' content='text/html; charset=UTF-8'/>";
-	if (is_dir(__DIR__ . "/../addons/font-awesome-4.7.0/")) {
-		print "<link type=\"text/css\" rel=\"stylesheet\" href=\"addons/font-awesome-4.7.0/css/font-awesome.min.css\"/>";
+	if ($addon_path=is_addon("font-awesome")) {
+		print "<link type=\"text/css\" rel=\"stylesheet\" href=\"".$addon_path."/css/font-awesome.min.css\"/>";
 	}
 	print "<link type=\"text/css\" rel=\"stylesheet\" href=\"" . set_file_version("css/main.css") . "\" />";
 	print "<link type=\"text/css\" rel=\"stylesheet\" href=\"" . set_file_version("css/wizard.css") . "\" />";
@@ -7016,6 +7016,30 @@ function highlight($haystack, $needle, $insensitive = true, $match_type = "", $b
 		$result = preg_replace($search, "<span style='background-color:".$bg_color.";'>".$original_word."</span>", $result);
 	}
 	return $result;
+}
+
+/**
+ * 
+ * Verify if project hhas searched addon
+ * @param string $adddon Addon partial or full name for addon folder
+ * @return boolean|string Return false if there is no addon containing provided string as name
+ */
+function is_addon($addon)
+{
+	if (!is_dir(__DIR__ . "/../addons"))
+		return false;
+	
+	$addons = scandir(__DIR__ . "/../addons/");
+	
+	$matches = preg_grep("/".$addon."/",$addons);
+	if (!count($matches))
+		return false;
+	
+	$matches = array_values($matches);
+	
+	$path = "addons/" . $matches[0];
+	
+	return $path;
 }
 
 ?>
