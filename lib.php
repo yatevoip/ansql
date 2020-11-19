@@ -1673,7 +1673,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				}
 			}
 			$autocall = array();
-			print '<table class="checkbox-group" id="'.$form_identifier.$field_name.'">';
+			print '<div style="display: inline-block;" class="checkbox-group">';
+			print '<table class="checkbox-group" style="margin-right: 5px;" id="'.$form_identifier.$field_name.'">';
 			foreach ($checkboxes as $row => $content) {
 				print '<tr class="checkbox-group">';
 				foreach ($content as $col => $opt) {
@@ -1697,7 +1698,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					$autocall = array($field_name, $opt, $form_identifier);
 				}
 			}
-			print '</table><div style="float:right;">'.$field_comment.'</div>';
+			print '</table>';
+			print '<span style="float:right" class="checkbox-group">'.$field_comment.'</span>';
+			print '</div>';
 			
 			if (!empty($autocall)) {
 				call_user_func_array("autocall_js", $autocall);
