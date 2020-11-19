@@ -1976,7 +1976,9 @@ function comment_field($field_format, $form_identifier, $field_name, $category_i
 
 				$comment = $field_format["comment"];
 
-				if (is_file("images/question.jpg"))
+				if (is_addon("font-awesome"))
+					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+				else if (is_file("images/question.jpg"))
 					$res .= '&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"/>';
 				else
 					$res .= '&nbsp;&nbsp;<font style="cursor:pointer;" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"> ? </font>';
@@ -1991,7 +1993,9 @@ function comment_field($field_format, $form_identifier, $field_name, $category_i
 
 			$comment_id = build_comment_id($field_format, $form_identifier, $field_name, $category_id);
 
-			if (is_file("images/question.jpg"))
+			if (is_addon("font-awesome"))
+					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_docs(\''.$category_id.'\', \''.$comment_id.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+			else if (is_file("images/question.jpg"))
 				$res .= '&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_docs(\''.$category_id.'\', \''.$comment_id.'\');"/>';
 			else
 				$res .= '&nbsp;&nbsp;<font style="cursor:pointer;" onClick="show_docs(\''.$category_id.'\',\''.$comment_id.'\');"> ? </font>';
@@ -4987,10 +4991,12 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 				$res .= " autocomplete=\"".$field_format["autocomplete"]."\"";
 			if($display != "hidden" && isset($field_format["comment"])) {
 				$q_mark = true;
-				if (is_file("images/question.jpg"))
+				if (is_addon("font-awesome"))
+					$res .= '>&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+				else if (is_file("images/question.jpg"))
 					$res .= '>&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"/>';
 				else
-					$res .= '&nbsp;&nbsp;<font style="cursor:pointer;" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"> ? </font>';
+					$res .= '>&nbsp;&nbsp;<font style="cursor:pointer;" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"> ? </font>';
 			} else
 				$res .= '>';
 			break;
@@ -5027,7 +5033,9 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 	{
 		$comment = $field_format["comment"];
 		if(!$q_mark) {
-			if (is_file("images/question.jpg"))
+			if (is_addon("font-awesome"))
+					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+			else if (is_file("images/question.jpg"))
 				$res .= '&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"/>';
 			else
 				$res .= '&nbsp;&nbsp;<font style="cursor:pointer;" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"> ? </font>';
