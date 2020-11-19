@@ -37,6 +37,11 @@ $use_comments_docs = false;
 	<title> Debug Page </title>
 	<link type="text/css" rel="stylesheet" href="../css/main.css" />
 	<script language="javascript" type="text/javascript" src="javascript.js"></script>
+<?php
+	if ($addon_path=is_addon("font-awesome")) {
+		print "<link type=\"text/css\" rel=\"stylesheet\" href=\"../".$addon_path."/css/font-awesome.min.css\"/>";
+	}
+?>
 </head>
 <body>
 <?php
