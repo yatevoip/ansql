@@ -1415,7 +1415,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		print ' style="width:'.$td_width["right"].'"';
 	print '>';
 
-	$field_comment = comment_field($field_format, $form_identifier, $field_name, $category_id, $display);
+	$field_comment = (empty($field_format["no_comment"])) ? comment_field($field_format, $form_identifier, $field_name, $category_id, $display) : "";
 
 	if ($htmlentities_onvalue && !isset($field_format["no_escape"]))
 		$value = (!is_array($value)) ? htmlentities($value) : array_map("htmlentities",$value);
