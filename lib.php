@@ -5208,9 +5208,10 @@ function load_page($page, $timeout=0)
  * Builds link substituting last current link position (after "/") with given page path; 
  * example: build_link('main.php?module=home&method=home')  =>  'http(s)://ip:port/{$_SERVER["PHP_SELF"] without last elem}/main.php?module=home&method=home'
  * @param string $page The page path for which the link is built.
+ * @param bool $loopback_ip Default is false. If true link address will be built with 172.0.0.1 as server name.
  * @return string The builded link.
  */
-function build_link($page)
+function build_link($page, $loopback_ip = false)
 {
 	if (substr($page,0,7)=="http://" || substr($page,0,8)=="https://")
 		return $page;
@@ -5220,7 +5221,9 @@ function build_link($page)
 	$current[count($current)-1] = $page;
 	$current = implode("/",$current);
 	
-	if (isset($_SERVER["SERVER_PORT"]) && $_SERVER["SERVER_PORT"]!=80)
+	if ($loopback_ip)
+		$page = "127.0.0.1".$current;
+	elseif (isset($_SERVER["SERVER_PORT"]) && $_SERVER["SERVER_PORT"]!=80)
 		$page = $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$current;
 	else
 		$page = $_SERVER["SERVER_NAME"].$current;
