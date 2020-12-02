@@ -411,9 +411,10 @@ function error_with_details($text, $details, $extra_css="", $print_text = true, 
  * @param $details String Extra details to be displayed after click on "More details" link
  * @param $more_details_id String If provided this will be the id of the html container holding the More Details text
  * @param $extra_css String. Css class. If provided this css class will be aplied on the entire notice box
+ * @param $print_text Bool. If true prints the notice directly. Otherwise returns the html with the message.
  * @return string if $print_text is false
  */
-function notice($message, $next_cb=NULL, $no_error = true, $encode=true, $details="", $more_details_id="", $extra_css="")
+function notice($message, $next_cb=NULL, $no_error=true, $encode=true, $details="", $more_details_id="", $extra_css="", $print_text=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module, $more_details_counter;
@@ -423,23 +424,29 @@ function notice($message, $next_cb=NULL, $no_error = true, $encode=true, $detail
 	
 	$message = ($encode) ? htmlentities($message) : $message;
 
+	$notice = "";
 	if ($no_error)
-		print '<div class="notice '.$extra_css.'">'.$message;
+		$notice = '<div class="notice '.$extra_css.'">'.$message;
 	else
-		print '<div class="notice error '.$extra_css.'"><font class="error">Error! </font>'.$message;
+		$notice = '<div class="notice error '.$extra_css.'"><font class="error">Error! </font>'.$message;
 
 	if ($details) {
 		if (!$more_details_id) {
 			$more_details_counter = ($more_details_counter===null) ? 0 : $more_details_counter+1;
 			$more_details_id = "error_details".$more_details_counter;
 		}
-		print ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More&nbsp;details<br/></a>';
-		print '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
-		print $details;
-		print '</div>';
+		$notice .= ' <a class="llink" onclick="show_hide(\''.$more_details_id.'\');">More&nbsp;details<br/></a>';
+		$notice .= '<div id="'.$more_details_id.'" class="error_details" style="display: none;">';
+		$notice .= $details;
+		$notice .= '</div>';
 	}
 	
-	print "</div>";
+	$notice .= "</div>";
+
+	if (!$print_text)
+		return $notice;
+
+	print $notice;
 	
 	if ($next_cb != "no" && is_callable($next_cb))
 		call_user_func($next_cb);
