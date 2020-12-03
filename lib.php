@@ -216,7 +216,7 @@ function note($note, $encode=true)
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	
 	$note = ($encode) ? htmlentities($note) : $note;
-	print 'Note! '.htmlentities($note).'<br/>';
+	print 'Note! '.$note.'<br/>';
 }
 
 /**
