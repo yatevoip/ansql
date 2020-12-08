@@ -281,6 +281,8 @@ class Debug
 					$body.= ($manually_triggered) ? "See User description\n" : $message;
 				}
 				$logs_file = self::get_log_file();
+
+				$attachment = false;
 				if (is_file($logs_file)) {
 					$dir_arr = explode("/",$logs_file);
 					$path = "";
@@ -292,12 +294,13 @@ class Debug
 
 					exec("tail -n 500 $logs_file > $attach_file");
 					rename($logs_file, $new_file);
-				}
-
-				$attachment = (is_file($logs_file)) ? array(array("file"=>$attach_file,"content_type"=>"text/plain")) : false;
-				if (!$attachment)
+					$attachment = array(array("file"=>$attach_file,"content_type"=>"text/plain"));
+				} else {
 					// logs are not kept in file, add xdebug to email body
-					$body .= "\n\n$xdebug";
+					$lines = explode("\n", $xdebug);
+					$lines = array_slice($lines, -500);
+					$body .= "\n\n". implode("\n", $lines);
+				}
 				$body = str_replace("\n","<br/>",$body);
 							
 				// set where to send triggered reports
@@ -313,7 +316,7 @@ class Debug
 					send_mail($to, $server_email_address, $subject, $body, $attachment,null,false);
 
 				if ($attachment)
-					exec("rm -f $attach_file");
+					unlink($attach_file);
 
 				break;
 			case "web":
