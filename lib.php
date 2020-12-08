@@ -1812,6 +1812,22 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print '<label for="'.$form_identifier.$field_name.'_toggle">Show Password</label>';
 			}
 			break;
+		case "button":
+			if (isset($field_format["container_elem"]))
+				print "<span class='".$css."' id='".$field_name."_span'>";
+			print "<button class='".$css."' type='button' name='".$form_identifier.$field_name."' id='".$form_identifier.$field_name."'";
+			if (isset($field_format["javascript"]))
+				print $field_format["javascript"];
+			print ">";
+			if (isset($field_format["button_name"]))
+				print $field_format["button_name"];
+			else
+				print "View/Change";
+			print "</button>";
+			if (isset($field_format["container_elem"]))
+				print "</span>";
+			print $field_comment;
+			break;	
 		case "fixed":
 			if (strlen($value))
 				print $value;
