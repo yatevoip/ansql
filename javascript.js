@@ -1723,3 +1723,30 @@ function expand_frame(iframe_id = "docs_iframe", expand_icon_id = "docs_expand_i
 	document.getElementById(iframe_id).style = "";
 	document.getElementById(expand_icon_id).className = "fa fa-angle-double-left";
 }
+
+function options_checkbox_group(elem_id)
+{
+	var elems = document.getElementsByName(elem_id+"[]");
+	var options = [];
+	for (var elem of elems)
+		options.push(elem.value);
+	
+	return options;
+}
+
+function selectedIndex_checkbox_group(elem_id)
+{
+	var subelems = document.getElementsByName(elem_id+"[]");
+	var options = [];
+	for (var subelem of subelems) {
+		if (subelem.checked)
+			options.push(subelem.value);
+	}
+	
+	return options;
+}
+
+function copy_dropdown_value(from_elem, to_elem_id)
+{
+	document.getElementById(to_elem_id).selectedIndex =from_elem.selectedIndex;
+}
