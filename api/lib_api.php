@@ -222,7 +222,7 @@ function run_api_requests($handling, $node_type, $equipment, $request_params, $m
 			
 		} else {
 
-			$extra .= "Request ".$request_params["request"]." was successfull for equipment: ".$extra_succ;
+			$extra .= "Request ".$request_params["request"]." was successful for equipment: ".$extra_succ;
 			/*return build_success($aggregate_response, $request_params, $extra);*/
 		}
 		
@@ -242,7 +242,7 @@ function run_api_requests($handling, $node_type, $equipment, $request_params, $m
 			// return response from first server that returns a positive response
 			if ($res["code"] === 0) {
 				$answer[] = array_merge(array("equipment_name"=>$equipment_name), $res);
-				return build_success($answer, $request_params, "Request ".$request_params["request"]." was successfull from equipment $equipment_name");
+				return build_success($answer, $request_params, "Request ".$request_params["request"]." was successful from equipment $equipment_name");
 			}
 		}
 		

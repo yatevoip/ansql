@@ -171,7 +171,7 @@ function do_request($method = "POST")
 		);
 		parse_str($_SERVER["QUERY_STRING"], $uri["params"]);
 
-		Debug::xdebug("api", "The builded data from the URI that will be used with the predefined requests: \n".print_r($uri,true));
+		Debug::xdebug("api", "The built data from the URI that will be used with the predefined requests: \n".print_r($uri,true));
 
 		$methods_allowed = array("GET","POST","PUT","DELETE");
 		if (!in_array($_SERVER["REQUEST_METHOD"], $methods_allowed)) {
