@@ -988,7 +988,7 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
 	if (count($additional))
 		foreach($additional as $key=>$value) 
 			print '<input type="hidden" id="' . $key . '" name="' . $key . '" value=' . html_quotes_escape($value) . '>';
-
+		
 	if (isset($_SESSION["previous_page"])) {
 		foreach ($_SESSION["previous_page"] as $param=>$value)
 			if (!isset($additional[$param]) && $param!="module" && $param!="method" && $param!="action" && !in_array($param,$skip_params))
@@ -1680,8 +1680,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				}
 			}
 			$autocall = array();
-			print '<div style="display: inline-block;" class="checkbox-group">';
-			print '<table class="checkbox-group" style="margin-right: 5px;" id="'.$form_identifier.$field_name.'">';
+			print '<table class="checkbox-group" id="'.$form_identifier.$field_name.'">';
 			foreach ($checkboxes as $row => $content) {
 				print '<tr class="checkbox-group">';
 				foreach ($content as $col => $opt) {
@@ -1706,8 +1705,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				}
 			}
 			print '</table>';
-			print '<span style="float:right" class="checkbox-group">'.$field_comment.'</span>';
-			print '</div>';
+			print '<span class="checkbox-group">'.$field_comment.'</span>';
 			
 			if (!empty($autocall)) {
 				call_user_func_array("autocall_js", $autocall);
@@ -2003,7 +2001,7 @@ function comment_field($field_format, $form_identifier, $field_name, $category_i
 				$comment = $field_format["comment"];
 
 				if (is_addon("font-awesome"))
-					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer help_icon" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"></i>';
 				else if (is_file("images/question.jpg"))
 					$res .= '&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"/>';
 				else
@@ -2020,7 +2018,7 @@ function comment_field($field_format, $form_identifier, $field_name, $category_i
 			$comment_id = build_comment_id($field_format, $form_identifier, $field_name, $category_id);
 
 			if (is_addon("font-awesome"))
-					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_docs(\''.$category_id.'\', \''.$comment_id.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer help_icon" aria-hidden="true" onClick="show_docs(\''.$category_id.'\', \''.$comment_id.'\');"></i>';
 			else if (is_file("images/question.jpg"))
 				$res .= '&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_docs(\''.$category_id.'\', \''.$comment_id.'\');"/>';
 			else
@@ -3850,7 +3848,7 @@ function explanations($logo, $title, $explanations, $style="explanation")
 /**
  * Builds the HTML dropdown
  */ 
-function build_dropdown($arr, $name, $show_not_selected = true, $disabled = "", $css = "", $javascript = "", $just_options = false, $hidden = false, $set_not_selected = null)
+function build_dropdown($arr, $name, $show_not_selected = true, $disabled = "", $css = "", $javascript = "", $just_options = false, $hidden = false, $set_not_selected = null, $use_default_keys = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	if (!$just_options) {
@@ -3871,8 +3869,13 @@ function build_dropdown($arr, $name, $show_not_selected = true, $disabled = "", 
 	unset($arr["selected"]);
 	for ($i=0; $i<count($arr); $i++) {
 		if (is_array($arr[$i])) {
-			$value = $arr[$i]["field_id"];
-			$value_name = $arr[$i]["field_name"];
+			if ($use_default_keys) {
+				$value = $arr[$i]["field_id"];
+				$value_name = $arr[$i]["field_name"];
+			} else {
+				$value = $arr[$i]["{$name}_id"];
+				$value_name = $arr[$i]["{$name}"];
+			}
 			$css = (isset($arr[$i]["css"])) ? 'class="'.$arr[$i]["css"].'"' : "";
 			$res .= "<option value=\"$value\" $css";
 			if (is_array($selected)) {
@@ -5018,7 +5021,7 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 			if($display != "hidden" && isset($field_format["comment"])) {
 				$q_mark = true;
 				if (is_addon("font-awesome"))
-					$res .= '>&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+					$res .= '>&nbsp;&nbsp;<i class="fa fa-question pointer help_icon" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"></i>';
 				else if (is_file("images/question.jpg"))
 					$res .= '>&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"/>';
 				else
@@ -5060,7 +5063,7 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 		$comment = $field_format["comment"];
 		if(!$q_mark) {
 			if (is_addon("font-awesome"))
-					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');" style="display:inline;color:#0189d7;font-size:16px;vertical-align: middle;"></i>';
+					$res .= '&nbsp;&nbsp;<i class="fa fa-question pointer help_icon" aria-hidden="true" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"></i>';
 			else if (is_file("images/question.jpg"))
 				$res .= '&nbsp;&nbsp;<img class="pointer" src="images/question.jpg" onClick="show_hide_comment(\''.$form_identifier.$field_name.'\');"/>';
 			else
@@ -7078,5 +7081,235 @@ function is_addon($addon)
 	
 	return $path;
 }
+
+/**
+ * Return associative array UTC - GMT
+ */
+function timezones_list()
+{
+	return array(
+	  "-12:00"=>"GMT -12:00",
+	  "-11:00"=>"GMT -11:00",
+	  "-10:00"=>"GMT -10:00",
+	  "-09:30"=>"GMT -09:30",
+	  "-09:00"=>"GMT -09:00",
+	  "-08:00"=>"GMT -08:00",
+	  "-07:00"=>"GMT -07:00",
+	  "-06:00"=>"GMT -06:00",
+	  "-05:00"=>"GMT -05:00",
+	  "-04:00"=>"GMT -04:00",
+	  "-03:30"=>"GMT -03:30",
+	  "-03:00"=>"GMT -03:00",
+	  "-02:00"=>"GMT -02:00",
+	  "-01:00"=>"GMT -01:00",
+	  "+00:00"=>"GMT +00:00",
+	  "+01:00"=>"GMT +01:00",
+	  "+02:00"=>"GMT +02:00",
+	  "+03:00"=>"GMT +03:00",
+	  "+03:30"=>"GMT +03:30",
+	  "+04:00"=>"GMT +04:00",
+	  "+04:30"=>"GMT +04:30",
+	  "+05:00"=>"GMT +05:00",
+	  "+05:30"=>"GMT +05:30",
+	  "+05:45"=>"GMT +05:45",
+	  "+06:00"=>"GMT +06:00",
+	  "+06:30"=>"GMT +06:30",
+	  "+07:00"=>"GMT +07:00",
+	  "+08:00"=>"GMT +08:00",
+	  "+08:45"=>"GMT +08:45",
+	  "+09:00"=>"GMT +09:00",
+	  "+09:30"=>"GMT +09:30",
+	  "+10:00"=>"GMT +10:00",
+	  "+10:30"=>"GMT +10:30",
+	  "+11:00"=>"GMT +11:00",
+	  "+12:00"=>"GMT +12:00",
+	  "+12:45"=>"GMT +12:45",
+	  "+13:00"=>"GMT +13:00",
+	  "+14:00"=>"GMT +14:00"
+	);
+}
+
+
+/**
+ * Return associative array UTC - GMT among with the timezones
+ */
+function timezones_country_list()
+{
+	return array(
+	  "-12:00"=>"(GMT -12:00) Eniwetok, Kwajalein",
+	  "-11:00"=>"(GMT -11:00) Midway Island, Samoa",
+	  "-10:00"=>"(GMT -10:00) Hawaii",
+	  "-09:30"=>"(GMT -09:30) Taiohae",
+	  "-09:00"=>"(GMT -09:00) Alaska",
+	  "-08:00"=>"(GMT -08:00) Pacific Time (US &amp; Canada)",
+	  "-07:00"=>"(GMT -07:00) Mountain Time (US &amp; Canada)",
+	  "-06:00"=>"(GMT -06:00) Central Time (US &amp; Canada), Mexico City",
+	  "-05:00"=>"(GMT -05:00) Eastern Time (US &amp; Canada), Bogota, Lima",
+	  "-04:00"=>"(GMT -04:00) Atlantic Time (Canada), Caracas, La Paz",
+	  "-03:30"=>"(GMT -03:30) Newfoundland",
+	  "-03:00"=>"(GMT -03:00) Brazil, Buenos Aires, Georgetown",
+	  "-02:00"=>"(GMT -02:00) Mid-Atlantic",
+	  "-01:00"=>"(GMT -01:00) Azores, Cape Verde Islands",
+	  "+00:00"=>"(GMT -00:00) Western Europe Time, London, Lisbon, Casablanca",
+	  "+01:00"=>"(GMT -01:00) Brussels, Copenhagen, Madrid, Paris",
+	  "+02:00"=>"(GMT -02:00) Kaliningrad, South Africa",
+	  "+03:00"=>"(GMT -03:00) Baghdad, Riyadh, Moscow, St. Petersburg",
+	  "+03:30"=>"(GMT -03:30) Tehran",
+	  "+04:00"=>"(GMT -04:30) Abu Dhabi, Muscat, Baku, Tbilisi",
+	  "+04:30"=>"(GMT -04:30) Kabul",
+	  "+05:00"=>"(GMT -05:00) Ekaterinburg, Islamabad, Karachi, Tashkent",
+	  "+05:30"=>"(GMT -05:40) Bombay, Calcutta, Madras, New Delhi",
+	  "+05:45"=>"(GMT -05:45) Kathmandu, Pokhara",
+	  "+06:00"=>"(GMT -06:00) Almaty, Dhaka, Colombo",
+	  "+06:30"=>"(GMT -06:30) Yangon, Mandalay",
+	  "+07:00"=>"(GMT -07:00) Bangkok, Hanoi, Jakarta",
+	  "+08:00"=>"(GMT -08:00) Beijing, Perth, Singapore, Hong Kong",
+	  "+08:45"=>"(GMT -08:45) Eucla",
+	  "+09:00"=>"(GMT -09:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk",
+	  "+09:30"=>"(GMT -09:30) Adelaide, Darwin",
+	  "+10:00"=>"(GMT -10:00) Eastern Australia, Guam, Vladivostok",
+	  "+10:30"=>"(GMT -10:30) Lord Howe Island",
+	  "+11:00"=>"(GMT -11:00) Magadan, Solomon Islands, New Caledonia",
+	  "+12:00"=>"(GMT -12:00) Auckland, Wellington, Fiji, Kamchatka",
+	  "+12:45"=>"(GMT -12:45) Chatham Islands",
+	  "+13:00"=>"(GMT -13:00) Apia, Nukualofa",
+	  "+14:00"=>"(GMT -14:00) Line Islands, Tokelau"
+	);
+}
+
+/**
+ * Transform timezone hours difference to UTC in seconds
+ */
+function timezone_to_seconds($timezone)
+{
+	$seconds = 0;
+	switch($timezone) {
+		case "-12:00": 
+			$seconds = -1 * hours_to_seconds(12);
+			break;
+		case "-11:00": 
+			$seconds = -1 * hours_to_seconds(11);
+			break;
+		case "-10:00": 
+			$seconds = -1 * hours_to_seconds(10);
+			break;
+		case "-09:30": 
+			$seconds = -1 * hours_to_seconds(9.5);
+			break;
+		case "-09:00": 
+			$seconds = -1 * hours_to_seconds(9);
+			break;
+		case "-08:00": 
+			$seconds = -1 * hours_to_seconds(8);
+			break;
+		case "-07:00": 
+			$seconds = -1 * hours_to_seconds(7);
+			break;
+		case "-06:00": 
+			$seconds = -1 * hours_to_seconds(6);
+			break;
+		case "-05:00": 
+			$seconds = -1 * hours_to_seconds(5);
+			break;
+		case "-04:00": 
+			$seconds = -1 * hours_to_seconds(4);
+			break;
+		case "-03:30": 
+			$seconds = -1 * hours_to_seconds(3.5);
+			break;
+		case "-03:00": 
+			$seconds = -1 * hours_to_seconds(3);
+			break;
+		case "-02:00": 
+			$seconds = -1 * hours_to_seconds(2);
+			break;
+		case "-01:00": 
+			$seconds = -1 * hours_to_seconds(1);
+			break;
+		case "+00:00": 
+			$seconds = 0;
+			break;
+		case "+01:00": 
+			$seconds = hours_to_seconds(1);
+			break;
+		case "+02:00": 
+			$seconds = hours_to_seconds(2);
+			break;
+		case "+03:00": 
+			$seconds = hours_to_seconds(3);
+			break;
+		case "+03:30": 
+			$seconds = hours_to_seconds(3.5);
+			break;		
+		case "+04:00": 
+			$seconds = hours_to_seconds(4);
+			break;
+		case "+04:30": 
+			$seconds = hours_to_seconds(4.5);
+			break;
+		case "+05:00": 
+			$seconds = hours_to_seconds(5);
+			break;
+		case "+05:30": 
+			$seconds = hours_to_seconds(5.5);
+			break;
+		case "+05:45": 
+			$seconds = hours_to_seconds(5.75);
+			break;
+		case "+06:00": 
+			$seconds = hours_to_seconds(6);
+			break;
+		case "+06:30": 
+			$seconds = hours_to_seconds(6.30);
+			break;
+		case "+07:00": 
+			$seconds = hours_to_seconds(7);
+			break;
+		case "+08:00": 
+			$seconds = hours_to_seconds(8);
+			break;
+		case "+08:45": 
+			$seconds = hours_to_seconds(8.75);
+			break;
+		case "+09:00": 
+			$seconds = hours_to_seconds(9);
+			break;
+		case "+09:30": 
+			$seconds = hours_to_seconds(9.5);
+			break;
+		case "+10:00": 
+			$seconds = hours_to_seconds(10);
+			break;
+		case "+10:30": 
+			$seconds = hours_to_seconds(10.5);
+			break;
+		case "+11:00": 
+			$seconds = hours_to_seconds(11);
+			break;
+		case "+12:00": 
+			$seconds = hours_to_seconds(12);
+			break;
+		case "+12:45": 
+			$seconds = hours_to_seconds(12.75);
+			break;
+		case "+13:00": 
+			$seconds = hours_to_seconds(13);
+			break;
+		case "+14:00": 
+			$seconds = hours_to_seconds(14);
+			break;
+	}
+	
+	return $seconds;
+}
+
+/**
+ * Transform hours into seconds
+ */
+function hours_to_seconds($hours)
+{
+	return $hours * 60 * 60;
+}
+
 
 ?>
