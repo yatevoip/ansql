@@ -217,7 +217,8 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 			}
 			curl_close($curl);
 			print $ret;
-		} elseif ($type == "application/octet-stream" || substr($type,0,10) == "text/plain" || substr($type,0,25) == "text/tab-separated-values") {
+		} elseif ($type == "application/octet-stream" || substr($type,0,10) == "text/plain" ||
+		  substr($type,0,25) == "text/tab-separated-values" || $type == "application/x-pcapng") {
 			curl_close($curl);
 			return $ret;
 		} else {
