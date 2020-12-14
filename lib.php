@@ -1825,7 +1825,104 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			if (isset($field_format["container_elem"]))
 				print "</span>";
 			print $field_comment;
-			break;	
+			break;
+		case "date_time":
+//			value format:
+//			$field_format["value"] = array(
+//				"date"=>1979-12-31,
+//				"time"=>23:59:59.999,
+//				"timezone"=>Europe/Bucharest
+//			);
+			
+			//~~~DATE INPUT~~~
+			// date value ex: 1979-12-31
+			
+			print "<input type=\"date\" id=\"{$field_name}_date\" name=\"{$field_name}_date\"";
+			
+			if (isset($value["date"]))
+				print " value=\"{$value["date"]}\"";
+			
+			if (isset($field_format["date_min"]))
+				print " min=\"".$field_format["date_min"]."\"";
+			
+			if (isset($field_format["date_max"]))
+				print " max=\"".$field_format["date_max"]."\"";
+			
+			if (isset($field_format["javascript"]["date"]))
+				print " ".$field_format["javascript"]["date"];
+			
+			if (isset($field_format["javascript"]) && is_string($field_format["javascript"]))
+				print " ".$field_format["javascript"];
+			elseif (isset($field_format["javascript"]["all"]))
+				print " ".$field_format["javascript"]["all"];
+			
+			
+			print " >&nbsp;";
+			
+			//stop here display just date field if $field_format["no_time"]=true
+			if (isset($field_format["no_time"]) && $field_format["no_time"]===true) 
+				break;
+			
+			//~~~TIME INPUT~~~
+			// time value format ex: 23:59:59.999
+			
+			print "<input type=\"time\" id=\"{$field_name}_time\" name=\"{$field_name}_time\" ";
+			
+			if (isset($value["date"]))
+				print " value=\"{$value["time"]}\"";
+				
+			if (isset($field_format["time_format"])) {
+				if ($field_format["time_format"]=="H:i:s")
+					print " step=\"1\"";
+				elseif ($field_format["time_format"]=="H:i:s.v")
+					print " step=\"0.1\"";
+			} elseif (isset($field_format["time_step"]))
+					print " step=\"{$field_format["time_step"]}\"";
+			
+			if (isset($field_format["time_min"]))
+				print " min=\"".$field_format["time_min"]."\"";
+			
+			if (isset($field_format["time_max"]))
+				print " max=\"".$field_format["time_max"]."\"";
+			
+			if (isset($field_format["javascript"]["time"]))
+				print " ".$field_format["javascript"]["time"];
+			
+			if (isset($field_format["javascript"]) && is_string($field_format["javascript"]))
+				print " ".$field_format["javascript"];
+			elseif (isset($field_format["javascript"]["all"]))
+				print " ".$field_format["javascript"]["all"];
+			
+			print " >&nbsp;";
+			
+			//stop here display just date and time fields if $field_format["no_date"]=true
+			if (isset($field_format["no_timezone"]) && $field_format["no_timezone"]===true) 
+				break;
+			
+			//~~~TIMEZONE INPUT~~~
+
+			if (isset($field_format["timezones_cb"]))
+				$timezones = call_user_func ($field_format["timezones_cb"]);
+			else
+				$timezones = pretty_timezone_list();
+
+			$timezones = format_for_dropdown_assoc_opt($timezones,"{$field_name}_timezone");
+
+			$js = "";
+			if (isset($field_format["javascript"]["timezone"]))
+				$js = " ".$field_format["javascript"]["timezone"];
+			if (isset($field_format["javascript"]) && is_string($field_format["javascript"]))
+				$js = " ".$field_format["javascript"];
+			elseif (isset($field_format["javascript"]["all"]))
+				$js = " ".$field_format["javascript"]["all"];
+
+			if (isset($value["timezone"]))
+				$timezones["selected"]=$value["timezone"];
+
+			print build_dropdown($timezones, "{$field_name}_timezone", false, false, $css, $js, false, false, null, false);
+
+			print $field_comment;
+			break;
 		case "fixed":
 			if (strlen($value))
 				print $value;
@@ -4071,7 +4168,19 @@ function set_form_fields(&$fields, $error_fields, $field_prefix='', $use_urldeco
 			$fields[$name]["error"] = true;
 		if (substr($name,-2) == "[]" && $def["display"] == "mul_select")
 			$val = (isset($_REQUEST[$field_prefix.substr($name,0,strlen($name)-2)])) ? $_REQUEST[$field_prefix.substr($name,0,strlen($name)-2)] : null;
-		else
+		elseif ($def["display"] == "date_time") {
+			$val = array(
+				"date"=>null,
+				"time"=>null,
+				"timezone"=>null
+			);
+			if (isset($_REQUEST["{$field_prefix}{$name}_date"]))
+				$val["date"] = $_REQUEST["{$field_prefix}{$name}_date"];
+			if (isset($_REQUEST["{$field_prefix}{$name}_date"]))
+				$val["time"] = $_REQUEST["{$field_prefix}{$name}_time"];
+			if (isset($_REQUEST["{$field_prefix}{$name}_date"]))
+				$val["timezone"] = $_REQUEST["{$field_prefix}{$name}_timezone"];
+		} else
 			$val = (isset($_REQUEST[$field_prefix.$name])) ? $_REQUEST[$field_prefix.$name] : null;
 
 		if ($use_urldecode)
@@ -5050,6 +5159,103 @@ function display_field($field_name,$field_format,$form_identifier='',$css=null)
 				$res .= '<br><input id="'.$form_identifier.$field_name.'_toggle" class="password-toggle" type="checkbox" onclick="display_password(this);">';
 				$res .= '<label for="'.$form_identifier.$field_name.'_toggle">Show Password</label>';
 			}
+			break;
+		case "date_time":
+			
+//			value format:
+//			$field_format["value"] = array(
+//				"date"=>1979-12-31,
+//				"time"=>23:59:59.999,
+//				"timezone"=>Europe/Bucharest
+//			);
+			
+			//~~~DATE INPUT~~~
+			// date value ex: 1979-12-31
+			
+			$res .=  "<input type=\"date\" id=\"{$field_name}_date\" name=\"{$field_name}_date\"";
+			
+			if (isset($value["date"]))
+				$res .=  " value=\"{$value["date"]}\"";
+			
+			if (isset($field_format["date_min"]))
+				$res .=  " min=\"".$field_format["date_min"]."\"";
+			
+			if (isset($field_format["date_max"]))
+				$res .=  " max=\"".$field_format["date_max"]."\"";
+			
+			if (isset($field_format["javascript"]["date"]))
+				$res .=  " ".$field_format["javascript"]["date"];
+			
+			if (isset($field_format["javascript"]) && is_string($field_format["javascript"]))
+				$res .=  " ".$field_format["javascript"];
+			elseif (isset($field_format["javascript"]["all"]))
+				$res .=  " ".$field_format["javascript"]["all"];
+			
+			
+			$res .=  " >&nbsp;";
+			
+			//stop here display just date field if $field_format["no_time"]=true
+			if (isset($field_format["no_time"]) && $field_format["no_time"]===true) 
+				break;
+			
+			//~~~TIME INPUT~~~
+			// time value format ex: 23:59:59.999
+			
+			$res .=  "<input type=\"time\" id=\"{$field_name}_time\" name=\"{$field_name}_time\" ";
+			
+			if (isset($value["date"]))
+				$res .=  " value=\"{$value["time"]}\"";
+				
+			if (isset($field_format["time_format"])) {
+				if ($field_format["time_format"]=="H:i:s")
+					$res .=  " step=\"1\"";
+				elseif ($field_format["time_format"]=="H:i:s.v")
+					$res .=  " step=\"0.1\"";
+			} elseif (isset($field_format["time_step"]))
+					$res .=  " step=\"{$field_format["time_step"]}\"";
+			
+			if (isset($field_format["time_min"]))
+				$res .=  " min=\"".$field_format["time_min"]."\"";
+			
+			if (isset($field_format["time_max"]))
+				$res .=  " max=\"".$field_format["time_max"]."\"";
+			
+			if (isset($field_format["javascript"]["time"]))
+				$res .=  " ".$field_format["javascript"]["time"];
+			
+			if (isset($field_format["javascript"]) && is_string($field_format["javascript"]))
+				$res .=  " ".$field_format["javascript"];
+			elseif (isset($field_format["javascript"]["all"]))
+				$res .=  " ".$field_format["javascript"]["all"];
+			
+			$res .=  " >&nbsp;";
+			
+			//stop here display just date and time fields if $field_format["no_date"]=true
+			if (isset($field_format["no_timezone"]) && $field_format["no_timezone"]===true) 
+				break;
+			
+			//~~~TIMEZONE INPUT~~~
+
+			if (isset($field_format["timezones_cb"]))
+				$timezones = call_user_func ($field_format["timezones_cb"]);
+			else
+				$timezones = pretty_timezone_list();
+
+			$timezones = format_for_dropdown_assoc_opt($timezones,"{$field_name}_timezone");
+
+			$js = "";
+			if (isset($field_format["javascript"]["timezone"]))
+				$js = " ".$field_format["javascript"]["timezone"];
+			if (isset($field_format["javascript"]) && is_string($field_format["javascript"]))
+				$js = " ".$field_format["javascript"];
+			elseif (isset($field_format["javascript"]["all"]))
+				$js = $field_format["javascript"]["all"];
+
+			if (isset($value["timezone"]))
+				$timezones["selected"]=$value["timezone"];
+
+			$res .= build_dropdown($timezones, "{$field_name}_timezone", false, false, $css, $js, false, false, null, false);
+
 			break;
 		case "fixed":
 			if(strlen($value))
@@ -7083,227 +7289,6 @@ function is_addon($addon)
 }
 
 /**
- * Return associative array UTC - GMT
- */
-function timezones_list()
-{
-	return array(
-	  "-12:00"=>"GMT -12:00",
-	  "-11:00"=>"GMT -11:00",
-	  "-10:00"=>"GMT -10:00",
-	  "-09:30"=>"GMT -09:30",
-	  "-09:00"=>"GMT -09:00",
-	  "-08:00"=>"GMT -08:00",
-	  "-07:00"=>"GMT -07:00",
-	  "-06:00"=>"GMT -06:00",
-	  "-05:00"=>"GMT -05:00",
-	  "-04:00"=>"GMT -04:00",
-	  "-03:30"=>"GMT -03:30",
-	  "-03:00"=>"GMT -03:00",
-	  "-02:00"=>"GMT -02:00",
-	  "-01:00"=>"GMT -01:00",
-	  "+00:00"=>"GMT +00:00",
-	  "+01:00"=>"GMT +01:00",
-	  "+02:00"=>"GMT +02:00",
-	  "+03:00"=>"GMT +03:00",
-	  "+03:30"=>"GMT +03:30",
-	  "+04:00"=>"GMT +04:00",
-	  "+04:30"=>"GMT +04:30",
-	  "+05:00"=>"GMT +05:00",
-	  "+05:30"=>"GMT +05:30",
-	  "+05:45"=>"GMT +05:45",
-	  "+06:00"=>"GMT +06:00",
-	  "+06:30"=>"GMT +06:30",
-	  "+07:00"=>"GMT +07:00",
-	  "+08:00"=>"GMT +08:00",
-	  "+08:45"=>"GMT +08:45",
-	  "+09:00"=>"GMT +09:00",
-	  "+09:30"=>"GMT +09:30",
-	  "+10:00"=>"GMT +10:00",
-	  "+10:30"=>"GMT +10:30",
-	  "+11:00"=>"GMT +11:00",
-	  "+12:00"=>"GMT +12:00",
-	  "+12:45"=>"GMT +12:45",
-	  "+13:00"=>"GMT +13:00",
-	  "+14:00"=>"GMT +14:00"
-	);
-}
-
-
-/**
- * Return associative array UTC - GMT among with the timezones
- */
-function timezones_country_list()
-{
-	return array(
-	  "-12:00"=>"(GMT -12:00) Eniwetok, Kwajalein",
-	  "-11:00"=>"(GMT -11:00) Midway Island, Samoa",
-	  "-10:00"=>"(GMT -10:00) Hawaii",
-	  "-09:30"=>"(GMT -09:30) Taiohae",
-	  "-09:00"=>"(GMT -09:00) Alaska",
-	  "-08:00"=>"(GMT -08:00) Pacific Time (US &amp; Canada)",
-	  "-07:00"=>"(GMT -07:00) Mountain Time (US &amp; Canada)",
-	  "-06:00"=>"(GMT -06:00) Central Time (US &amp; Canada), Mexico City",
-	  "-05:00"=>"(GMT -05:00) Eastern Time (US &amp; Canada), Bogota, Lima",
-	  "-04:00"=>"(GMT -04:00) Atlantic Time (Canada), Caracas, La Paz",
-	  "-03:30"=>"(GMT -03:30) Newfoundland",
-	  "-03:00"=>"(GMT -03:00) Brazil, Buenos Aires, Georgetown",
-	  "-02:00"=>"(GMT -02:00) Mid-Atlantic",
-	  "-01:00"=>"(GMT -01:00) Azores, Cape Verde Islands",
-	  "+00:00"=>"(GMT -00:00) Western Europe Time, London, Lisbon, Casablanca",
-	  "+01:00"=>"(GMT -01:00) Brussels, Copenhagen, Madrid, Paris",
-	  "+02:00"=>"(GMT -02:00) Kaliningrad, South Africa",
-	  "+03:00"=>"(GMT -03:00) Baghdad, Riyadh, Moscow, St. Petersburg",
-	  "+03:30"=>"(GMT -03:30) Tehran",
-	  "+04:00"=>"(GMT -04:30) Abu Dhabi, Muscat, Baku, Tbilisi",
-	  "+04:30"=>"(GMT -04:30) Kabul",
-	  "+05:00"=>"(GMT -05:00) Ekaterinburg, Islamabad, Karachi, Tashkent",
-	  "+05:30"=>"(GMT -05:40) Bombay, Calcutta, Madras, New Delhi",
-	  "+05:45"=>"(GMT -05:45) Kathmandu, Pokhara",
-	  "+06:00"=>"(GMT -06:00) Almaty, Dhaka, Colombo",
-	  "+06:30"=>"(GMT -06:30) Yangon, Mandalay",
-	  "+07:00"=>"(GMT -07:00) Bangkok, Hanoi, Jakarta",
-	  "+08:00"=>"(GMT -08:00) Beijing, Perth, Singapore, Hong Kong",
-	  "+08:45"=>"(GMT -08:45) Eucla",
-	  "+09:00"=>"(GMT -09:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk",
-	  "+09:30"=>"(GMT -09:30) Adelaide, Darwin",
-	  "+10:00"=>"(GMT -10:00) Eastern Australia, Guam, Vladivostok",
-	  "+10:30"=>"(GMT -10:30) Lord Howe Island",
-	  "+11:00"=>"(GMT -11:00) Magadan, Solomon Islands, New Caledonia",
-	  "+12:00"=>"(GMT -12:00) Auckland, Wellington, Fiji, Kamchatka",
-	  "+12:45"=>"(GMT -12:45) Chatham Islands",
-	  "+13:00"=>"(GMT -13:00) Apia, Nukualofa",
-	  "+14:00"=>"(GMT -14:00) Line Islands, Tokelau"
-	);
-}
-
-/**
- * Transform timezone hours difference to UTC in seconds
- */
-function timezone_to_seconds($timezone)
-{
-	$seconds = 0;
-	switch($timezone) {
-		case "-12:00": 
-			$seconds = -1 * hours_to_seconds(12);
-			break;
-		case "-11:00": 
-			$seconds = -1 * hours_to_seconds(11);
-			break;
-		case "-10:00": 
-			$seconds = -1 * hours_to_seconds(10);
-			break;
-		case "-09:30": 
-			$seconds = -1 * hours_to_seconds(9.5);
-			break;
-		case "-09:00": 
-			$seconds = -1 * hours_to_seconds(9);
-			break;
-		case "-08:00": 
-			$seconds = -1 * hours_to_seconds(8);
-			break;
-		case "-07:00": 
-			$seconds = -1 * hours_to_seconds(7);
-			break;
-		case "-06:00": 
-			$seconds = -1 * hours_to_seconds(6);
-			break;
-		case "-05:00": 
-			$seconds = -1 * hours_to_seconds(5);
-			break;
-		case "-04:00": 
-			$seconds = -1 * hours_to_seconds(4);
-			break;
-		case "-03:30": 
-			$seconds = -1 * hours_to_seconds(3.5);
-			break;
-		case "-03:00": 
-			$seconds = -1 * hours_to_seconds(3);
-			break;
-		case "-02:00": 
-			$seconds = -1 * hours_to_seconds(2);
-			break;
-		case "-01:00": 
-			$seconds = -1 * hours_to_seconds(1);
-			break;
-		case "+00:00": 
-			$seconds = 0;
-			break;
-		case "+01:00": 
-			$seconds = hours_to_seconds(1);
-			break;
-		case "+02:00": 
-			$seconds = hours_to_seconds(2);
-			break;
-		case "+03:00": 
-			$seconds = hours_to_seconds(3);
-			break;
-		case "+03:30": 
-			$seconds = hours_to_seconds(3.5);
-			break;		
-		case "+04:00": 
-			$seconds = hours_to_seconds(4);
-			break;
-		case "+04:30": 
-			$seconds = hours_to_seconds(4.5);
-			break;
-		case "+05:00": 
-			$seconds = hours_to_seconds(5);
-			break;
-		case "+05:30": 
-			$seconds = hours_to_seconds(5.5);
-			break;
-		case "+05:45": 
-			$seconds = hours_to_seconds(5.75);
-			break;
-		case "+06:00": 
-			$seconds = hours_to_seconds(6);
-			break;
-		case "+06:30": 
-			$seconds = hours_to_seconds(6.30);
-			break;
-		case "+07:00": 
-			$seconds = hours_to_seconds(7);
-			break;
-		case "+08:00": 
-			$seconds = hours_to_seconds(8);
-			break;
-		case "+08:45": 
-			$seconds = hours_to_seconds(8.75);
-			break;
-		case "+09:00": 
-			$seconds = hours_to_seconds(9);
-			break;
-		case "+09:30": 
-			$seconds = hours_to_seconds(9.5);
-			break;
-		case "+10:00": 
-			$seconds = hours_to_seconds(10);
-			break;
-		case "+10:30": 
-			$seconds = hours_to_seconds(10.5);
-			break;
-		case "+11:00": 
-			$seconds = hours_to_seconds(11);
-			break;
-		case "+12:00": 
-			$seconds = hours_to_seconds(12);
-			break;
-		case "+12:45": 
-			$seconds = hours_to_seconds(12.75);
-			break;
-		case "+13:00": 
-			$seconds = hours_to_seconds(13);
-			break;
-		case "+14:00": 
-			$seconds = hours_to_seconds(14);
-			break;
-	}
-	
-	return $seconds;
-}
-
-/**
  * Transform hours into seconds
  */
 function hours_to_seconds($hours)
@@ -7311,5 +7296,262 @@ function hours_to_seconds($hours)
 	return $hours * 60 * 60;
 }
 
+/**
+ * Associative list of timezone offsets. 
+ * Array format:
+ *	value = timezone name
+ *	key = offset in seconds between timezone and UTC standard time 
+ * Ex: 
+ *	Array
+	(
+	    [Africa/Abidjan] => 0
+	    [Africa/Accra] => 0
+	    [Africa/Addis_Ababa] => 10800
+	    [Africa/Algiers] => 3600
+	    ............
+	    [Europe/Bucharest] => 7200
+	    ............
+	    [Pacific/Rarotonga] => -36000
+	    [Pacific/Saipan] => 36000
+	    [Pacific/Tahiti] => -36000
+	    [Pacific/Tarawa] => 43200
+	    [Pacific/Tongatapu] => 50400
+	    [Pacific/Wake] => 43200
+	    [Pacific/Wallis] => 43200
+	    [UTC] => 0
+    )
+ * @return associative array
+ */
+function timezone_offsets_list()
+{
+	$timezones = timezone_identifiers_list();
+
+	$timezone_offsets = array();
+	foreach( $timezones as $timezone )
+	{
+	    $tz = new DateTimeZone($timezone);
+	    $timezone_offsets[$timezone] = $tz->getOffset(new DateTime);
+	}
+
+	return $timezone_offsets;
+}
+
+
+/**
+ * List of timezones groupped by offset
+ * Array format:
+ *	key = offset in seconds between timezone and UTC standard time 
+ *	value = group of timezone names
+ * Array
+(
+    [0] => Array
+        (
+            [0] => Africa/Abidjan
+            [1] => Africa/Accra
+            .......
+            [26] => Europe/Lisbon
+            [27] => Europe/London
+            [28] => UTC
+        )
+     ....
+
+     [7200] => Array
+        (
+            [0] => Africa/Blantyre
+            [1] => Africa/Bujumbura
+            [2] => Africa/Cairo
+	    .....
+            [22] => Europe/Bucharest
+            [23] => Europe/Chisinau
+            ....
+            [32] => Europe/Vilnius
+            [33] => Europe/Zaporozhye
+        )
+     ....
+ )
+ * @return array
+ */
+function timezones_grouped_by_offset()
+{
+	$timezone_offsets = timezone_offsets_list();
+	
+	// group timezones by offsets
+	$timezone_group = array();
+	foreach( $timezone_offsets as $timezone => $offset )
+	    $timezone_group[$offset][] = $timezone;
+
+	return $timezone_group;
+}
+
+/**
+ * List of timezone offsets grouped by offset and sorted by timezone name 
+ * Ex: 
+ *	Array
+	(
+	     [Pacific/Midway] => -39600
+	     [Pacific/Niue] => -39600
+	     [Pacific/Pago_Pago] => -39600
+	     [America/Adak] => -36000
+	     [Pacific/Honolulu] => -36000
+	     [Pacific/Rarotonga] => -36000
+	     [Pacific/Tahiti] => -36000
+	     [Pacific/Marquesas] => -34200
+	     ............
+	     [Europe/London] => 0
+	     [UTC] => 0
+	     .............
+	     [Europe/Bucharest] => 7200
+	     .............
+	     [Pacific/Fiji] => 46800
+	     [Pacific/Chatham] => 49500
+	     [Pacific/Apia] => 50400
+	     [Pacific/Kiritimati] => 50400
+	     [Pacific/Tongatapu] => 50400
+	)
+ * @return associative array
+ */
+function sorted_timezone_offsets_list()
+{
+	$timezones_list = timezones_grouped_by_offset();
+	
+	//sort the list by offsets
+	ksort($timezones_list);
+	
+	//sort each timezones group by timezone name
+	array_map("asort", $timezones_list);
+
+	$timezone_offsets = array();
+	foreach ($timezones_list as $offset => $timezones) {
+		foreach ($timezones as $timezone) {
+			$timezone_offsets[$timezone] = $offset;
+		}
+	}
+	
+	return $timezone_offsets;
+	
+}
+
+/**
+ * List of timezone offsets grouped by offset and sorted by timezone name 
+ * Ex: 
+ *	Array
+	(
+	    [Pacific/Midway] => (GMT-11:00) Pacific/Midway
+	    [Pacific/Niue] => (GMT-11:00) Pacific/Niue
+	    [Pacific/Pago_Pago] => (GMT-11:00) Pacific/Pago_Pago
+	    [America/Adak] => (GMT-10:00) America/Adak
+	    [Pacific/Honolulu] => (GMT-10:00) Pacific/Honolulu
+	    [Pacific/Rarotonga] => (GMT-10:00) Pacific/Rarotonga
+	    [Pacific/Tahiti] => (GMT-10:00) Pacific/Tahiti
+	    [Pacific/Marquesas] => (GMT-09:30) Pacific/Marquesas
+	    ............
+	    [Europe/London] => (GMT+00:00) Europe/London
+	    [UTC] => (GMT+00:00) UTC
+	    .............
+	    [Europe/Bucharest] => (GMT+02:00) Europe/Bucharest
+	    .............
+	    [Pacific/Chatham] => (GMT+13:45) Pacific/Chatham
+	    [Pacific/Apia] => (GMT+14:00) Pacific/Apia
+	    [Pacific/Kiritimati] => (GMT+14:00) Pacific/Kiritimati
+	    [Pacific/Tongatapu] => (GMT+14:00) Pacific/Tongatapu
+    )
+ * @return associative array
+ */
+function pretty_timezone_list($offset_format="H:i", $prefix="GMT")
+{
+	$timezone_offsets = sorted_timezone_offsets_list();
+
+	$timezone_list = array();
+	foreach ($timezone_offsets as $timezone => $offset) {
+		$offset_prefix = $offset < 0 ? '-' : '+';
+		$offset_formatted = gmdate($offset_format, abs($offset) );
+
+		$pretty_offset = $prefix . $offset_prefix . $offset_formatted;
+
+		$timezone_list[$timezone] = "(${pretty_offset}) $timezone";
+	}
+
+	return $timezone_list;
+}
+
+/**
+ * List of timezone hours sorted by hour
+ * Ex: 
+ *	Array
+	(
+		[-11:00] => GMT-11:00
+		[-10:00] => GMT-10:00
+		[-09:30] => GMT-09:30
+		[-09:00] => GMT-09:00
+		[-08:00] => GMT-08:00
+		[-07:00] => GMT-07:00
+		[-06:00] => GMT-06:00
+		[-05:00] => GMT-05:00
+		[-04:00] => GMT-04:00
+		[-03:30] => GMT-03:30
+		[-03:00] => GMT-03:00
+		[-02:00] => GMT-02:00
+		[-01:00] => GMT-01:00
+		[+00:00] => GMT+00:00
+		[+01:00] => GMT+01:00
+		[+02:00] => GMT+02:00
+		[+03:00] => GMT+03:00
+		[+03:30] => GMT+03:30
+		[+04:00] => GMT+04:00
+		[+04:30] => GMT+04:30
+		[+05:00] => GMT+05:00
+		[+05:30] => GMT+05:30
+		[+05:45] => GMT+05:45
+		[+06:00] => GMT+06:00
+		[+06:30] => GMT+06:30
+		[+07:00] => GMT+07:00
+		[+08:00] => GMT+08:00
+		[+08:30] => GMT+08:30
+		[+08:45] => GMT+08:45
+		[+09:00] => GMT+09:00
+		[+09:30] => GMT+09:30
+		[+10:00] => GMT+10:00
+		[+10:30] => GMT+10:30
+		[+11:00] => GMT+11:00
+		[+12:00] => GMT+12:00
+		[+13:00] => GMT+13:00
+		[+13:45] => GMT+13:45
+		[+14:00] => GMT+14:00	     
+	)
+ * @return associative array
+ */
+function pretty_timezone_hours_list($offset_format="H:i", $prefix="GMT")
+{
+	$timezones = sorted_timezone_offsets_list();
+	
+	$hours_list = array();
+	foreach ($timezones as $timezone) {
+		
+		$offset_prefix = $offset < 0 ? '-' : '+';
+		$offset_formatted = gmdate($offset_format, abs($offset) );
+
+		$pretty_offset = $prefix . $offset_prefix . $offset_formatted;
+
+		$hours_list[$offset_formatted] = $pretty_offset;
+	}
+	
+	return $hours_list;
+}
+
+/**
+ * Transform a human formated datetime into 
+ * @param type $format
+ * @param type $human_datetime
+ * @param type $timezone_name
+ * @return type
+ */
+function human_datetime_to_timestamp($format,$human_datetime,$timezone_name)
+{
+	$timezone = new DateTimeZone($timezone_name);
+	
+	$datetime = DateTime::createFromFormat($format, $human_datetime, $timezone);
+	
+	return $datetime->getTimestamp();
+}
 
 ?>
