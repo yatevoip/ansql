@@ -4176,10 +4176,13 @@ function set_form_fields(&$fields, $error_fields, $field_prefix='', $use_urldeco
 			);
 			if (isset($_REQUEST["{$field_prefix}{$name}_date"]))
 				$val["date"] = $_REQUEST["{$field_prefix}{$name}_date"];
-			if (isset($_REQUEST["{$field_prefix}{$name}_date"]))
+			if (isset($_REQUEST["{$field_prefix}{$name}_time"]))
 				$val["time"] = $_REQUEST["{$field_prefix}{$name}_time"];
-			if (isset($_REQUEST["{$field_prefix}{$name}_date"]))
+			if (isset($_REQUEST["{$field_prefix}{$name}_timezone"]))
 				$val["timezone"] = $_REQUEST["{$field_prefix}{$name}_timezone"];
+
+			if ($val["date"]===null && $val["time"]===null && $val["timezone"]===null )
+				$val = null;
 		} else
 			$val = (isset($_REQUEST[$field_prefix.$name])) ? $_REQUEST[$field_prefix.$name] : null;
 
@@ -7539,19 +7542,39 @@ function pretty_timezone_hours_list($offset_format="H:i", $prefix="GMT")
 }
 
 /**
- * Transform a human formated datetime into 
- * @param type $format
- * @param type $human_datetime
- * @param type $timezone_name
- * @return type
+ * Get the timestamp for provided datetime 
+ * @param string $format To see valid formats reffer to https://www.php.net/manual/en/datetime.createfromformat.php
+ * @param string $human_datetime Datetime formated in the specifed $format. 
+ * Ex:  
+ *	for $format = 'Y-m-j H:i:s' 
+ *	$human_datetime must be like: "2020-02-05 13:07:02"
+ * 
+ *	also for this example format the hour must be between 00 and 23
+ * 
+ * @param string $timezone_name To see valid timezone examples go to https://www.php.net/manual/en/datetimezone.listidentifiers.php
+ * @return array(true, timestamp) on succes, array(false, message) on failure
+ * !Caution! The error message might contain HTML <br> tags
  */
-function human_datetime_to_timestamp($format,$human_datetime,$timezone_name)
+function human_datetime_to_timestamp($format,$human_datetime,$timezone_name,$glue_error_message="<br>")
 {
 	$timezone = new DateTimeZone($timezone_name);
 	
 	$datetime = DateTime::createFromFormat($format, $human_datetime, $timezone);
+	$err_msg = array();
 	
-	return $datetime->getTimestamp();
+	$errors = DateTime::getLastErrors();
+	
+	if (isset($errors["error_count"]) && $errors["error_count"]>0)
+		$err_msg[] = implode($glue_error_message,$errors["errors"]);
+
+	if (isset($errors["warning_count"]) && $errors["warning_count"]>0)
+		$err_msg[] = implode($glue_error_message,$errors["warnings"]);
+
+	$err_msg = implode($glue_error_message,$err_msg);
+	if (strlen($err_msg)>0)
+		return array(false, $err_msg);
+	
+	return array(true, $datetime->getTimestamp());
 }
 
 ?>
