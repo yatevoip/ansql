@@ -368,9 +368,16 @@ class Debug
 			if (in_array("web", $logs_in)) {
 				$msg = $date . strtoupper($tag) . ": " . $msg;
 				
+				//if message is already displayed by dumping xdebug there is no need to double display it
 				if (!isset($_SESSION["dump_xdebug"])) {
 					print "\n<p class='debugmess'>". htmlentities($msg) . "</p>" . "\n";
 				}
+			}
+			
+			if  (in_array("console", $logs_in)) {
+				$msg = $date . strtoupper($tag) . ": " . $msg;
+				if (is_cli())
+					print $msg. "\n";
 			}
 
 			Debug::xdebug($tag, $msg);

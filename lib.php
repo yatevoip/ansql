@@ -7651,4 +7651,14 @@ function human_datetime_to_timestamp($format,$human_datetime,$timezone_name,$glu
 	return array(true, $datetime->getTimestamp());
 }
 
+/**
+ * Function checks if PHP is used in CLI mode. 
+ * @return boolean Returns true if CLI mode is used, otherwise returns false.
+ */
+function is_cli()
+{
+	if (php_sapi_name() == "cli")
+		return true;
+	return false;
+}
 ?>
