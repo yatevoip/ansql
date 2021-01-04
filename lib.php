@@ -4775,7 +4775,11 @@ function arr_to_json($file_name, $arr, $col_names, $display_as_notice_mess = tru
 
 	$file = $upload_path . "/" . $file_name;
 	$fh = fopen($file, "w") or die("Can't open file for writting: ".$file);
-	fwrite($fh, json_encode($fields,JSON_PRETTY_PRINT));
+	if (phpversion() && phpversion() >= 5.4)
+		fwrite($fh, json_encode($fields,JSON_PRETTY_PRINT));
+	else
+		fwrite($fh, json_encode($fields));
+
 	fclose($fh);
 
 	if (isset($download_option) && $download_option=="direct_file")
