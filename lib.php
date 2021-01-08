@@ -1435,6 +1435,15 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				$textarea_cols = $field_format["textarea_cols"];
 			if (isset($field_format["textarea_rows"]))
 				$textarea_rows = $field_format["textarea_rows"];
+			if (isset($field_format["container_div"])) {
+				$prefix = (isset($field_format["container_class_prefix"])) ? $field_format["container_class_prefix"] : "";
+				print "<div class='".$prefix."container_textarea' id='container_".$form_identifier.$field_name."'>";
+				print "<div class='".$prefix."backdrop' id='backdrop_".$form_identifier.$field_name."'>";
+				print "<div class='".$prefix."highlights' id='highlights_".$form_identifier.$field_name."'></div>";
+				print "</div>";
+			}
+			if (isset($field_format["extra_css"]))
+				$css = $css." ".$field_format["extra_css"];
 			print '<textarea class="'.$css.'" id="'.$form_identifier.$field_name.'" name="'.$form_identifier.$field_name.'" cols="'.$textarea_cols.'" rows="'.$textarea_rows.'" ';
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
@@ -1442,7 +1451,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print " readonly=''";
 			print '>';
 			print $value;
-			print '</textarea>'.$field_comment;
+			print '</textarea>';
+			if (isset($field_format["container_div"]))
+				print "</div>";
+			print $field_comment;
 			break;
 		
 		case "tri_bool":
