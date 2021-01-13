@@ -1780,7 +1780,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 							$not_displayed_elem_ids[] = $elem_id;
 						}				
 						if (isset($field_format["set_download"]))
-							print '<li style="display:'.$display_type.'" id="'.$elem_id.'"><a class="'.$css.'" href="'.$field_format["set_download"].'?file=example/'.$filename.'">'.$filename . '</a> '.$description.' </li>';
+							print '<li style="display:'.$display_type.'" id="'.$elem_id.'"><a class="'.$css.'" href="'.$field_format["set_download"].'">'.$filename . '</a> '.$description.' </li>';
 						else
 							print '<li style="display:'.$display_type.'" id="'.$elem_id.'"><a class="'.$css.'" href="example/'.$filename.'">'.$filename . '</a> '.$description.' </li>';
 						$i++;
