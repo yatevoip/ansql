@@ -5584,8 +5584,11 @@ function requiredFieldsJs($form_fields, $excluded_fields)
  * @param $custom_fields Array. Custom search fields that will be added before the $search_options.
  * @param $value_readonly Bool. If true set 'Value' field as readonly, when 'Search by' is not selected.
  * Ex: array("title"=>array("Search1", "Search2"),array("<input type.../>", "<select>..</select>"))
+ * @param $custom_order Bool. Default false. If true custom search fields will be added after the $search_options.
+ * @param $default_selected String. The default dropdown option to be displayed as selected.
+ * @param $not_selected_option Bool. Default true. If false, option '-' will not be added to the dropdown.
  */
-function generic_search($search_options, $custom_fields=array(), $value_readonly=false, $custom_order=false, $default_selected=NULL)
+function generic_search($search_options, $custom_fields=array(), $value_readonly=false, $custom_order=false, $default_selected=NULL, $not_selected_option=true)
 {
 	$search_options = format_for_dropdown($search_options);
 	
@@ -5597,7 +5600,7 @@ function generic_search($search_options, $custom_fields=array(), $value_readonly
 	$title = array("Search by", "Value", "&nbsp;");
 	$ro = (!$value_readonly) ? "undefined" : "true";
 	$fields = array(array(
-			build_dropdown($search_options, "col", true, "", "", 'onchange="clean_cols_search('.$ro.')"'),
+			build_dropdown($search_options, "col", $not_selected_option, "", "", 'onchange="clean_cols_search('.$ro.')"'),
 			"<input type=\"text\" value=". html_quotes_escape(getparam("col_value"))." name=\"col_value\" id=\"col_value\" size=\"10\"/>",
 			"<input type=\"submit\" value=\"Search\" />"
 		));
