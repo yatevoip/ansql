@@ -4060,7 +4060,7 @@ function format_opt_for_dropdown($vals, $field="field", $set_id=false)
  * Build a table with the rows of a html form data
  * Uses display_pair() to display the rows
  */ 
-function formTable($rows, $th = null, $title = null, $submit = null, $width = null, $id = null, $css_first_column = '', $color_indexes = array(), $dif_css = "")
+function formTable($rows, $th = null, $title = null, $submit = null, $width = null, $id = null, $css_first_column = '', $color_indexes = array(), $dif_css = "", $th_css = "")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	if (is_array($th))
@@ -4089,7 +4089,7 @@ function formTable($rows, $th = null, $title = null, $submit = null, $width = nu
 				$style = "";
 				$info = $th[$i];
 			}
-			print "<th class=\"formtable\" $style>".$info."</th>\n";
+			print "<th class=\"formtable ".$th_css."\" $style>".$info."</th>\n";
 		}
 		print "</tr>\n";
 	}
