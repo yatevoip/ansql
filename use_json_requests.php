@@ -124,9 +124,15 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	}
 
 	$timeout = 20;
-	if (count($request_timeout) && in_array($out["request"], array_keys($request_timeout))) {
-		$timeout = $request_timeout[$out["request"]];
-	}
+	$key = $out["request"];
+	if (isset($request_timeout[$key]))
+		$timeout = $request_timeout[$key];
+
+	//  Note: this is used to modify timeout for 'set_node' request but just for a specific node
+	if (isset($out["node"]))
+		$key .= ".".$out["node"];
+	if (isset($request_timeout[$key]))
+		$timeout = $request_timeout[$key];
 
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
