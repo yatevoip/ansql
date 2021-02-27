@@ -1382,13 +1382,16 @@ function import_iframe_cancel_button (cb, cb_parameters, cb_container_id=null)
  * Removes iframe used for import files by copying content from import_form (from iframe) in the container holding the iframe
  * @param string iframe_container_id The id of the container holding the iframe
  * @param string content_container_id The id of the container holding the content. If not provided falls to default id "import_form" 
+ * @param string magic_reload The link to reload the main page after changes are done in the imported iframe form
  */
-function import_iframe_response(iframe_container_id, content_container_id = null)
+function import_iframe_response(iframe_container_id, content_container_id = null, magic_reload = null)
 {
     if (!content_container_id)
 	    content_container_id = 'import_form';
-
-    window.parent.document.getElementById(iframe_container_id).innerHTML = document.getElementById(content_container_id).innerHTML;
+	if (magic_reload)
+		window.top.location = magic_reload;
+	else
+		window.parent.document.getElementById(iframe_container_id).innerHTML = document.getElementById(content_container_id).innerHTML;
 }
 
 function isObject(obj)
