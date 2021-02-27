@@ -6364,18 +6364,18 @@ function import_file_iframe($additional_params = array())
         
 	$src = "pages.php?method=".$form_method;
 	
-	if(count($additional_params)) {
+	if (count($additional_params)) {
 		foreach ($additional_params as $additional_param)
 			$src .= "&{$additional_param}=".getparam($additional_param);
 	} else {
-		foreach($_REQUEST as $param => $value){
-			if($param==="form_method" || $param==="method")
+		foreach ($_REQUEST as $param => $value){
+			if ($param==="form_method" || $param==="method")
 				continue;
 			$src .= "&{$param}={$value}";
 		}
 	}
 	print "<iframe id='import_iframe' class='import_iframe' src='$src'>";
-        print "</iframe>";
+    print "</iframe>";
 }
 
 function open_html_iframe() 
@@ -6414,12 +6414,10 @@ function close_html_iframe()
  *			html document and to link JS and CSS docs so we can use css and javascript inside iframe
  * @param string $form_action. Name of the function used for validation
  */
-function import_form_obj($class, $examples, $error="", $error_fields = array(), $cb_cancel = null,$cb_cancel_parameters=array(),$hidden_fields=array(),$iframe=true, $form_action=null)
+function import_form_obj($class, $examples, $error="", $error_fields = array(), $cb_cancel = null,$cb_cancel_parameters=array(),$hidden_fields=array(),$iframe=true, $form_action=null, $fields=array())
 {	
 	if (!$cb_cancel)
 		$cb_cancel = "display_" . get_plural_form($class);
-	
-	$fields = array();
 	
 	if ($iframe) {
 		open_html_iframe();
@@ -6447,8 +6445,8 @@ function import_form_obj($class, $examples, $error="", $error_fields = array(), 
 	error_handle($error, $fields, $error_fields);
 	start_form("pages.php?method=" . $form_action, "POST", true, $cb_cancel);
 	
-	if(count($hidden_fields)) {
-		foreach($hidden_fields as $name => $value)
+	if (count($hidden_fields)) {
+		foreach ($hidden_fields as $name => $value)
 			print "<input id='$name' name='$name' type='hidden' value='$value'/>";
 	}
 	
@@ -6750,19 +6748,20 @@ function get_selected_chk()
  * Verifies if a file with specified extension was provided in $_FILES and uploads it in $upload_path/time().$ext
  * @global type $upload_path
  * @param type $ext
+ * @param $name String. The name of the field where the file is uploaded.
  * @return array. If success returns array(true, " path to file") otherwise returns array(false, msg, array())
  */
-function check_file_upload($ext)
+function check_file_upload($ext, $name = "insert_file_location")
 {
 	global $upload_path;
 	
 	if (!count($_FILES))
 		return array(false, "No file uploaded!", array());
 	
-	if ($err = file_upload_has_err("insert_file_location"))
+		if ($err = file_upload_has_err($name))
 		return array(false, $err, array());
 
-	$filename = basename($_FILES["insert_file_location"]["name"]);	
+	$filename = basename($_FILES[$name]["name"]);
 	
 	$len = -1 * strlen($ext);
 	$file_ext = strtolower(substr($filename,$len));
@@ -6773,9 +6772,11 @@ function check_file_upload($ext)
 		mkdir($upload_path);
 
 	$real_name = time().$ext;
-	$file      = "$upload_path/$real_name";
-	if (!move_uploaded_file($_FILES["insert_file_location"]['tmp_name'],$file))
-		return array(false, "Could not upload file.", array());	
+	$sep       = (substr($upload_path,-1)=="/") ? "" : "/";
+	$file      = $upload_path . $sep . $real_name;
+	
+	if (!move_uploaded_file($_FILES[$name]['tmp_name'],$file))
+		return array(false, "Could not upload file.", array());
 	
 	return array(true, $file);
 }
