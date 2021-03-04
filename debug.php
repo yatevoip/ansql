@@ -198,7 +198,7 @@ class Debug
 		self::dump_xdebug();
 
 		foreach($debug_notify as $notification_type=>$notification_options) {
-			if (!count($notification_options))
+			if (!is_array($notification_options) || !count($notification_options))
 				continue;
 			switch ($notification_type) {
 			case "mail":
@@ -306,7 +306,7 @@ class Debug
 				// set where to send triggered reports
 				$to_emails = $notification_options;
 				if (isset($to_emails["manually_triggered"])) {
-					if ($manually_triggered && count($to_emails["manually_triggered"]))
+					if ($manually_triggered && is_arrray($to_emails["manually_triggered"]) && count($to_emails["manually_triggered"]))
 						$to_emails = $to_emails["manually_triggered"];
 					else
 						unset($to_emails["manually_triggered"]);
@@ -610,7 +610,9 @@ class Debug
 	public static function get_log_file()
 	{
 		global $logs_in;
-    
+
+		if (!is_array($logs_in))
+			return false;
 		$count_logs = count($logs_in);
 		for ($i=0; $i<$count_logs; $i++) {
 			if ($logs_in[$i]=="web" || strpos($logs_in[$i],"stdout"))
@@ -670,7 +672,7 @@ class Debug
 		global $dump_request_params;
 
 		print "<div class='trigger_report'>";
-		if (isset($debug_notify["mail"]) && count($debug_notify["mail"]))
+		if (isset($debug_notify["mail"]) && is_array($debug_notify["mail"]) && count($debug_notify["mail"]))
 			print "<a class='llink' href='main.php?module=".$module."&method=form_bug_report'>Send&nbsp;bug&nbsp;report</a>";
 		if (isset($_SESSION["triggered_report"]) && $_SESSION["triggered_report"]==true && isset($debug_notify["web"]) && in_array("notify",$debug_notify["web"]))
 			print "<div class='triggered_error'>!ERROR <a class='llink' href='".$_SESSION["main"]."?module=$module&method=clear_triggered_error'>Clear</a></div>";

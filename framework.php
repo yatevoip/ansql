@@ -1131,7 +1131,7 @@ class Model
 		$tables = str_replace(' ', '',$from_clause);
 		$tables = explode(',',$tables);
 
-		if (count($extend_with))
+		if (is_array($extend_with) && count($extend_with))
 		{
 			foreach($extend_with as $column_name=>$table_name)
 			{
@@ -1213,7 +1213,7 @@ class Model
 			self::warning(_("Could not select")." $class "._("from database").". Query: $query");
 			$this->invalidate();
 			return ;
-		} elseif(!count($res)) {
+		} elseif(!is_array($res) || !count($res)) {
 			$this->invalidate();
 			return;
 		} elseif(count($res)>1) {
@@ -1388,8 +1388,8 @@ class Model
 		{
 			$var = $this->variable($id);
 			$value_id = $this->{$id};
-			//if this object has a numeric id defined, no conditions were given then i want that object to be returned
-			if (!count($conditions) && !$given_where && !$order && !$limit && !$offset && $value_id)
+			//if this object has a numeric id defined, no conditions were given, then i want that object to be returned
+			if ( (!is_array($conditions) || !count($conditions)) && !$given_where && !$order && !$limit && !$offset && $value_id)
 			{
 				$value_id = $var->escape($value_id);
 				// one expectes a single row to be returned from the resulted query
@@ -1703,7 +1703,7 @@ class Model
 		$update_log = "";
 		$error = "";
 		$error_fields = array();
-		if (!count($conditions))  {
+		if (!is_array($conditions) || !count($conditions))  {
 			if($this->isInvalid())
 				return array(false, _("Update was not made. Object was invalidated previously."),$error_fields, 0);
 			$id = $this->getIdName();
@@ -1794,7 +1794,7 @@ class Model
 		$error = "";
 		$error_fields = array();
 
-		if(!count($conditions)) {
+		if(!is_array($conditions) || !count($conditions)) {
 			if($this->isInvalid())
 				return array(false, _("Update was not made. Object was invalidated previously."),array(),0);
 			$id = $this->getIdName();
@@ -1807,7 +1807,7 @@ class Model
 
 		$where = $this->makeWhereClause($conditions, true);
 		$vars = self::getVariables(get_class($this));
-		if (!count($fields))
+		if (!is_array($fields) || !count($fields))
 			return array(false,_("Update was not made. No fields were specified."),array(),0);
 		foreach($vars as $var_name=>$var) 
 		{
@@ -2015,7 +2015,7 @@ class Model
 
 		$orig_cond = $conditions;
 		$table = $this->getTableName();
-		if (!count($conditions)) {
+		if (!is_array($conditions) || !count($conditions)) {
 			if ($this->isInvalid())
 				return array(false, _("Could not delete object of class")." "._(get_class($this)).". "._("Object was previously invalidated").".");
 			
@@ -2258,7 +2258,7 @@ class Model
 		$original_message = $message;
 		$orig_cond = $conditions;
 		$table = $this->getTableName();
-		if(!count($conditions)) 
+		if(!is_array($conditions) || !count($conditions)) 
 		{
 			if($this->isInvalid())
 				return array(false, _("Could not try to delete object of class")." "._(get_class($this)).". "._("Object was previously invalidated").".");
@@ -2432,7 +2432,7 @@ class Model
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 
-		if (!count($objects))
+		if (!is_array($objects) || !count($objects))
 			return array();
 		// array of beginnings that will be stripped
 		// usage is motivated by need of having two columns in the array generated from a single variable
@@ -2740,7 +2740,7 @@ class Model
 			$i++;
 		}
 		
-		if (!count($all_db_identifiers)) 
+		if (!is_array($all_db_identifiers) || !count($all_db_identifiers)) 
 			return array(NULL);
 		
 		return $all_db_identifiers;
@@ -2783,7 +2783,7 @@ class Model
 
 				$identifier = call_user_func(array($object,"getDbIdentifier"));
 				//if object doesn't have identifier consider identifier to be the first one defined in config.php (or null if not in config.php)
-				if (!count($identifier) && $all_db_identifiers[0])
+				if ( (!is_array($identified) || !count($identifier)) && $all_db_identifiers[0])
 					$identifier = array($all_db_identifiers[0]);
 				
 				// if object doesn't have identifier and current identier is different than the default => skip
@@ -3073,7 +3073,7 @@ class Model
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 
 		$where = ' WHERE ';
-		if(!count($conditions))
+		if(!is_array($conditions) || !count($conditions))
 			return '';
 		$obj_table = $this->getTableName();
 		foreach($conditions as $key=>$value)
@@ -3359,10 +3359,10 @@ class Model
 
 		// When writing the String one must pay attention to use "" for fields and tables that are in
 		// the special words in PostgreSQL
-		if(!count($order))
-			return;
 		if (!is_array($order))
 			return $order;
+		if (!count($order))
+			return;
 		$clause = '';
 		foreach($order as $key=>$value) 
 		{

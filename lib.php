@@ -701,7 +701,7 @@ function build_link_request($exclude_params=array(), $additional_url_elements=ar
 		if (substr($link,-1) != "?")
 			$link .= "&";
 
-		if (count($additional_url_elements)) {
+		if (is_array($additional_url_elements) && count($additional_url_elements)) {
 			foreach ($additional_url_elements as $k=>$element_name)
 				if ($element_name == $param)
 					$link .= "$param=".urlencode($value);
@@ -805,7 +805,7 @@ function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 	if (isset($_REQUEST["total"]))
 		$total = $_REQUEST["total"];
 
-	if (!count($additional_url_elements))
+	if (!is_array($additional_url_elements) || !count($additional_url_elements))
 		$additional_url_elements = array("total");
 	elseif (!in_array("total", $additional_url_elements))
 		$additional_url_elements[] = "total";
@@ -985,7 +985,7 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
 
 	print "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"$action\" />\n";
 
-	if (count($additional))
+	if (is_array($additional) && count($additional))
 		foreach($additional as $key=>$value) 
 			print '<input type="hidden" id="' . $key . '" name="' . $key . '" value=' . html_quotes_escape($value) . '>';
 		
@@ -1151,7 +1151,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 		print '</tr>';
 	}
 
-	if(count($custom_submit))
+	if(is_array($custom_submit) && count($custom_submit))
 		foreach($custom_submit as $field_name=>$field_format)
 			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width);
 
@@ -1300,7 +1300,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	}
 
 	if (!is_array($value) && !strlen($value) && isset($field_format["cb_for_value"]) && isset($field_format["cb_for_value"]["name"]) && is_callable($field_format["cb_for_value"]["name"])) {
-		if (count($field_format["cb_for_value"])==2) 
+		if (is_array($field_format["cb_for_value"]) && count($field_format["cb_for_value"])==2) 
 			$value = call_user_func_array($field_format["cb_for_value"]["name"],$field_format["cb_for_value"]["params"]);
 		else
 			$value = call_user_func($field_format["cb_for_value"]["name"]);
@@ -1587,7 +1587,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				}
 			}
 
-			if ($add_selected_to_dropdown_if_missing && (is_string($selected) && strlen($selected) || is_array($selected) && count($selected))) {
+			if ($add_selected_to_dropdown_if_missing && ( (is_string($selected) && strlen($selected)) || (is_array($selected) && count($selected)) ) ) {
 				if (is_string($selected) && !$is_selected) {
 					print '<option '.$css.' SELECTED >' . $selected . '</option>';
 				} elseif (is_array($selected)) {
@@ -1615,7 +1615,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			foreach ($options as $var=>$opt) {
 				if ($var === "selected" || $var === "SELECTED")
 					continue;
-				if (count($opt) == 2) {
+				if (is_array($opt) && count($opt) == 2) {
 					$optval = $field_name.'_id';
 					$name = $field_name;
 					$value = $opt[$optval];
@@ -2030,7 +2030,7 @@ function is_form_submited($apply_conditions=array())
 
 	// if keep_form_values activated but no condition given
 	// try detecting if form was submited by verifying if "action" field is equal to "database" value
-	if ($keep_form_values && !count($apply_conditions))
+	if ($keep_form_values && (!is_array($apply_conditions) || !count($apply_conditions)))
 		$apply_conditions = array("action"=>"database");
 	
 	$form_submited = true;
@@ -2186,13 +2186,16 @@ function find_field_value($res, $line, $field)
 	return NULL;
 }
 
-function tree($array, $func = "copacClick",$class="copac",$title=NULL)
+function tree($array, $func="copacClick", $class="copac", $title=NULL)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module,$path;
 
+	if (!is_array($array))
+		$array = array();
+
 	$i = 0;
-	if (!isset($array[$i]) && count($array))
+	if (count($array) && !isset($array[$i]))
 		while(!isset($array[$i]))
 			$i++;
 	if (count($array)) {
@@ -2324,6 +2327,9 @@ function tableOfObjects_ord($objects, $formats, $object_name, $object_actions=ar
 function clean_actions_array($actions)
 {
 	global $level, $forbidden_actions;
+
+	if (!is_array($actions))
+		return array();
 	
 	if (!isset($forbidden_actions[$level]))
 		return $actions;
@@ -2408,6 +2414,9 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 
 	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities, $level, $go_to_prev_page_link;
 
+	if (!is_array($objects))
+		$objects = array();
+
 	$object_actions = clean_actions_array($object_actions);
 	$general_actions = clean_actions_array($general_actions);
 	$formats = clean_actions_array($formats);
@@ -2432,7 +2441,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		print "<table class=\"$css\"><tr><td style=\"text-align:right;\">";
 		plainmessage("There aren't any $plural in the database.");
 		print "</td></tr>";
-		if(!count($general_actions)) {
+		if (!count($general_actions)) {
 			print '</table>';
 			return;
 		}
@@ -2503,7 +2512,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 	} else
 		$no_columns = 2;
 
-	if(count($general_actions) && in_array("__top",$general_actions))
+	if (count($general_actions) && in_array("__top",$general_actions))
 		links_general_actions($general_actions, $no_columns, $css, $base, true);
 
 	print $ths;
@@ -2738,7 +2747,7 @@ function links_general_actions($general_actions, $no_columns, $css, $base, $on_t
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
-	if (!count($general_actions))
+	if (!is_array($general_actions) || !count($general_actions))
 		return;
 
 	$pos_css = ($on_top) ? "starttable" : "endtable";
@@ -2883,6 +2892,8 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module, $do_not_apply_htmlentities, $level, $go_to_prev_page_link;
 
+	if (!is_array($array))
+		$array = array();
 	$element_actions = clean_actions_array($element_actions);
 	$general_actions = clean_actions_array($general_actions);
 	$formats = clean_actions_array($formats);
@@ -3897,6 +3908,7 @@ function bytestostring($size, $precision = 0)
 function form_params($fields)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+
 	$params = array();
 	for ($i=0; $i<count($fields); $i++)
 		$params[$fields[$i]] = getparam($fields[$i]);
@@ -4063,6 +4075,9 @@ function format_opt_for_dropdown($vals, $field="field", $set_id=false)
 function formTable($rows, $th = null, $title = null, $submit = null, $width = null, $id = null, $css_first_column = '', $color_indexes = array(), $dif_css = "", $th_css = "")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
+	if (!is_array($rows))
+		$rows = array();
+
 	if (is_array($th))
 		$cols = count($th);
 	elseif (isset($rows[0]))
@@ -4585,7 +4600,7 @@ function send_mail($emailaddress, $fromaddress, $emailsubject, $body, $attachmen
 	//$msg .= strip_tags(str_replace("\n", "<br/>", $body)).$eol.$eol;
 	$msg .= $body.$eol.$eol;
 
-	if($attachments !== false  && count($attachments) > 0) {
+	if($attachments !== false  && is_array($attachments) && count($attachments) > 0) {
 	# Boundry for marking the split & Multitype Headers
 		$headers .= 'MIME-Version: 1.0'.$eol;
 		$headers .= "Content-Type: multipart/mixed; boundary=\"".$mime_boundary."\"".$eol;
@@ -4888,6 +4903,9 @@ function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_head
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	$col_nr = 0;
+
+	if (!is_array($array))
+		$array = array();
 	
 	if (!$formats && count($array))
 		foreach ($array[0] as $name=>$val)
@@ -5384,6 +5402,8 @@ function generic_tabbed_settings($options,$config,$section_to_open=array(),$show
 
 	if (!$form_name)
 		$form_name = $module;
+	if (!is_array($options))
+		$options = array();
 
 	print '<table class="sections '.$custom_css.'" cellspacing="0" cellpadding="0">'."\n";
 	print '<tr>'."\n";
@@ -5664,6 +5684,8 @@ function get_search_conditions($custom_cols=array())
  */ 
 function get_file_last_lines($path, $line_count, $block_size = 512, $offset = null, $leftover = '', $lines = array())
 {
+	if (!is_array($lines))
+		$lines = array();
 	if (count($lines) >= $line_count)
 		return array(array_slice($lines, 0, $line_count), $offset, $leftover, array_slice($lines, $line_count));
 
@@ -5741,7 +5763,7 @@ function format_comment($text)
  */
 function build_net_addresses_dropdown($net_interfaces, $select=false, $type_ip = "both", $dropdown_key = "local")
 {
-	$interfaces_ips = "";
+	$interfaces_ips = array();
 
 	foreach ($net_interfaces["net_address"] as $key=>$interface) {
 		if (!$select)
@@ -5779,6 +5801,10 @@ function change_keys_dropdown($array, $old_key, $new_key)
 {
 	$old_keys = array($old_key."_id", $old_key);
 	$new_keys = array($new_key."_id", $new_key);
+
+
+	if (!is_array($array))
+		return array();
 
 	for ($i=0; $i<count($array); $i++) {
 		for ($j=0; $j<2; $j++) {
@@ -6364,7 +6390,7 @@ function import_file_iframe($additional_params = array())
         
 	$src = "pages.php?method=".$form_method;
 	
-	if (count($additional_params)) {
+	if (is_array($additional_params) && count($additional_params)) {
 		foreach ($additional_params as $additional_param)
 			$src .= "&{$additional_param}=".getparam($additional_param);
 	} else {
@@ -6425,7 +6451,7 @@ function import_form_obj($class, $examples, $error="", $error_fields = array(), 
 		//  -  replace the iframe content with the content displayed from calling cb and 
 		//  -  will remove iframe by replacing iframe with it's own content
 		//
-		$cb_parameters = (count($cb_cancel_parameters)) ? json_encode($cb_cancel_parameters) : "false";
+		$cb_parameters = (is_array($cb_cancel_parameters) && count($cb_cancel_parameters)) ? json_encode($cb_cancel_parameters) : "false";
 		$fields["buttons"] = array(	
 			"display" => "custom_submit", 
 			"value"   => "<input class=\"edit\" name=\"Upload\" value=\"Upload\" type=\"submit\">
@@ -6445,7 +6471,7 @@ function import_form_obj($class, $examples, $error="", $error_fields = array(), 
 	error_handle($error, $fields, $error_fields);
 	start_form("pages.php?method=" . $form_action, "POST", true, $cb_cancel);
 	
-	if (count($hidden_fields)) {
+	if (is_array($hidden_fields) && count($hidden_fields)) {
 		foreach ($hidden_fields as $name => $value)
 			print "<input id='$name' name='$name' type='hidden' value='$value'/>";
 	}
@@ -6549,7 +6575,7 @@ function validate_import_file($class, $mandatory_cols = array(), $type_file = "c
 		return array(false, "The validation for .".$type_file." file is not implemented.", array());
 	}
 	
-	if (!$res["col_names"] || !count($res["data"])) {
+	if (!$res["col_names"] || !is_array($res["data"]) || !count($res["data"])) {
 		return array(false, "Can not upload file. File seems to be empty.", array());	
 	}
 	$data         = $res["data"];// $data = array( array(col1=>val1,col2=>val2, ...), array(col1=>val1,col2=>val2, ...), ...)
@@ -6572,7 +6598,7 @@ function validate_import_file($class, $mandatory_cols = array(), $type_file = "c
 	}
 
 	if ($missing_col) {
-		$msg =  (count($mandatory_cols)) ? "Columns '" .implode("', '",$mandatory_cols)."' are mandatory!" : "Column '" .implode("', '",$mandatory_cols)."' is mandatory!";
+		$msg =  (is_array($mandatory_cols) && count($mandatory_cols)) ? "Columns '" .implode("', '",$mandatory_cols)."' are mandatory!" : "Column '" .implode("', '",$mandatory_cols)."' is mandatory!";
 		return array(false, "Can not upload file. Column '" . $missing_col ."' was not found in file. " . $msg, array());	
 	}
 	
@@ -6755,10 +6781,10 @@ function check_file_upload($ext, $name = "insert_file_location")
 {
 	global $upload_path;
 	
-	if (!count($_FILES))
+	if (!is_array($_FILES) || !count($_FILES))
 		return array(false, "No file uploaded!", array());
 	
-		if ($err = file_upload_has_err($name))
+	if ($err = file_upload_has_err($name))
 		return array(false, $err, array());
 
 	$filename = basename($_FILES[$name]["name"]);

@@ -145,7 +145,7 @@ abstract class TabbedSettings
 				$new_fields[$section][$subsection][$param_name]["value"]       = $field_param;
 		}
 
-		$status = (!count($this->error_field)) ? true : false;
+		$status = (!is_array($this->error_field) || !count($this->error_field)) ? true : false;
 		return array($status, "fields"=>$new_fields, "request_fields"=>$request_fields);
 	}
 
@@ -168,8 +168,11 @@ abstract class TabbedSettings
 	{
 		Debug::func_start(__METHOD__, func_get_args(), "tabs_validations");
 
+		if (!is_array($validity))
+			$validity = array();
+
 		if (function_exists("call_user_func_array")) { //this function exists in PHP 5.3.0
-			$total = count($validity);
+			$total = (is_array($validity) && count($validity)) ? count($validity) : 0;
 			$args  = array($param_name,$field_param);
 			
 			for ($i=1; $i<$total; $i++) 

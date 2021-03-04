@@ -76,7 +76,7 @@ abstract class Plugin
 	 */
 	public static function includeJSPlugins()
 	{
-		if (!count(self::$plugin_classes))
+		if (!is_array(self::$plugin_classes) || !count(self::$plugin_classes))
 			return;
 
 		foreach (self::$plugin_classes as $class) {
