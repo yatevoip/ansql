@@ -149,7 +149,7 @@ class CsvFile extends GenericFile
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"ansql");
 		parent::__construct($file_name);
-		$this->formats = (is_array($formats)) ? $formats ; array();
+		$this->formats = (is_array($formats)) ? $formats : array();
 		$this->sep = $sep;
 		$this->file_content = $file_content;
 		$this->test_header = $test_header;
