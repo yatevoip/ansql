@@ -2783,7 +2783,7 @@ class Model
 
 				$identifier = call_user_func(array($object,"getDbIdentifier"));
 				//if object doesn't have identifier consider identifier to be the first one defined in config.php (or null if not in config.php)
-				if ( (!is_array($identified) || !count($identifier)) && $all_db_identifiers[0])
+				if ( (!is_array($identifier) || !count($identifier)) && $all_db_identifiers[0])
 					$identifier = array($all_db_identifiers[0]);
 				
 				// if object doesn't have identifier and current identier is different than the default => skip
