@@ -787,8 +787,10 @@ function items_on_page($total = null, $nrs = array(20,50,100), $additional_url_e
  * @param $total Integer. Total number of entities
  * @param $additional_url_elements Array. Additional elements to add in links beside default ones(module, method, page, total)
  * Ex: array("status")
+ * @param $jump_to Boolean. Default false. If true, 'jump to' input is displayed.
+ * @param $div_css String. If value is given, <center> tag won't be used, and specified css class will be used instead of the default one 'pages'.
  */ 
-function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
+function pages($total = NULL, $additional_url_elements=array(), $jump_to=false, $div_css = NULL)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $limit, $page, $module, $method, $action, $go_to_prev_page_link;
@@ -827,8 +829,12 @@ function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 		return; 
 
 	$pages = floor($total/$limit);
-	print '<center>';
-	print '<div class="pages">';
+	if ($div_css) {
+		print '<div class="'.$div_css.'">';
+	} else {
+		print '<center>';
+		print '<div class="pages">';
+	}
 	if ($page != 0) {
 		/* jump to first page */
 		print '<a class="pagelink" href="'.$link.'&page=0">|<</a>&nbsp;&nbsp;';
@@ -893,7 +899,8 @@ function pages($total = NULL, $additional_url_elements=array(), $jump_to=false)
 		print '('.$no_pages.')&nbsp;&nbsp;<font class="jump_to_text">Jump to</font> &nbsp;<input class="jump_to_inp" type="text" name="jump_to" id="jump_to" onkeyup="if (event.keyCode==13) '."jump_to('".$link."', $limit, $no_pages);".' "/>&nbsp;'. "<input type=\"button\" name=\"go\" value=\"Go\" onclick=\"jump_to('".$link."', $limit, $no_pages);\" />";
 	}
 	print '</div>';
-	print '</center>';
+	if (!$div_css)
+		print '</center>';
 }
 
 /**
