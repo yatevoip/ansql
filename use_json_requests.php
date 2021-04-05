@@ -98,6 +98,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	global $request_timeout;
 	global $displayed_errors;
 	global $func_handle_headers;
+	global $request_http2;
 
 	if (substr($request,0,7)!="http://" && substr($request,0,8)!="https://") {
 		if (!isset($func_build_request_url) || !$func_build_request_url)
@@ -134,6 +135,11 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	if (isset($request_timeout[$key]))
 		$timeout = $request_timeout[$key];
 
+	if ($request_http2) {
+		curl_setopt($curl,CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_2_0);
+		curl_setopt($curl,CURLOPT_SSL_VERIFYPEER,false);
+		curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,false);
+	}
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
 	curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($out));
