@@ -135,9 +135,12 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	if (isset($request_timeout[$key]))
 		$timeout = $request_timeout[$key];
 
+	// by default don't use HTTP/2
+	if (!isset($request_http2))
+		$request_http2 = false;
+
 	if ($request_http2) {
 		curl_setopt($curl,CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_2_0);
-		curl_setopt($curl,CURLOPT_SSL_VERIFYPEER,false);
 		curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,false);
 	}
 	curl_setopt($curl,CURLOPT_POST,true);
@@ -247,6 +250,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 function make_basic_curl_request($url,$out,$auth_header=false)
 {
 	global $func_handle_headers;
+	global $request_http2;
 	
 	$curl = curl_init($url);
 	if ($curl === false) {
@@ -264,6 +268,15 @@ function make_basic_curl_request($url,$out,$auth_header=false)
 	);
 	if ($auth_header)
 		$headers[] = "X-Authentication: ".$json_api_secret;
+
+	// by default don't use HTTP/2
+	if (!isset($request_http2))
+		$request_http2 = false;
+
+	if ($request_http2) {
+		curl_setopt($curl,CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_2_0);
+		curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,false);
+	}
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
 	curl_setopt($curl,CURLOPT_POSTFIELDS,$out);
