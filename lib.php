@@ -1280,7 +1280,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if (isset($field_format["advanced"]))
 		$have_advanced = true;
 
-	if (isset($field_format["triggered_by"]))
+	$needs_trigger = false;
+	if (isset($field_format["triggered_by"]) && strlen($field_format["triggered_by"]) !== 0)
 		$needs_trigger = true;
 
 	$display = (isset($field_format["display"])) ? $field_format["display"] : "text";
