@@ -6768,7 +6768,7 @@ function get_selected_chk()
 
 		$checkbox_value = getparam($field_name);
 		if (bool_value($checkbox_value) || $checkbox_value=="on") {
-			$selected_obj_ids[] = substr($field_name, 6);
+			$selected_obj_ids[] = (int)substr($field_name, 6);
 		} else
 			continue;
 	}
