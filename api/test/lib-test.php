@@ -17,6 +17,7 @@
  */ 
 function test_curl_request($url, $content=null, $ctype=null, $method='post', $print_url=true)
 {
+	global $upload_path;
 	// for tests purpose use the next line and in terminal 'ngrep -d lo -W byline host 127.0.0.1 and port 80'
 	// $_SERVER['HTTP_HOST'] = '127.0.0.1';
 	$_SERVER['REQUEST_SCHEME'] = "http";
@@ -97,12 +98,21 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 		if ($print_url)
 			print " OK, code=$code, type='$type'<br><pre>$ret</pre>";
 		if ($type == "application/json") {
-			$inp = json_decode($ret,true);
-			print("<pre>");var_dump($inp);print("</pre>");
+			$ret = json_decode($ret,true);
+			print("<pre>");var_dump($ret);print("</pre>");
+
+			if (isset($ret["answer_list"]["archive"])) {
+				$tmp =  "all_eq_conf_".time().".tar";
+				if (!file_put_contents($upload_path."/".$tmp, base64_decode($ret["answer_list"]["archive"]))) {
+					unlink($upload_path."/".$tmp);
+					print "Could not write archive files to '$tmp'";
+				} else {
+					print "<div style=\"font-weight:bold;font-size:15px;padding:5px;\">Archive was decoded from request and set in file. <a href=\"../../download.php?file=$tmp\">Download</a></div>";
+				}
+			}
 		} else {
 			print $message;
 		}
 	}
 	curl_close($curl);
-
 }
