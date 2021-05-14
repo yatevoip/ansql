@@ -33,9 +33,17 @@ if (isset($debug)) {
 
 $mess = str_replace("\n","", $response["message"]);
 header("HTTP/1.1 " . $response["code"] . " " . $mess);
+if (isset($response["download"]) && isset($response["data"])) {
+	header("Content-Type: application/octet-stream");
+	header("Content-Disposition: attachment; filename=".$response["download"]);
+	echo $response["data"];
+	exit;
+}
+
 if (isset($response["data"])) {
 	header("Content-Type: application/json");
 	echo json_encode($response["data"]);
+	exit;
 }
 
 function process_request($req, $params)

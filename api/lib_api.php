@@ -23,6 +23,14 @@ function translate_error_to_code($res)
 
 function build_success($data, $params, $extra=null)
 {
+	if (isset($data["download"]))
+		return array(
+			"code"      => 200,
+			"message"   => "OK",
+			"params"    => $params,
+			"download"  => $data["download"],
+			"data"		=> $data["archive"]
+		);
 	$res = array(
 		"code"		=> 200,
 		"message"	=> "OK",

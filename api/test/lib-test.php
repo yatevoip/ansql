@@ -100,16 +100,15 @@ function test_curl_request($url, $content=null, $ctype=null, $method='post', $pr
 		if ($type == "application/json") {
 			$ret = json_decode($ret,true);
 			print("<pre>");var_dump($ret);print("</pre>");
-
-			if (isset($ret["answer_list"]["archive"])) {
-				$tmp =  "all_eq_conf_".time().".tar";
-				if (!file_put_contents($upload_path."/".$tmp, base64_decode($ret["answer_list"]["archive"]))) {
-					unlink($upload_path."/".$tmp);
-					print "Could not write archive files to '$tmp'";
-				} else {
-					print "<div style=\"font-weight:bold;font-size:15px;padding:5px;\">Archive was decoded from request and set in file. <a href=\"../../download.php?file=$tmp\">Download</a></div>";
-				}
+		} elseif ($type == "application/octet-stream") {
+			$tmp =  "all_eq_conf_".time().".tar";
+			if (!file_put_contents($upload_path."/".$tmp, $ret)) {
+				unlink($upload_path."/".$tmp);
+				print "Could not write archive files to '$tmp'";
+			} else {
+				print "<div style=\"font-weight:bold;font-size:15px;padding:5px;\">Received Content type: 'application/octet-stream', set archive into file. <a href=\"../../download.php?file=$tmp\">Download</a></div>";
 			}
+
 		} else {
 			print $message;
 		}
