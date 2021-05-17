@@ -36,6 +36,8 @@ header("HTTP/1.1 " . $response["code"] . " " . $mess);
 if (isset($response["download"]) && isset($response["data"])) {
 	header("Content-Type: application/octet-stream");
 	header("Content-Disposition: attachment; filename=".$response["download"]);
+	header("Content-Transfer-Encoding: binary");
+	header("Content-Length: ".strlen($response["data"]));
 	echo $response["data"];
 	exit;
 }
