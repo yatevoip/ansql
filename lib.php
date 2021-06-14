@@ -6444,11 +6444,19 @@ function close_html_iframe()
  * @param array $error_fields. Array containing fields having incorrect values.
  * @param string $cb_cancel. Name of the function which will be called after the execution of this function is
  * @param array $cb_cancel_parameters. Id of the equipment if objects to be imported are not global objects
+ * @param type $form_action_params Parameters to be added to action URL. 
+ *			  Ex: 
+ *			   For $form_action_params = array("equipment_id" => 15, "language_id" => 12);  
+ *			   Results <form action="pages.php?method=import_languages_database&equipment_id=15&language_id=12" ...
  * @param bool $iframe. If true will indicate that the form is inside an iframe, therefore is needed to add the html structure for a 
  *			html document and to link JS and CSS docs so we can use css and javascript inside iframe
- * @param string $form_action. Name of the function used for validation
+ * @param string $form_action_method. Name of the function used for validation. Will be added to action URL. 
+ *			  Ex: 
+ *			   For $form_action_method = array("method" => "import_languages_database")
+ *			   Results <form action="pages.php?method=import_languages_database"
+ * @param array $fields. Array of type field_name=>field_formats
  */
-function import_form_obj($class, $examples, $error="", $error_fields = array(), $cb_cancel = null,$cb_cancel_parameters=array(),$hidden_fields=array(),$iframe=true, $form_action=null, $fields=array())
+function import_form_obj($class, $examples, $error="", $error_fields = array(), $cb_cancel = null,$cb_cancel_parameters=array(),$form_action_params=array(),$iframe=true, $form_action_method=null, $fields=array(), $form_action = "pages.php")
 {	
 	if (!$cb_cancel)
 		$cb_cancel = "display_" . get_plural_form($class);
@@ -6473,17 +6481,19 @@ function import_form_obj($class, $examples, $error="", $error_fields = array(), 
 	
 	$button_name = (!isset($fields["buttons"])) ? "Upload" : "no";
 	
-	if (!$form_action)
-		$form_action = "import_" . get_plural_form($class) . "_database";
-	
-	error_handle($error, $fields, $error_fields);
-	start_form("pages.php?method=" . $form_action, "POST", true, $cb_cancel);
-	
-	if (is_array($hidden_fields) && count($hidden_fields)) {
-		foreach ($hidden_fields as $name => $value)
-			print "<input id='$name' name='$name' type='hidden' value='$value'/>";
+	// Important! We add values in form action as request parameters, 
+	// instead of adding hidden fields with this values, 
+	// so, we don't lose this params, if files uploaded bigger than post_max_size
+	if (!$form_action_method)
+		$form_action_method = "import_" . get_plural_form($class) . "_database";
+	$form_action = $form_action . "?method=" . $form_action_method;
+	if (is_array($form_action_params) && count($form_action_params)) {
+		foreach ($form_action_params as $name => $value)
+			$form_action .=  "&".$name."=".$value;
 	}
 	
+	error_handle($error, $fields, $error_fields);
+	start_form($form_action, "POST", true, $cb_cancel);	
 	editObject(NULL,$fields,"Import " . str_replace("_", " ", get_plural_form($class)) . " from file", $button_name);
 	end_form();
 	
@@ -6776,6 +6786,49 @@ function get_selected_chk()
 	return $selected_obj_ids;
 }
 
+/**
+ * Return corresponding error type as stated here:
+ * https://www.php.net/manual/en/errorfunc.constants.php
+ * @param int $type_id
+ * @return Corresponding error type
+ */
+function translate_error_type($type_id)
+{
+	switch ($type_id) {
+		case 1:
+			return "E_ERROR";
+		case 2:
+			return "E_WARNING";
+		case 4:
+			return "E_PARSE";
+		case 8:
+			return "E_NOTICE";
+		case 16:
+			return "E_CORE_ERROR";
+		case 32:
+			return "E_CORE_WARNING";
+		case 64:
+			return "E_COMPILE_ERROR";
+		case 128:
+			return "E_COMPILE_WARNING";
+		case 256:
+			return "E_USER_ERROR";
+		case 512:
+			return "E_USER_WARNING";
+		case 1024:
+			return "E_USER_NOTICE";
+		case 2048:
+			return "E_STRICT";
+		case 4096:
+			return "E_RECOVERABLE_ERROR";
+		case 8192:
+			return "E_DEPRECATED";
+		case 16384:
+			return "E_USER_DEPRECATED";
+		case 32767:
+			return "E_ALL";
+	}
+}
 
 /**
  * Function used for pre-validatating file. 
@@ -6789,6 +6842,13 @@ function check_file_upload($ext, $name = "insert_file_location")
 {
 	global $upload_path;
 	
+	$last_error = error_get_last();
+	
+	if ($last_error!==NULL) {
+		$err_type = translate_error_type($last_error["type"]);
+		
+		return array(false, "Encountered PHP error: Type: '".$err_type . "' , Message: '" . $last_error["message"] ."'", array());
+	}
 	if (!is_array($_FILES) || !count($_FILES))
 		return array(false, "No file uploaded!", array());
 	
