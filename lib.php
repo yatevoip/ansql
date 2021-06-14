@@ -1797,15 +1797,15 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 						print '<a class="'.$css.'" id="show_hide_file_examples" onclick="show_hide_file_examples([\''. implode("','", $not_displayed_elem_ids).'\'], \'show_hide_file_examples\')" href="#">Display more examples...</a>';
 					print '</ul>';
 				}
-				if (isset($field_format["extra_info"])) {
-					if (!is_array($field_format["extra_info"])) {
-						print 'Note! ' . $field_format["extra_info"];
-					} else {
-						print 'Note! <ul>';
-						foreach ($field_format["extra_info"] as $extra_info)
-							print '<li>' . $extra_info . '</li>';
-						print '</ul>';
-					}
+			}
+			if (isset($field_format["extra_info"])) {
+				if (!is_array($field_format["extra_info"]) && strlen($field_format["extra_info"])>0) {
+					print '<div class="extra_info_import_form">'.'Note! ' . $field_format["extra_info"].'</div>';
+				} else if (is_array($field_format["extra_info"]) && count($field_format["extra_info"])>0){
+					print '<div class="extra_info_import_form">'.'Note! <ul>';
+					foreach ($field_format["extra_info"] as $extra_info)
+						print '<li>' . $extra_info . '</li>';
+					print '</ul>'.'</div>';
 				}
 			}
 			if ($display == 'file' && !isset($field_format["file_example"])) 
