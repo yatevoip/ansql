@@ -86,7 +86,7 @@ function build_request_url(&$out,&$request)
 	return $url;
 }
 
-function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true)
+function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $token_alarm_center = false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -100,6 +100,9 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	global $func_handle_headers;
 	global $request_http2;
 
+	$trigger_report = true;
+	if ($token_alarm_center)
+		$trigger_report = false;
 	if (substr($request,0,7)!="http://" && substr($request,0,8)!="https://") {
 		if (!isset($func_build_request_url) || !$func_build_request_url)
 			$func_build_request_url = "build_request_url";
@@ -116,7 +119,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	$curl = curl_init($url);
 	if ($curl === false) {
 		$resp = array("code"=>"-103", "message"=>_("Could not initialize curl request."));
-		write_error($request, $out, "", "", $url, $resp);
+		write_error($request, $out, "", "", $url, $resp, $trigger_report);
 		return $resp;
 	}
 
@@ -125,15 +128,16 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	}
 
 	$timeout = 20;
-	$key = $out["request"];
-	if (isset($request_timeout[$key]))
-		$timeout = $request_timeout[$key];
-
-	//  Note: this is used to modify timeout for 'set_node' request but just for a specific node
-	if (isset($out["node"]))
-		$key .= ".".$out["node"];
-	if (isset($request_timeout[$key]))
-		$timeout = $request_timeout[$key];
+	if (!$token_alarm_center) {
+		$key = $out["request"];
+		if (isset($request_timeout[$key]))
+			$timeout = $request_timeout[$key];
+		//  Note: this is used to modify timeout for 'set_node' request but just for a specific node
+		if (isset($out["node"]))
+			$key .= ".".$out["node"];
+		if (isset($request_timeout[$key]))
+			$timeout = $request_timeout[$key];
+	}
 
 	// by default don't use HTTP/2
 	if (!isset($request_http2))
@@ -143,11 +147,12 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		curl_setopt($curl,CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_2_0);
 		curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,false);
 	}
+	$api_secret = $token_alarm_center ? $token_alarm_center : $json_api_secret;
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
 	curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($out));
 	curl_setopt($curl,CURLOPT_HTTPHEADER,array(
-	    "X-Authentication: ".$json_api_secret,
+	    "X-Authentication: ".$api_secret,
 	    "Content-Type: application/json",
 	    "Accept: application/json,text/x-json,application/x-httpd-php",
 	    "Accept-Encoding: gzip, deflate"
@@ -172,7 +177,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		$error = curl_error($curl);
 		// if no response from api / request times out this will be received
 		$resp = array("code"=>"-100", "message"=>_("Could not send request. Please try again later.\n Error: $error."));
-		write_error($request, $out, $ret, "CURL exec error: $error", $url, $resp);
+		write_error($request, $out, $ret, "CURL exec error: $error", $url, $resp, $trigger_report);
 		curl_close($curl);
 		return $resp;
 	} else {	
@@ -209,7 +214,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 			$inp = json_decode($ret,true);
 			if (!$inp || $inp==$ret) {
 				$resp = array("code"=>"-101", "message"=>_("Could not parse JSON response."));
-				write_error($request, $out, $ret, $http_code, $url, $resp);
+				write_error($request, $out, $ret, $http_code, $url, $resp, $trigger_report);
 				curl_close($curl);
 				return $resp;
 			}
@@ -226,7 +231,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		} elseif ($type == "image/jpeg") {
 			if ($response_is_array) {
 				$resp = array("code"=>"-102", "message"=>_("Invalid content type image/jpeg for response."));
-				write_error($request, $out, $ret, $http_code, $url, $resp);
+				write_error($request, $out, $ret, $http_code, $url, $resp, $trigger_report);
 				return $resp;
 			
 			}
@@ -239,7 +244,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		} else {
 			//print $ret;
 			$resp = array("code"=>"-101", "message"=>_("Could not parse response from API. Got unknown type $type."));
-			write_error($request, $out, $ret, $http_code, $url, $resp);
+			write_error($request, $out, $ret, $http_code, $url, $resp, $trigger_report);
 			curl_close($curl);
 			return $resp;
 			//return $ret;
@@ -251,6 +256,7 @@ function make_basic_curl_request($url,$out,$auth_header=false)
 {
 	global $func_handle_headers;
 	global $request_http2;
+	global $json_api_secret;
 	
 	$curl = curl_init($url);
 	if ($curl === false) {
@@ -347,7 +353,7 @@ function handle_headers_response($curl, &$ret)
 		$ret = substr($ret,$info['header_size']);
 }
 
-function write_error($request, $out, $ret, $http_code, $url, $displayed_response=null)
+function write_error($request, $out, $ret, $http_code, $url, $displayed_response=null, $trigger_report=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -360,17 +366,21 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 	if ($displayed_response)
 		$text .= "Displayed: ".json_encode($displayed_response)."\n";
 
-	// keep writing errors separately but also write them to common logs file
-	if ($displayed_response["code"]) {
-		$code = $displayed_response["code"];
-		if (is_callable("get_type_error") && !isset($error_type_func)) {
-			if (get_type_error($code) == "fatal")
-				Debug::trigger_report('ansql_json', $text);
-		} elseif (isset($error_type_func) && is_callable($error_type_func)) {
-			if (call_user_func_array($error_type_func,array($code)))
-				Debug::trigger_report('ansql_json', $text);
-		} else {
-			Debug::trigger_report('ansql_json', '$error_type_func not set. The received code must be translated into an error type.');
+	// write_error() used from make_curl_request() is also used from Debug::trigger_report()
+	// we don't want to trigger report in case of integromat request failure
+	if ($trigger_report) {
+		// keep writing errors separately but also write them to common logs file
+		if ($displayed_response["code"]) {
+			$code = $displayed_response["code"];
+			if (is_callable("get_type_error") && !isset($error_type_func)) {
+				if (get_type_error($code) == "fatal")
+					Debug::trigger_report('ansql_json', $text);
+			} elseif (isset($error_type_func) && is_callable($error_type_func)) {
+				if (call_user_func_array($error_type_func,array($code)))
+					Debug::trigger_report('ansql_json', $text);
+			} else {
+				Debug::trigger_report('ansql_json', '$error_type_func not set. The received code must be translated into an error type.');
+			}
 		}
 	}
 

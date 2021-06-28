@@ -124,12 +124,13 @@ class Debug
 	/**
 	 * Function triggers the sending of a bug report
 	 * Depending on param $shutdown it agregates the received reports and registers shutdown function shutdown_trigger_report()
-	 * Current supported methods: mail, web (dump or notify)
+	 * Current supported methods: mail, web (dump or notify), api
 	 * Ex:
 	 * $debug_notify = array(
 	 * 	"mail" => array("email@domain.com", "email2@domain.com", 
 	 *			"manually_triggered"=>array("email3@domain.com", "email4@domain.com")),
-	 * 	"web"  => array("notify", "dump")
+	 * 	"web"  => array("notify", "dump"),
+	 * 	"api"  => array("url_api")
 	 * );
 	 * 'mail' - send emails with the log file as attachment or the xdebug log directly if logging to file was not configured.
 	 *	  - contains default email address to which bug report will be sent		
@@ -165,7 +166,7 @@ class Debug
 		global $count_triggered;
 		global $log_triggered;
 		global $software_version;
-		global $skip_interfaces;
+		global $dev_debug_mail;
 
 		if (!$message) {
 			$message = $tag;
@@ -192,31 +193,21 @@ class Debug
 			}
 			return;
 		}
-
 		// save xdebug
 		$xdebug = self::get_xdebug();
 		self::dump_xdebug();
 
 		foreach($debug_notify as $notification_type=>$notification_options) {
-			if (!is_array($notification_options) || !count($notification_options))
+			if (!is_array($notification_options) || !count($notification_options)) {
 				continue;
+			}
+
 			switch ($notification_type) {
 			case "mail":
 				if (!isset($server_email_address))
 					$server_email_address = "bugreport@localhost.lan";
 
-				if (!isset($skip_interfaces))
-					$skip_interfaces = 'LOOPBACK|NO-CARRIER';
-				
-				if (isset($_SESSION["username"])) {
-					$user = $_SESSION["username"];
-					$reporter = getparam("name");
-					if ($reporter)
-						$user .= "($reporter)";
-				} else {
-					exec('echo "$USER"',$user);
-					$user = implode($user,"\n");
-				}
+				$user = self::get_username();
 				
 				$subject = ($manually_triggered) ? "Manually triggered bug report for '".$proj_title."' by $user" : "Auto triggered bug report for '".$proj_title."'";
 
@@ -243,33 +234,9 @@ class Debug
 				$body .= "\nApplication is running on:";
 				exec("/sbin/ip addr ls", $info);
 
-				$skip = true;
-				foreach ($info as $data) {
-					if (preg_match('/^[1-9]/', $data)) {
-						if (preg_match('/'.$skip_interfaces.'/', $data)) {
-							$skip = true;
-							continue;
-						}
-					$line = explode(':',$data);
-					if (!empty($body))
-						$body .= "\n";
-						$body .= 'Interface: '.trim($line[1]). " with";
-						$skip = false;
-						continue;
-					}
-					if ($skip)
-						continue;
-					if (strpos($data, "inet6") !== false) {
-						$line = explode(' ', trim($data));
-						$body .= " IPv6: " . $line[1];
-						continue;
-					}
-					if (strpos($data, "inet") !== false) {
-						$line = explode(' ', trim($data));
-						$body .= " IPv4: " . $line[1];
-						continue;
-					}
-				}
+				$interfaces = self::get_interfaces();
+				foreach ($interfaces as $interface) 
+					$body .= $interface;
 
 				$description = getparam("bug_description");
 				$description = htmlentities($description);
@@ -280,27 +247,15 @@ class Debug
 					$body .= "\n\n Error that triggered report: ";
 					$body.= ($manually_triggered) ? "See User description\n" : $message;
 				}
-				$logs_file = self::get_log_file();
 
 				$attachment = false;
-				if (is_file($logs_file)) {
-					$dir_arr = explode("/",$logs_file);
-					$path = "";
-					for ($i=0; $i<count($dir_arr)-1; $i++)
-						$path .= $dir_arr[$i]."/";
-
-					$new_file = $path ."log.".date("YmdHis");
-					$attach_file = $path ."attach_log.".date("YmdHis");
-
-					exec("tail -n 500 $logs_file > $attach_file");
-					rename($logs_file, $new_file);
-					$attachment = array(array("file"=>$attach_file,"content_type"=>"text/plain"));
-				} else {
-					// logs are not kept in file, add xdebug to email body
-					$lines = explode("\n", $xdebug);
-					$lines = array_slice($lines, -500);
-					$body .= "\n\n". implode("\n", $lines);
-				}
+				$res = self::get_log($xdebug,true);
+				if (!$res[0]) {
+					$attachment = $res[1];
+					$attach_file = $res[2];
+				} else
+					$body .= $res[1];
+				
 				$body = str_replace("\n","<br/>",$body);
 							
 				// set where to send triggered reports
@@ -311,13 +266,31 @@ class Debug
 					else
 						unset($to_emails["manually_triggered"]);
 				}
-				
+
 				foreach ($to_emails as $to)
 					send_mail($to, $server_email_address, $subject, $body, $attachment,null,false);
 
 				if ($attachment)
 					unlink($attach_file);
 
+				break;
+			case "api":
+				$out = array(
+					"username" => self::get_username(),
+					"application" => $proj_title,
+					"version" => (isset($software_version)) ? $software_version : "",
+					"interfaces" => self::get_interfaces(),
+					"log" => base64_encode(self::get_log($xdebug)),
+					"report_name" => self::get_report_name($message),
+					"host_name" => function_exists("gethostname") ? gethostname() : ""
+				);	
+				if ($dev_debug_mail)
+					$out["email"] = $dev_debug_mail;
+
+				$token_alarm_center = is_callable("get_token_alarm_center") ? get_token_alarm_center() : false; 
+				$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,$token_alarm_center);
+				// integromat hook response 200 ok with json content ["code":0]
+				// do nothing with result from curl 
 				break;
 			case "web":
 				for ($i=0; $i<count($notification_options); $i++) {
@@ -344,6 +317,105 @@ class Debug
 		}
 	}
 
+	private static function get_username()
+	{
+		if (isset($_SESSION["username"])) {
+			$user = $_SESSION["username"];
+			$reporter = getparam("name");
+			if ($reporter)
+				$user .= "($reporter)";
+		} else {
+			exec('echo "$USER"',$user);
+			$user = implode($user,"\n");
+		}
+
+		return $user;
+	}
+
+	private static function get_log($xdebug,$attachment=false)
+	{		
+		$logs_file = self::get_log_file();
+
+		if (is_file($logs_file)) {
+			$dir_arr = explode("/",$logs_file);
+			$path = "";
+			for ($i=0; $i<count($dir_arr)-1; $i++)
+				$path .= $dir_arr[$i]."/";
+
+			$new_file = $path ."log.".date("YmdHis");
+			$attach_file = $path ."attach_log.".date("YmdHis");
+
+			exec("tail -n 500 $logs_file > $attach_file");
+			rename($logs_file, $new_file);
+			if (!$attachment) {
+				$lines = file_get_contents($attach_file);
+				unlink($attach_file);
+				return $lines;
+			}
+			return array(false, array(array("file"=>$attach_file,"content_type"=>"text/plain")), $attach_file);
+		} 
+
+		// logs are not kept in file, take the log from xdebug 
+		$lines = explode("\n", $xdebug);
+		$lines = array_slice($lines, -500);
+		if ($attachment)
+			return array(true, "\n\n". implode("\n", $lines));
+
+		return implode("\n", $lines);
+	}
+
+	// This is the error that triggered the bug report
+	private static function get_report_name($message)
+	{
+		$report_name = "Error that triggered report: ";
+		$description = htmlentities(getparam("bug_description"));
+		if ($description)
+			return $report_name. "User description: ".$description;
+
+		if ($message) 
+			return  $report_name .  $message;
+
+		return "";
+
+	}
+
+	private static function get_interfaces()
+	{
+		global $skip_interfaces;
+
+		if (!isset($skip_interfaces))
+			$skip_interfaces = 'LOOPBACK|NO-CARRIER';
+	
+		exec("/sbin/ip addr ls", $info);
+
+		$skip = true;
+		$interfaces = array();
+		foreach ($info as $data) {
+			if (preg_match('/^[1-9]/', $data)) {
+				if (preg_match('/'.$skip_interfaces.'/', $data)) {
+					$skip = true;
+					continue;
+				}
+				$line = explode(':',$data);
+				$interfaces[] = 'Interface: ' . trim($line[1]);
+				$skip = false;
+				continue;
+			}
+			if ($skip)
+				continue;
+			if (strpos($data, "inet6") !== false) {
+				$line = explode(' ', trim($data));
+				$interfaces[] = " IPv6: " . $line[1];
+				continue;
+			}
+			if (strpos($data, "inet") !== false) {
+				$line = explode(' ', trim($data));
+				$interfaces[] = " IPv4: " . $line[1];
+				continue;
+			}
+		}
+		return $interfaces;
+	}
 	/**
 	 * Uses xdebug to dump the content of a variable/ object/ array/ array of objects
 	 *
@@ -672,7 +744,8 @@ class Debug
 		global $dump_request_params;
 
 		print "<div class='trigger_report'>";
-		if (isset($debug_notify["mail"]) && is_array($debug_notify["mail"]) && count($debug_notify["mail"]))
+		if (isset($debug_notify["mail"]) && is_array($debug_notify["mail"]) && count($debug_notify["mail"])	|| 
+			(isset($debug_notify["api"]) && is_array($debug_notify["api"]) && count($debug_notify["api"])))
 			print "<a class='llink' href='main.php?module=".$module."&method=form_bug_report'>Send&nbsp;bug&nbsp;report</a>";
 		if (isset($_SESSION["triggered_report"]) && $_SESSION["triggered_report"]==true && isset($debug_notify["web"]) && in_array("notify",$debug_notify["web"]))
 			print "<div class='triggered_error'>!ERROR <a class='llink' href='".$_SESSION["main"]."?module=$module&method=clear_triggered_error'>Clear</a></div>";
@@ -682,10 +755,10 @@ class Debug
 			foreach ($debug_buttons as $method=>$button) {
 				switch ($method) {
 					case "dump_session":
-                                                if (is_file("pages.php"))
-                                                    $page = "pages.php";
-                                                else
-                                                    $page = (isset($_SESSION["main"])) ? $_SESSION["main"] : "main.php";
+						if (is_file("pages.php"))
+							$page = "pages.php";
+						else
+							$page = (isset($_SESSION["main"])) ? $_SESSION["main"] : "main.php";
 						print " <a class='llink' href='$page?method=$method' target='_blank'>$button</a>";
 						break;
 					case "dump_request":
@@ -697,10 +770,10 @@ class Debug
 							<span id='cleaned_xdebug_session' style='display:none;color: green;'>Xdebug Session was cleaned! </span>";
 						break;
 					case "debug_options":
-                                            	print " <a class='llink' href='ansql/debug_all.php'>$button</a>";
+						print " <a class='llink' href='ansql/debug_all.php'>$button</a>";
 						$_SESSION["previous_link"] = $_SERVER["REQUEST_URI"];
 						break;
-					
+
 					default:
 						call_user_func($button);
 				}
