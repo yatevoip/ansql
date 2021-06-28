@@ -128,7 +128,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	}
 
 	$timeout = 20;
-	if (!$token_alarm_center) {
+	if (isset($out["request"])) {
 		$key = $out["request"];
 		if (isset($request_timeout[$key]))
 			$timeout = $request_timeout[$key];
