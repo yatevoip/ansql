@@ -2545,7 +2545,7 @@ class Model
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 
-		if ($value === "")
+		if ($value === "" || $value === NULL)
 			return NULL;
 
 		if (!is_string($value))
