@@ -2488,6 +2488,8 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 			$css_col = extract_column_css($conditional_css, $name);
 			
 			$ucss = ($no_columns == 0) ? "$css first_th" : $css;
+			if ($no_columns == count($formats)-1)
+				$ucss = $css . " last_th";
 			$ths .= '<th class="'.$ucss.$css_col.'">';
 			//$ths .= str_replace("_","&nbsp;",ucfirst($name));
 			$column_link = false;
