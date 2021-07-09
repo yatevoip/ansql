@@ -287,8 +287,7 @@ class Debug
 				if ($dev_debug_mail)
 					$out["email"] = $dev_debug_mail;
 
-				$token_alarm_center = is_callable("get_token_alarm_center") ? get_token_alarm_center() : false; 
-				$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,$token_alarm_center);
+				$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,false,false);
 				// integromat hook response 200 ok with json content ["code":0]
 				// do nothing with result from curl 
 				break;

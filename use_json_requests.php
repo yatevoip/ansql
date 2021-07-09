@@ -86,7 +86,7 @@ function build_request_url(&$out,&$request)
 	return $url;
 }
 
-function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $token_alarm_center = false)
+function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $token_alarm_center = false, $trigger_report = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -100,9 +100,6 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	global $func_handle_headers;
 	global $request_http2;
 
-	$trigger_report = true;
-	if ($token_alarm_center)
-		$trigger_report = false;
 	if (substr($request,0,7)!="http://" && substr($request,0,8)!="https://") {
 		if (!isset($func_build_request_url) || !$func_build_request_url)
 			$func_build_request_url = "build_request_url";
@@ -147,16 +144,27 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		curl_setopt($curl,CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_2_0);
 		curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,false);
 	}
-	$api_secret = $token_alarm_center ? $token_alarm_center : $json_api_secret;
+	$api_secret = false;
+	if ($token_alarm_center)
+		$api_secret = $token_alarm_center;
+	elseif ($json_api_secret && $trigger_report)
+		$api_secret = $json_api_secret;
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
 	curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($out));
-	curl_setopt($curl,CURLOPT_HTTPHEADER,array(
-	    "X-Authentication: ".$api_secret,
-	    "Content-Type: application/json",
-	    "Accept: application/json,text/x-json,application/x-httpd-php",
-	    "Accept-Encoding: gzip, deflate"
-	));
+	if (!$api_secret)
+		curl_setopt($curl,CURLOPT_HTTPHEADER,array(
+	    	"Content-Type: application/json",
+	    	"Accept: application/json,text/x-json,application/x-httpd-php",
+	    	"Accept-Encoding: gzip, deflate"
+		));
+	else
+		curl_setopt($curl,CURLOPT_HTTPHEADER,array(
+	    	"X-Authentication: ".$api_secret,
+	    	"Content-Type: application/json",
+	    	"Accept: application/json,text/x-json,application/x-httpd-php",
+	    	"Accept-Encoding: gzip, deflate"
+		));
 
 	curl_setopt($curl,CURLOPT_RETURNTRANSFER, 1);
 	// handle_api_headers will be called for each header line and must return number of handled bytes
