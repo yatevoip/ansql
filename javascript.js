@@ -333,7 +333,10 @@ function show_docs(category_id, comment_id)
 
 	if (document.last_comment_id && iframe_doc.getElementById(document.last_comment_id+"_id") &&
 			document.last_comment_id+"_id" != reference_id)
-		iframe_doc.getElementById(document.last_comment_id+"_id").className = "docs_lost_focus";
+		if (iframe_doc.getElementById(document.last_comment_id+"_id").parentElement.className == "sect_subtitle")
+			iframe_doc.getElementById(document.last_comment_id+"_id").className = "";
+		else
+			iframe_doc.getElementById(document.last_comment_id+"_id").className = "docs_lost_focus";
 
 	/* set the new last_reference_id */
 	document.last_comment_id = category_id;
