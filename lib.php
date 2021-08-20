@@ -1944,6 +1944,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 			print build_dropdown($timezones, "{$field_name}_timezone", false, false, $css, $js, false, false, null, false);
 
+			//Extra Button: Ex: Use UTC button to auto select UTC timezone
+			if (isset($field_format["button"]["js"]) && isset($field_format["button"]["name"]))
+				print "<button type=\"button\" " . $field_format["button"]["js"] . " >" . $field_format["button"]["name"] . "</button> ";
+
 			print $field_comment;
 			break;
 		case "fixed":
