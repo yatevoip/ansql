@@ -919,20 +919,45 @@ function dump_session()
 	if (isset($cb_dump_session) && is_callable($cb_dump_session))
 		call_user_func($db_dump_session);
 	else {
-		print "<pre>";
+		print "<div style=\"font-size: 13px;position: relative;color: #085098;margin-bottom: 10px;font-weight: normal;border: 1px solid #ccc;background-color: #f2ffe5;background-image: url('images/notice.png');background-position: left center;background-repeat: no-repeat;padding: 10px;    padding-left: 10px;padding-left: 40px;\">" .
+		      "Data stored in xDebug was dropped as it's size was too large." .
+		      "</div>";
+		
+		//detect if is $_SESSION[xdebug] too large and drop it if so
+		if (function_exists("memory_get_usage")) {
+			$mem_alloc = memory_get_usage();
+			$max_allowed_memory = get_max_allowed_memory();
+			
+			if ($mem_alloc*3 >= $max_allowed_memory) {
+				clean_xdebug_session();
+				print "<div style=\"font-size: 13px;position: relative;color: #085098;margin-bottom: 10px;font-weight: normal;border: 1px solid #ccc;background-color: #f2ffe5;background-image: url('images/notice.png');background-position: left center;background-repeat: no-repeat;padding: 10px;    padding-left: 10px;padding-left: 40px;\">" .
+				"Data stored in xDebug was dropped as it's size was too large." .
+				"</div>";
+			}
+		}
+		
 		$sess = $_SESSION;
-		array_walk_recursive($sess, function (&$value) { $value = htmlentities($value);});
-		$copy_session = $sess;
-		if (isset($copy_session["xdebug"])) {
-			$xdebug = $copy_session["xdebug"];
-			unset($copy_session["xdebug"]);
+
+		if (isset($sess["xdebug"])) {
+			$xdebug = $sess["xdebug"];
+			unset($sess["xdebug"]);
 		}
 		if (!isset($xdebug))
 			$xdebug = "";
-		var_dump($copy_session);
+		
+		//old implementation assumed to htmlentities with array recursive
+
+		ob_start();
+		
+		//first display what we have in SESSION without xDebug data
+		var_dump($sess);
+		
+		//display xDebug data
 		print "xdebug: ";
-		var_dump($xdebug);
-		print "</pre>";
+		print var_dump($xdebug);
+		
+		$buffer = ob_get_clean();
+		echo "<pre>".htmlentities($buffer)."</pre>";
 	}
 }
 	
@@ -942,12 +967,19 @@ function clean_xdebug_session()
 		$_SESSION["xdebug"] = "";
 }
 
-function auto_clean_xdebug_session()
-{	
+function get_max_allowed_memory()
+{
 	global $xdebug_max_memory;
 	
 	if (!isset($xdebug_max_memory) || !strlen($xdebug_max_memory))
-		$xdebug_max_memory = 52428800; //50 MB
+		return 52428800; //50 MB
+	
+	return $xdebug_max_memory;
+}
+
+function auto_clean_xdebug_session()
+{	
+	$xdebug_max_memory = get_max_allowed_memory();
 	
 	if (!function_exists("memory_get_usage"))
 		return;
