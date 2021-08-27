@@ -919,10 +919,6 @@ function dump_session()
 	if (isset($cb_dump_session) && is_callable($cb_dump_session))
 		call_user_func($db_dump_session);
 	else {
-		print "<div style=\"font-size: 13px;position: relative;color: #085098;margin-bottom: 10px;font-weight: normal;border: 1px solid #ccc;background-color: #f2ffe5;background-image: url('images/notice.png');background-position: left center;background-repeat: no-repeat;padding: 10px;    padding-left: 10px;padding-left: 40px;\">" .
-		      "Data stored in xDebug was dropped as it's size was too large." .
-		      "</div>";
-		
 		//detect if is $_SESSION[xdebug] too large and drop it if so
 		if (function_exists("memory_get_usage")) {
 			$mem_alloc = memory_get_usage();
