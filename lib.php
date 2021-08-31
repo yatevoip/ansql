@@ -3594,10 +3594,10 @@ function get_date($key='',$_hour='00',$min='00',$sec='00')
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	$day = getparam($key."day");
 	$month = getparam($key."month");
-	if (!$day || !$month)
+	$year = getparam($key."year");
+	if (!$day || !$month || !$year)
 		return null;
 	$month = getmonthnumber($month);
-	$year = getparam($key."year");
 	$hour = getparam($key."hour");
 	if (strlen(!$hour))
 		$hour = $_hour;
