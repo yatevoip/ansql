@@ -277,7 +277,7 @@ class Debug
 			case "api":
 				$out = array(
 					"username" => self::get_username(),
-					"application" => $proj_title,
+					"application" => is_callable("get_network_name") ? get_network_name($proj_title) : $proj_title,
 					"version" => (isset($software_version)) ? $software_version : "",
 					"interfaces" => self::get_interfaces(),
 					"log" => base64_encode(self::get_log($xdebug)),
