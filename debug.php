@@ -261,14 +261,15 @@ class Debug
 				// set where to send triggered reports
 				$to_emails = $notification_options;
 				if (isset($to_emails["manually_triggered"])) {
-					if ($manually_triggered && is_arrray($to_emails["manually_triggered"]) && count($to_emails["manually_triggered"]))
+					if ($manually_triggered && is_array($to_emails["manually_triggered"]) && count($to_emails["manually_triggered"]))
 						$to_emails = $to_emails["manually_triggered"];
 					else
 						unset($to_emails["manually_triggered"]);
 				}
 
-				foreach ($to_emails as $to)
+				foreach ($to_emails as $to) {
 					send_mail($to, $server_email_address, $subject, $body, $attachment,null,false);
+				}
 
 				if ($attachment)
 					unlink($attach_file);
@@ -286,8 +287,8 @@ class Debug
 				);	
 				if ($dev_debug_mail)
 					$out["email"] = $dev_debug_mail;
-
-				$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,false,false);
+				if (Bug_report::aggregate_report($out))
+					$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,false,false);
 				// integromat hook response 200 ok with json content ["code":0]
 				// do nothing with result from curl 
 				break;
