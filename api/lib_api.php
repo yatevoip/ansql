@@ -223,9 +223,9 @@ function run_api_requests($handling, $node_type, $equipment, $request_params, $m
 		}
 		
 		if ($have_errors) {
-			$extra = "Request ".$request_params["request"]." failed for equipment:  ". $extra_err;
+			$extra = "Request ".$request_params["request"]." failed for equipment:  ". $extra_err. "\n";
 			if (strlen($extra_succ))
-				$extra .= " succeeded for equipment: ".$extra_succ;
+				$extra .= "Request ".$request_params["request"]." succeeded for equipment: ".$extra_succ;
 			/*return build_error($code, $message, $request_params, $extra);*/
 			
 		} else {
