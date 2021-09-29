@@ -6123,13 +6123,17 @@ function display_cat_prop($stat_props,$stat_name,$display,$max_length)
 	print "<table class='$display' cellspacing='0' cellpadding='0'>";
 	print "<tr> <td class='prop_lev1'>".$stat_name." </td></tr>";
 
+	$categ_name = $stat_name;
 	foreach ($stat_props as $stat_name=>$stat_val) {
 		print "<tr>";
 		print "<td class='cat_lev2'>";
 		print $stat_name;
 		print "</td>";
 		print "<td class='prop_lev2'>";
-		if ($stat_val === true)
+		if ($categ_name=="uptime" && $stat_name=="wall") {
+			$orig = $stat_val;
+			$stat_val = time_elapsed($orig);
+		} elseif ($stat_val === true)
 			$stat_val = "true";
 		elseif ($stat_val === false)
 			$stat_val = "false";
@@ -6137,8 +6141,8 @@ function display_cat_prop($stat_props,$stat_name,$display,$max_length)
 		print "</td>";
 		print "</tr>";
 	}
-		if (count($stat_props)<$max_length)
-			fill_td($max_length-count($stat_props));
+	if (count($stat_props)<$max_length)
+		fill_td($max_length-count($stat_props));
 	print "</table>";
 }
 
@@ -6183,6 +6187,30 @@ function suffix_index($index)
 			$suffix = "th";
 	}
 	return $suffix;
+}
+
+function time_elapsed($secs)
+{
+	$bit = array(
+		//'y' => $secs / 31556926 % 12,
+		//'w' => $secs / 604800 % 52,
+		'd' => floor( $secs / 86400) ,
+		'h' => $secs / 3600 % 24,
+		'm' => $secs / 60 % 60,
+		's' => $secs % 60
+        );
+	
+	foreach ($bit as $k=>$v) {
+		if ($k=="d")
+			continue;
+		if (strlen($v)==1)
+			$bit["$k"] = "0".$v;
+	}
+	
+	$res = ($bit["d"]) ? $bit["d"]."&nbsp;" : "";
+	$res .= $bit["h"].":".$bit["m"].":".$bit["s"]."&nbsp;($secs)";
+
+	return $res;
 }
 
 /**
