@@ -7924,11 +7924,13 @@ function _date_diff($one, $two)
     return $result;
 }
 
-function date_difference($start)
+function date_difference($start,$end=null)
 {
 	if (!class_exists('DateTime')) {
+		if (!$end)
+			$end = time();
 
-		$res = _date_diff($start, time());
+		$res = _date_diff($start, $end);
 		if ($res["y"]!=0)
 			return $res["y"]."y ".$res["m"]."m ". $res["d"]."d";
 		if ($res["m"]!=0)
@@ -7943,10 +7945,13 @@ function date_difference($start)
 		return $res["s"]."s";
 	}
 
-	$start  = date('Y-m-d H:i:s',$start);
-	$end    = date('Y-m-d H:i:s');
-	$d_start    = new DateTime($start);
-	$d_end      = new DateTime($end);
+	$start = date('Y-m-d H:i:s',$start);
+	if (!$end)
+		$end = date('Y-m-d H:i:s');
+	else
+		$end = date('Y-m-d H:i:s',$end);
+	$d_start = new DateTime($start);
+	$d_end   = new DateTime($end);
 	$diff = $d_start->diff($d_end);
 
 	if ($diff->format('%y'))
