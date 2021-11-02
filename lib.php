@@ -1752,6 +1752,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					print " value=".html_quotes_escape($selected);
 				}
 			}
+			if (isset($field_format["size"])) 
+				print " size='".$field_format["size"]."'";
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
 			if (isset($field_format["maxlength"]))
@@ -1800,7 +1802,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			}
 			if (isset($field_format["extra_info"])) {
 				if (!is_array($field_format["extra_info"]) && strlen($field_format["extra_info"])>0) {
-					print '<div class="extra_info_import_form">'.'Note! ' . $field_format["extra_info"].'</div>';
+					if ($display == 'file')
+						print '<div class="extra_info_import_form">'.'Note! ' . $field_format["extra_info"].'</div>';
+					else
+						print '<div class="extra_info">'. $field_format["extra_info"].'</div>';
 				} else if (is_array($field_format["extra_info"]) && count($field_format["extra_info"])>0){
 					print '<div class="extra_info_import_form">'.'Note! <ul>';
 					foreach ($field_format["extra_info"] as $extra_info)

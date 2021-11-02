@@ -937,6 +937,12 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 		// we assume that elements in form have the same "id" and "name"
 		// the containing tr is built by concatenanting "tr_" + element_id
 		id_tr_element = "tr_" + element_name;
+		
+		var current_elem_index = id_tr_element.substr(element_name.length+2, id_tr_element.length);
+		//for index > 9
+		if (!isNaN(id_tr_element.substr(element_name.length+1, id_tr_element.length))) {
+			current_elem_index = id_tr_element.substr(element_name.length+1, id_tr_element.length);
+		}
 
 		// if form fields are displayed on more levels
 		// split the form elements name by '_' to get their id 
@@ -946,8 +952,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 			var index_arr = id_tr_element.split("_");
 			if (index_arr[index_arr.length-1] !=link_index) 
 				continue;
-
-		} else if (id_tr_element.substr(element_name.length+2, id_tr_element.length)!=link_index)  
+		} else if (current_elem_index!=link_index)
 			continue;
 
 		tr_element = document.getElementById(id_tr_element);
@@ -955,10 +960,10 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 		// this field is advanced -> display it only if user already requested to see advanced fields
 		if (tr_element.getAttribute("advanced")=="true" && show_advanced==false)
 			continue;
-		
+
 		if (hasClass(tr_element, 'hidden_tr'))
 			continue;
-		
+
 		show(id_tr_element);
 	}
 
@@ -981,7 +986,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 	// Ex: 1_objtitle1, 1_objtitle2,   -- first number is the nr of the objtitle, last is the object index
 	// 2_objtitle1, 2_objtitle2
 	// maximum 10 objtitles 
-	for (i=1; i<10; i++) {
+	for (i=1; i<=10; i++) {
 		var elem = document.getElementById("tr_" + i + "_objtitle" + link_index);
 		if (elem == null || elem.style.display == null || elem.style.display == "" || (elem.getAttribute("advanced")=="true" && show_advanced==false))
 			continue;
