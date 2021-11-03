@@ -143,6 +143,8 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	if ($request_http2) {
 		curl_setopt($curl,CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_2_0);
 		curl_setopt($curl,CURLOPT_SSL_VERIFYHOST,false);
+	} else {
+		curl_setopt($curl,CURLOPT_HTTP_VERSION,CURL_HTTP_VERSION_1_1);
 	}
 	$api_secret = false;
 	if ($token_alarm_center)
