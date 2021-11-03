@@ -329,10 +329,11 @@ function handle_headers_response($curl, &$ret)
 	if (!isset($_SESSION["all_cookies"]))
 		$_SESSION["all_cookies"] = array();
 	foreach ($raw_headers as $header) {
-		if( preg_match('/^(.*?)\\:\\s+(.*?)$/m', $header, $header_parts) ){
+		if (preg_match('/^(.*?)\\:\\s+(.*?)$/m', $header, $header_parts)) {
 			$headers[$header_parts[1]] = $header_parts[2];
 
-			if ($header_parts[1] == "Set-Cookie") {
+			// HTTP headers are case insensitive and the header can be all lower case
+			if (!strcasecmp($header_parts[1], "Set-Cookie")) {
 				$cookie = $header_parts[2];
 				$cookie = explode("=", $cookie);
 				if (count($cookie)<2)
@@ -341,7 +342,7 @@ function handle_headers_response($curl, &$ret)
 				$value = $value[0];
 				$_SESSION["all_cookies"][$cookie[0]] = $value;
 			}
-			if ($header_parts[1] == "Content-Encoding" && substr(trim($header_parts[2]),0,4)=="gzip")
+			if (!strcasecmp($header_parts[1],"Content-Encoding") && substr(trim($header_parts[2]),0,4)=="gzip")
 				$gzip = true;
 		}
 	}
