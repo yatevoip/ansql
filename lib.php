@@ -4075,7 +4075,7 @@ function format_for_dropdown_assoc_opt($vals,$field_name)
  * otherwise the option selected is the same as the value
  * @return $arr Array with the specific format for the dropdown
  */ 
-function format_opt_for_dropdown($vals, $field="field", $set_id=false)
+function format_opt_for_dropdown($vals, $field="field", $set_id=false, $use_default_keys=true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	$arr = array();
@@ -4083,7 +4083,8 @@ function format_opt_for_dropdown($vals, $field="field", $set_id=false)
 		$field_id = $value;
 		if ($set_id)
 			$field_id = $id;
-		array_push($arr, array($field."_id"=>$field_id, $field."_name"=>$value));
+		$field_name = (!$use_default_keys) ? $field : $field."_name";
+		array_push($arr, array($field."_id"=>$field_id, $field_name=>$value));
 	}
 	return $arr;
 }
