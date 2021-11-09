@@ -579,19 +579,31 @@ function escape_page_param($value)
 function getparam($param,$escape = true)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"paranoid");
+	global $no_trim;
+
+	if (!isset($no_trim))
+		$no_trim = false;
+
 	$ret = NULL;
 	if (isset($_POST[$param]))
 		$ret = $_POST[$param];
-	else if (isset($_GET[$param]))
+	elseif (isset($_GET[$param]))
 		$ret = $_GET[$param];
-	else
+	else 
 		return NULL;
 	if (is_array($ret)) {
-		foreach($ret as $index => $value) 
-			$ret[$index] = escape_sql_param($ret[$index]);
+		foreach($ret as $index => $value) {
+			if ($no_trim)
+				$ret[$index] = escape_sql_param($ret[$index]);
+			else
+				$ret[$index] = escape_sql_param(trim($ret[$index]));
+		}
 		return $ret;
 	}
-	$ret = escape_sql_param($ret);
+	if ($no_trim)
+		$ret = escape_sql_param($ret);
+	else
+		$ret = escape_sql_param(trim($ret));
 	return $ret;
 }
 
