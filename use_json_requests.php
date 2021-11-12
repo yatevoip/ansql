@@ -93,7 +93,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	global $method;
 	global $conn_error;
 	global $parse_errors;
-	global $json_api_secret;
+	global $json_api_secret, $cb_update_json_api_secret;
 	global $func_build_request_url;
 	global $request_timeout;
 	global $displayed_errors;
@@ -113,6 +113,9 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	} else
 		$url = $request;
 
+	if (is_callable($cb_update_json_api_secret))
+		call_user_func($cb_update_json_api_secret, $url);
+	
 	$curl = curl_init($url);
 	if ($curl === false) {
 		$resp = array("code"=>"-103", "message"=>_("Could not initialize curl request."));
@@ -266,7 +269,10 @@ function make_basic_curl_request($url,$out,$auth_header=false)
 {
 	global $func_handle_headers;
 	global $request_http2;
-	global $json_api_secret;
+	global $json_api_secret, $cb_update_json_api_secret;;
+	
+	if (is_callable($cb_update_json_api_secret))
+		call_user_func($cb_update_json_api_secret, $url);
 	
 	$curl = curl_init($url);
 	if ($curl === false) {
