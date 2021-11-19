@@ -59,36 +59,44 @@ function build_error($code, $message, $params=array(), $extra=null)
 	
 }
 
-function log_request($inp, $out = null, $extra = "")
+function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0)
 {
+	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	global $logs_file;
 	global $logs_dir;
 
-	$addr = "unknown";
-	if (isset($_SERVER['REMOTE_ADDR']))
-		$addr = $_SERVER['REMOTE_ADDR'];
+	if ($write_api_logs) {
+		// the path where all products will write the API logs
+		$logs_dir = "/var/log/json_api";
+		$logs_file = (is_writeable($logs_dir)) ? "$logs_dir/requests_log.txt" : null;
+	}
 
 	if (!$logs_file) {
 		if (false !== $logs_file)
-			print "\n// Not writeable $logs_dir";
+			Debug::xdebug("api", "Not writeable $logs_dir");
 		return;
 	}
+	
+	$addr = (isset($_SERVER['REMOTE_ADDR'])) ? $_SERVER['REMOTE_ADDR'] : "unknown";
 	$day = date("Y-m-d");
 	$file = str_replace(".txt","$day.txt",$logs_file);
 	$fh = fopen($file, "a");
-	if ($fh) {
-		if ($out === null)
-			$out = "";
-		else 
-			$out = "Response: ".json_encode($out)."\n";
-
-		fwrite($fh, "------ " . date("Y-m-d H:i:s") . ", ip=$addr\nURI: ".$_SERVER['REQUEST_URI']."\nRequest: ".json_encode($inp)."\n$out\n");
-		if (strlen($extra))
-			fwrite($fh, "------ " ."Extra: ".$extra);
-		fclose($fh);
+	if (!$fh) {
+		Debug::xdebug("api", "Can't write to $file");
+		return;
 	}
+
+	if ($out === null)
+		$out = "";
+	elseif (json_encode($out))
+		$out = "JsonOut: ".json_encode($out)."\n";
 	else
-		print "\n// Can't write to $file";
+		$out = "DataOut: ". $out."\n";
+
+	fwrite($fh, "------ " . date("Y-m-d H:i:s") . ", ip=$addr\nURI: ".$_SERVER['REQUEST_URI']."\nJson: " . json_encode($inp)."\n$out");
+	if ($start_time)
+		fwrite($fh, sprintf("Handled: %0.3f\n",microtime(true) - $start_time)."\n");
+	fclose($fh);
 }
 
 function decode_post_put($ctype, $method, $uri)

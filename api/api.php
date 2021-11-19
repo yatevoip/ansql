@@ -19,11 +19,11 @@ include_once "../../api/api_includes.php";
 if (isset($debug))
 	$_SESSION["dump_xdebug"] = "on";
 
+$time = microtime(true);
 $response = do_request();
-if ($log_status) {
-	$extra = (isset($response["extra"])) ? $response["extra"] : "";
-	log_request($response["params"], $response["data"], $extra);
-}
+
+// log requests to /var/log/json_api so that all MMI API logs will be in the same file as all API logs from products
+log_request($response["params"], $response["data"], true, $time);
 
 if (isset($debug)) {
 	Debug::xdebug("api", "The response of the request when debug is activated from api_config.php: \n".print_r($response["data"],true));
@@ -83,7 +83,7 @@ function do_request($method = "POST")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 
-	global $cors_origin, $log_status, $api_secret, $predefined_requests;
+	global $cors_origin, $api_secret, $predefined_requests;
 
 //	if (!$api_secret)
 //		$api_secret = "mmi_secret";
