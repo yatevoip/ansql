@@ -1414,7 +1414,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if (!isset($field_format["column_name"]))
 		print ucfirst(str_replace("_","&nbsp;",$field_name));
 	else
-		print ucfirst($field_format["column_name"]);
+		print ucfirst(str_replace(" ","&nbsp;",$field_format["column_name"]));
 	if (isset($field_format["required"]))
 		$field_format["compulsory"] = $field_format["required"];
 	if (isset($field_format["object_required"]))
