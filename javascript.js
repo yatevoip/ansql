@@ -875,7 +875,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 		console.error("Can't retrieve parent for for element with id " + current_link_id);
 		return;
 	}
-	elems = parentform.elements;
+	var elems = parentform.elements;
 
 	// see if there are advanced fields (check button -- it's displayed only when there are fields marked as advanced)
 	if (advanced_id==undefined)
@@ -937,22 +937,16 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 		// we assume that elements in form have the same "id" and "name"
 		// the containing tr is built by concatenanting "tr_" + element_id
 		id_tr_element = "tr_" + element_name;
-		
-		var current_elem_index = id_tr_element.substr(element_name.length+2, id_tr_element.length);
-		//for index > 9
-		if (!isNaN(id_tr_element.substr(element_name.length+1, id_tr_element.length))) {
-			current_elem_index = id_tr_element.substr(element_name.length+1, id_tr_element.length);
-		}
 
 		// if form fields are displayed on more levels
 		// split the form elements name by '_' to get their id 
 		// and skip the elements that don't have to be displayed
 		// otherwise just display links ending in link_index
-		if (level_fields!=undefined && level_fields==true) {
+		if (level_fields==undefined || level_fields==true) {
 			var index_arr = id_tr_element.split("_");
 			if (index_arr[index_arr.length-1] !=link_index) 
 				continue;
-		} else if (current_elem_index!=link_index)
+		}  else if (id_tr_element.substr(element_name.length+2, id_tr_element.length)!=link_index)
 			continue;
 
 		tr_element = document.getElementById(id_tr_element);
@@ -977,7 +971,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
    			input.setAttribute("type", "hidden");
 			input.setAttribute("name", ''+hidden_fields[name]+'');
 			input.setAttribute("value", 'off');
-			tr_element_hidden = document.getElementById("tr_hidden_fields");
+			var tr_element_hidden = document.getElementById("tr_hidden_fields");
 			tr_element_hidden.appendChild(input);
 		}
 	}
@@ -986,7 +980,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 	// Ex: 1_objtitle1, 1_objtitle2,   -- first number is the nr of the objtitle, last is the object index
 	// 2_objtitle1, 2_objtitle2
 	// maximum 10 objtitles 
-	for (i=1; i<=10; i++) {
+	for (i=1; i<10; i++) {
 		var elem = document.getElementById("tr_" + i + "_objtitle" + link_index);
 		if (elem == null || elem.style.display == null || elem.style.display == "" || (elem.getAttribute("advanced")=="true" && show_advanced==false))
 			continue;
