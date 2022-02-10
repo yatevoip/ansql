@@ -6680,7 +6680,7 @@ function validate_import_file($class, $mandatory_cols = array(), $type_file = "c
 }
 
 /**
- * General function to import data from a file.
+ * Generic function to import data from a file.
  * ! does not verify file structure! 
  * ! Use validate_import_file() to validate file structure
  * @param $data Array. The information to be imported. Format: // $data = array( array(col1=>val1,col2=>val2),array(col1=>val1,col2=>val2) ...)
@@ -6697,7 +6697,7 @@ function import_file_data($data, $additional_params, $class, $mandatory_cols = a
 
 	$cols = array();
 	$vars = $class::variables();	
-	foreach ($vars as $col_name => $value)
+	foreach ($vars as $col_name=>$value)
 		$cols[] = $col_name;
 
 	$lines_imported = 0;	
@@ -6706,7 +6706,7 @@ function import_file_data($data, $additional_params, $class, $mandatory_cols = a
 		$obj = new $class;
 		$line_no = $line_no + 1;
 		
-		foreach ($line as $col_name => $col_val) {
+		foreach ($line as $col_name=>$col_val) {
 			$params[$col_name] = $col_val;
 
 			if (in_array($col_name, $mandatory_cols) && $col_val===null) {
@@ -6717,7 +6717,7 @@ function import_file_data($data, $additional_params, $class, $mandatory_cols = a
 				
 				$cond = array($col_name => $col_val);
 				
-				foreach($additional_params as $prop => $value)
+				foreach ($additional_params as $prop=>$value)
 					$cond[$prop] = ($value===null) ? "__empty" : $value;
 				
 				$count = $obj->fieldSelect("count(*)", $cond);
@@ -6736,7 +6736,8 @@ function import_file_data($data, $additional_params, $class, $mandatory_cols = a
 		$res = $obj->add($params);
 		if (!$res[0])
 			errormess("Could not import line " . $line_no . ": " . $res[1], "no");
-		$lines_imported++;
+		else
+			$lines_imported++;
 	}
 	$plural = ucfirst(str_replace("_"," ",get_plural_form($class)));
 	$mes    = ($lines_imported == 0) ? "There were no lines imported in " . $plural . "." : "Succesfully imported " . $lines_imported . " " . $plural . ".";
