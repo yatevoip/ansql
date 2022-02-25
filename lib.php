@@ -1768,6 +1768,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					print " value=".html_quotes_escape($selected);
 				}
 			}
+			if (isset($field_format["placeholder"])) 
+				print " placeholder='".$field_format["placeholder"]."'";
 			if (isset($field_format["size"])) 
 				print " size='".$field_format["size"]."'";
 			if (isset($field_format["javascript"]))
