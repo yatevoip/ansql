@@ -320,6 +320,8 @@ function show_docs(category_id, comment_id)
 
 	/* set reference_id with the id found in iframe html*/
 	var iframe = document.getElementById('iframe_param');
+	if (!iframe)
+		var iframe = window.parent.document.getElementById('iframe_param');
 	var reference_id = category_id+"_id";
 	var iframe_doc = get_iframe_doc(iframe);
 	if (iframe_doc.getElementById(comment_id+"_id"))
@@ -327,7 +329,10 @@ function show_docs(category_id, comment_id)
 
 	console.log("Reference_id comment: " + reference_id + ", comment_id: " + comment_id);
 
-	document.getElementById("page_id").style.width="78%";
+	if (!document.getElementById("page_id"))
+		window.parent.document.getElementById("page_id").style.width="78%";
+	else
+		document.getElementById("page_id").style.width="78%";
 	if (iframe_doc.getElementById(reference_id))
 		iframe_doc.getElementById(reference_id).className = "docs_focus";
 
