@@ -1050,22 +1050,24 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
  * @param $td_width Array or by default NULL. If Array("left"=>$value_left, "right"=>$value_right), force the widths to the ones provided. $value_left could be 20px or 20%.
  * @param $hide_advanced Bool default false. When true advanced fields will be always hidden when displaying form
  * @param $scroll_top_advanced Bool. Default false. Scrool to top after advanced fields are displayed
+ * @param $label String. Default NULL. The identifier for the fields. Used in warning message to user.
  */
-function editObject($object, $fields, $title, $submit="Submit", $compulsory_notice=NULL, $no_reset=false, $css=NULL, $form_identifier='', $td_width=NULL, $hide_advanced=false, $scroll_top_advanced=false)
+function editObject($object, $fields, $title, $submit="Submit", $compulsory_notice=NULL, $no_reset=false, $css=NULL, $form_identifier='', $td_width=NULL, $hide_advanced=false, $scroll_top_advanced=false, $label=NULL)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");	
 	
 	global $level, $method, $only_cancel_button, $exceptions_only_cancel_button;
 
-	if(!$css)
+	if (!$css)
 		$css = "edit";
 
 	if ($level === "auditor") {
 		$title = str_replace("Edit ", "View ", $title);
 	}
+
 	
 	print '<table class="'.$css.'" cellspacing="0" cellpadding="0">';
-	if($title) {
+	if ($title) {
 		print '<tr class="'.$css.'">';
 		print '<th class="'.$css.'" colspan="2">'.$title.'</th>';
 		print '</tr>';
@@ -1119,7 +1121,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 
 	foreach($fields as $field_name=>$field_format) {
 		if (!isset($field_format["display"]) || $field_format["display"]!="custom_submit")
-			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width);
+			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, null, $label);
 		else
 			$custom_submit[$field_name] = $field_format;
 	}
@@ -1172,7 +1174,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 
 	if(is_array($custom_submit) && count($custom_submit))
 		foreach($custom_submit as $field_name=>$field_format)
-			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width);
+			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, null, $label);
 
 	// don't display submit buttons if $submit value is "no" or "no_submit"
 	if (in_array($submit, array("no", "no_submit"))) {
@@ -1225,6 +1227,34 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 	print '</table>';
 }
 
+function build_restart_warning($label,$restart_fields,$form_identifier=null)
+{
+	global $equipment_restart_list;
+
+	// $restart_fields is the string with the field names that changed
+	// $equipment_restart_list is the list with only the params that trigger the restart
+	if (!count($equipment_restart_list))
+		return;
+
+	$restart = $glue = "";
+	$restart_fields = explode(", ",$restart_fields);
+	foreach ($equipment_restart_list as $fields_labeled) {
+		$identifier = explode("-", $fields_labeled);
+		if ($identifier[0] != $label)
+			continue;
+		$field = str_replace($label."-","",$fields_labeled);
+		if (in_array($field,$restart_fields)) {
+			if ($form_identifier)
+				$field = str_replace($form_identifier,"",$field);
+			$restart .= $glue . $field;
+			$glue = ", ";
+		}
+	}
+
+	if (strlen($restart))
+		warning_mess("The equipment must be restarted because these parameters were changed: " . $restart, "no");
+}
+
 /** 
  * Creates an input cancel button with build onclick link
  * to return to the previous page
@@ -1267,11 +1297,11 @@ function html_quotes_escape($str)
 /**
  * Builds the HTML data for FORM
  */ 
-function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null)
+function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null, $label=null)
 {
 	global $allow_code_comment, $use_comments_docs, $method, $add_selected_to_dropdown_if_missing;
 	
-	//Set this variable to true in defaults.php to add error icon for each field
+	// Set this variable to true in defaults.php to add error icon for each field
 	global $use_error_icon;
 	global $htmlentities_onall;
 	
@@ -1337,16 +1367,16 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	print ' class="'.$css;
 	if (isset($field_format["tr_extra_css"]))
 		print " ".$field_format["tr_extra_css"];
-	if(isset($field_format["advanced"]))
+	if (isset($field_format["advanced"]))
 	{
 		print " advancedrow\"";
-		if(!$show_advanced) {
+		if (!$show_advanced) {
 			print ' style="display:none;" advanced="true" ';
 			if (isset($field_format["triggered_by"]))
 				print " trigger=\"true\" ";
 
-		} elseif(isset($field_format["triggered_by"])){
-			if($needs_trigger)
+		} elseif (isset($field_format["triggered_by"])){
+			if ($needs_trigger)
 				print ' style="display:none;" trigger=\"true\" ';
 			else
 				print ' style="display:table-row;" trigger=\"true\" ';
@@ -1431,7 +1461,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		print "</div>";
 	// check if the error icon is set in fields
 	if (isset($field_format["error_icon"])) {
-		if($field_format["error_icon"]===true || $field_format["error_icon"]=="yes" || bool_value($field_format["error_icon"]) || $field_format["error_icon"]=="true")
+		if ($field_format["error_icon"]===true || $field_format["error_icon"]=="yes" || bool_value($field_format["error_icon"]) || $field_format["error_icon"]=="true")
 			print "<img src='images/error.png' class='field_error' id='err_$field_name' style='display:none;'>";
 	} else {
 		if ($use_error_icon)
@@ -1450,6 +1480,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	if ($htmlentities_onvalue && !isset($field_format["no_escape"]))
 		$value = (!is_array($value)) ? htmlentities($value) : array_map("htmlentities",$value);
+
+	if ($label)
+		build_javascript_format($field_name, $field_format, $display, $label, $form_identifier);
+
 	switch($display) {
 		case "textarea":
 		case "textarea-nonedit":
@@ -2000,6 +2034,28 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 }
 
 /**
+ * Builds the javascript format to use javascript function 
+ * build_restart_changes(label+filed_name) that will register the 
+ * fields that have changes from form
+ * Used in display_pair()
+ */
+function build_javascript_format($field_name, &$field_format, $display, $label, $form_identifier)
+{
+	$op = ($display == "checkbox") ? "onClick" : "onChange";
+	$js = "build_restart_changes('".$label."-".$form_identifier.$field_name."')";
+	if (!isset($field_format["javascript"])) {
+		$field_format["javascript"] = " " . $op . "=\"" . $js . "\"";
+		return;
+	}
+
+	$parts = preg_split("/".$op."=/i", $field_format["javascript"],2);
+	if (count($parts)>1)
+		$field_format["javascript"] = $parts[0] . $op . "=" . $parts[1][0] . $js . "; ". substr($parts[1],1);
+	else
+		$field_format["javascript"] .= " " . $op . "=\"" . $js . "\"";
+}
+
+/**
  * Used in display_pair()
  * Get the selected option for a field type dropdown/checkbox-group/radio
  * @param string $display
@@ -2443,7 +2499,7 @@ function stripos_array_values($str, $array)
  * Defaults to false
  * @param $add_empty_row Bool
  */
-function tableOfObjects($objects, $formats, $object_name, $object_actions=array(), $general_actions=array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names=array(), $select_all = false, $order_by_columns=false, $add_empty_row=false)
+function tableOfObjects($objects, $formats, $object_name, $object_actions=array(), $general_actions=array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names=array(), $select_all = false, $order_by_columns=false, $add_empty_row=false, $label=null, $form_identifier=null)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"paranoid");
 
@@ -2482,7 +2538,11 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		}
 	}
 
-	if(!$base) {
+	$restart_fields = getparam("restart_fields");
+	if ($restart_fields)
+		build_restart_warning($label,$restart_fields, $form_identifier);
+	
+	if (!$base) {
 		$main = (isset($_SESSION["main"])) ? $_SESSION["main"] : "main.php";
 		$base = "$main?module=$module";
 	}

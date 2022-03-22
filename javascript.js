@@ -1762,3 +1762,11 @@ function copy_dropdown_value(from_elem, to_elem_id)
 {
 	document.getElementById(to_elem_id).selectedIndex =from_elem.selectedIndex;
 }
+
+function build_restart_changes(field_name)
+{
+	if (!in_array(field_name, restartChanges))
+		restartChanges.push(field_name); 
+}
+
+var restartChanges = Array();
