@@ -2503,7 +2503,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"paranoid");
 
-	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities, $level, $go_to_prev_page_link;
+	global $db_true, $db_false, $module, $method, $do_not_apply_htmlentities, $level, $go_to_prev_page_link, $display_table_headers;
 
 	if (!is_array($objects))
 		$objects = array();
@@ -2521,7 +2521,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 	if(!$db_false)
 		$db_false = "no";
 
-	if(!count($objects)) {
+	if(!count($objects) && (!isset($display_table_headers) || $display_table_headers == false)) {
 		// display previous page contained in $go_to_prev_page_link (if pages() function detected that the wrong page is displayed then $go_to_prev_page_link will contain the previous page link with the correct page param variable)
 		if ($go_to_prev_page_link) {
 			print "<meta http-equiv=\"REFRESH\" content=\"3;url=".$go_to_prev_page_link."\">";
@@ -2606,13 +2606,49 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		$vars = $objects[0]->extendedVariables();
 		$class = get_class($objects[0]);
 		$id_name = $objects[0]->getIdName();
-	} else
-		$no_columns = 2;
+		print $ths;
+	} else {
+		if (!isset($display_table_headers) || $display_table_headers == false) {
+			$no_columns = 2;
+		} else {
+			// display previous page contained in $go_to_prev_page_link (if pages() function detected that the wrong page is displayed then $go_to_prev_page_link will contain the previous page link with the correct page param variable)
+			if ($go_to_prev_page_link) {
+				print "<meta http-equiv=\"REFRESH\" content=\"3;url=".$go_to_prev_page_link."\">";
+				plainmessage("<table class=\"$css\"><tr><td>Page will be refreshed in a few seconds.</td></tr>", false);
+				return;
+			}
+			$plural = get_plural_form($object_name);
 
+			$ths .= '<tr>';
+			$no_columns = 0; 
+			foreach($formats as $column_name => $var_name) {
+				$name = extract_column_name($column_name, $var_name);
+				$css_col = extract_column_css($conditional_css, $name);
+				$headers_name = str_replace("_","&nbsp;",ucfirst($name));
+
+				$ucss = ($no_columns == 0) ? "$css first_th" : $css;
+				if ($no_columns == count($formats)-1)
+					$ucss = $css . " last_th";
+				$ths .= '<th class="'.$ucss.$css_col.'">' . $headers_name . '</th>';
+				$no_columns++;
+
+			}
+
+			$ths .= '</tr><tr><td class="'.$css.' last_row left_align_monitoring"  colspan="'.count($formats).'" >';
+			print($ths);
+			plainmessage("There aren't any $plural in the database.");
+			print('</td></tr>');
+
+			if (!count($general_actions)) {
+				print '<tr><td class="last_row" colspan="'.count($formats).'"></td></tr>';
+				print '</table>';
+				return;
+			}
+		}
+	}
 	if (count($general_actions) && in_array("__top",$general_actions))
 		links_general_actions($general_actions, $no_columns, $css, $base, true);
 
-	print $ths;
 	for($i=0; $i<count($objects); $i++) {
 		$cond_css = '';
 		foreach($conditional_css as $css_name=>$conditions) {
@@ -2987,7 +3023,7 @@ function trim_value(&$value)
 function table($array, $formats, $element_name, $id_name, $element_actions = array(), $general_actions = array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names = array(), $table_id = null, $select_all = false, $order_by_columns = false, $build_link_elements = array(), $add_empty_row=false)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
-	global $module, $do_not_apply_htmlentities, $level, $go_to_prev_page_link;
+	global $module, $do_not_apply_htmlentities, $level, $go_to_prev_page_link, $display_table_headers;
 
 	if (!is_array($array))
 		$array = array();
@@ -3001,7 +3037,7 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 	
 	if (!$css)
 		$css = "content";
-	if (!count($array)) {
+	if (!count($array) && (!isset($display_table_headers) || $display_table_headers == false)) {
 		// display previous page contained in $go_to_prev_page_link (if pages() function detected that the wrong page is displayed then $go_to_prev_page_link will contain the previous page link with the correct page param variable)
 		if ($go_to_prev_page_link) {
 			print "<meta http-equiv=\"REFRESH\" content=\"3;url=".$go_to_prev_page_link."\">";
@@ -3084,8 +3120,47 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 			$no_columns++;
 		}
 		print '</tr>';
-	} else
-		$no_columns = 2;
+	} else {
+		if (!isset($display_table_headers) || $display_table_headers == false) {
+			$no_columns = 2;
+		} else {
+			// display previous page contained in $go_to_prev_page_link (if pages() function detected that the wrong page is displayed then $go_to_prev_page_link will contain the previous page link with the correct page param variable)
+			if ($go_to_prev_page_link) {
+				print "<meta http-equiv=\"REFRESH\" content=\"3;url=".$go_to_prev_page_link."\">";
+				plainmessage("<table class=\"$css\"><tr><td>Page will be refreshed in a few seconds.</td></tr>", false);
+				return;
+			}
+			$plural = get_plural_form($element_name);
+			print '<tr class="'.$css.'">';
+			$no_columns = 0;
+			$ths ="<tr>";
+			//$ths .= '<tr>';
+			$no_columns = 0; 
+			foreach($formats as $column_name => $var_name) {
+				$name = extract_column_name($column_name, $var_name);
+				$css_col = extract_column_css($conditional_css, $name);
+				$headers_name = str_replace("_","&nbsp;",ucfirst($name));
+
+				$ucss = ($no_columns == 0) ? "$css first_th" : $css;
+				if ($no_columns == count($formats)-1)
+					$ucss = $css . " last_th";
+				$ths .= '<th class="'.$ucss.$css_col.'">' . $headers_name . '</th>';
+				$no_columns++;
+
+			}
+
+			$ths .= '</tr><tr><td class="'.$css.' last_row left_align_monitoring"  colspan="'.count($formats).'" >';
+			print($ths);
+			plainmessage("There aren't any $plural in the database.");
+			print('</td></tr>');
+
+			if (!count($general_actions)) {
+				print '<tr><td class="last_row" colspan="'.count($formats).'"></td></tr>';
+				print '</table>';
+				return;
+			}
+		}
+	}
 
 	for ($i=0; $i<count($array); $i++) {
 		$cond_css = '';
