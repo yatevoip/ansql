@@ -2049,9 +2049,11 @@ function build_javascript_format($field_name, &$field_format, $display, $label, 
 	}
 
 	$parts = preg_split("/".$op."=/i", $field_format["javascript"],2);
-	if (count($parts)>1)
+	if (count($parts)>1) {
+		if ($parts[1][0] == "'")
+			$js = str_replace("'", "\"", $js);
 		$field_format["javascript"] = $parts[0] . $op . "=" . $parts[1][0] . $js . "; ". substr($parts[1],1);
-	else
+	} else
 		$field_format["javascript"] .= " " . $op . "=\"" . $js . "\"";
 }
 
