@@ -1785,7 +1785,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "password":
 		case "file":
 		case "text-nonedit":
-			print '<input  class="'.$css.'" type="'.($display=="text-nonedit"?"text":$display).'" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
+		case "text-disabled":
+			if (isset($field_format["extra_css"]))
+				$css = $css." ".$field_format["extra_css"];
+			print '<input  class="'.$css.'" type="'.($display=="text-nonedit"||$display=="text-disabled"?"text":$display).'" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
 			if ($display != "file" && $display != "password") {
 				if (!is_array($value)) {
 					print " value=".html_quotes_escape($value);
@@ -1812,6 +1815,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print " maxlength='".$field_format["maxlength"]."'";
 			if ($display == "text-nonedit")
 				print " readonly=''";
+			if ($display == "text-disabled")
+				print " disabled=''";
 			if (isset($field_format["autocomplete"]))
 				print " autocomplete=\"".$field_format["autocomplete"]."\"";
 
