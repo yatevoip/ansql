@@ -7717,6 +7717,8 @@ function hours_to_seconds($hours)
 function timezone_offsets_list()
 {
 	$timezones = timezone_identifiers_list();
+	// add 'GMT' to list of recognized timezones
+	$timezones[] = "GMT";
 
 	$timezone_offsets = array();
 	foreach( $timezones as $timezone )
