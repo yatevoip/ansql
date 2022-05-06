@@ -4251,6 +4251,16 @@ function format_opt_for_dropdown($vals, $field="field", $set_id=false, $use_defa
 /**
  * Build a table with the rows of a html form data
  * Uses display_pair() to display the rows
+ * @param $rows Array the fields displayed in each row of the table
+ * @param $th Array display each element in <th>. If width is present in array, add it in the 'style' of the element
+ * @param $title String the title for this <form> displayed in <table>
+ * @param $submit String the submit element displayed in <table>
+ * @param $width String The custom with of the table
+ * @param $id String The custom id of the table 
+ * @param $css_first_column String the name of the first td element in the table
+ * @param $color_indexes Array contains the ids of the rows that have custom css class 'custom_border'
+ * @param $dif_css String custom class of the css for all <td> elements
+ * @param $th_css String custom css for the <th> rows in <table>
  */ 
 function formTable($rows, $th = null, $title = null, $submit = null, $width = null, $id = null, $css_first_column = '', $color_indexes = array(), $dif_css = "", $th_css = "")
 {
@@ -4264,14 +4274,14 @@ function formTable($rows, $th = null, $title = null, $submit = null, $width = nu
 		$cols = count($rows[0]);
 	else
 		$cols = count($rows);
-	if (substr($width,-2) != "px" && substr($width,-1) != "%")
+	if ($width && substr($width,-2) != "px" && substr($width,-1) != "%")
 		$width .= "px";
 	$width = ($width) ? "style=\"width:".$width.";\"" : "";
 	$id = ($id) ? " id=\"$id\"" : "";
 	print '<table class="formtable '.$dif_css.'" cellspacing="0" cellpadding="0" '.$width.' '.$id.'>'."\n";
 	if ($title) {
 		print "<tr>\n";
-		print '<th class="title_formtable" colspan="'.$cols.'">'.$title.'</td>'."\n";
+		print '<th class="title_formtable '.$dif_css.'" colspan="'.$cols.'">'.$title.'</th>'."\n";
 		print "</tr>\n";
 	}
 	if (is_array($th)) {
@@ -4298,15 +4308,12 @@ function formTable($rows, $th = null, $title = null, $submit = null, $width = nu
 					$css = ($i%2 == 0) ? "formtable evenrow_ftable $dif_css" : "formtable $dif_css";
 					if (!$th && $i==0 && $j==0)
 						$css .= "firsttd";
-			//		if($j == 0)
-			//			$css .= " $css_first_column"."";
-					if ($i%2 == 0)
-						print "<td class=\"$css $custom_css\">". $row[$j] ."</td>\n";
-					else
-						print "<td class=\"$css $custom_css\">". $row[$j] ."</td>\n";
+					if ($css_first_column && $j == 0)
+						$css .= " $css_first_column"."";
+					print "<td class=\"$css $custom_css\">". $row[$j] ."</td>\n";
 				}
 			} else {
-				print '<td class="white_row" colspan="'.count($th).'">'.$row.'</td>';
+				print '<td class="white_row" colspan="'.$cols.'">'.$row.'</td>';
 			}
 			print "</tr>\n";
 		}
