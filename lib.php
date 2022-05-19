@@ -2647,7 +2647,7 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 			print('</td></tr>');
 
 			if (!count($general_actions)) {
-				print '<tr><td class="last_row" colspan="'.count($formats).'"></td></tr>';
+				print '<tr><td class="last_row_empty" colspan="'.count($formats).'"></td></tr>';
 				print '</table>';
 				return;
 			}
@@ -2755,7 +2755,10 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 		$colspan = count($formats) + count($object_actions);
 		if ($insert_checkboxes)
 			$colspan += 1;
-		print '<tr><td class="last_row" colspan="'.$colspan.'"></td></tr>';
+		if (!count($general_actions))
+			print '<tr><td class="last_row_empty" colspan="'.$colspan.'"></td></tr>';
+		else
+			print '<tr><td class="last_row" colspan="'.$colspan.'"></td></tr>';
 	}
 	if(count($general_actions) && !in_array("__top",$general_actions))
 		links_general_actions($general_actions, $no_columns, $css, $base);
