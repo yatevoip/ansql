@@ -120,7 +120,7 @@ class Variable
 			} 
 		} elseif ( (substr($this->_type,0,3) == "int" && $this->_type!="interval") || substr($this->_type,-3) == "int" || substr($this->_type,0,5) == "float" || substr($this->_type,0,7)=="tinyint" || $this->_type == "serial" || $this->_type == "bigserial" || substr($this->_type,0,6) == "bigint") {
 			$value = str_replace(',','',$value);
-			return 1*$value;
+			return (int)$value;
 		} elseif (($this->_type == "timestamp" || $this->_type == "date") && $value == "now()")
 			return $value;
 		elseif ($this->_type == "bit(1)") {
@@ -129,7 +129,7 @@ class Variable
 			else
 				return 0;
 		} elseif (substr($this->_type,0,4) == "bit(") 
-			return 1*$value;
+			return (int)$value;
 		return "'" . Database::escape($value) . "'";
 	}
 
