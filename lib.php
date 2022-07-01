@@ -2557,7 +2557,8 @@ function tableOfObjects($objects, $formats, $object_name, $object_actions=array(
 	$do_not_apply_htmlentities = (!$do_not_apply_htmlentities) ? array() : $do_not_apply_htmlentities;
 
 	$ths = "";
-	print '<table class="'.$css.'" id="'.$css.'_id" cellspacing="0" cellpadding="0">';
+	$id = str_replace(" ", "_", $css);
+	print '<table class="'.$css.'" id="'.$id.'_id" cellspacing="0" cellpadding="0">';
 
 	$order_dir = (!getparam("order_dir") || getparam("order_dir")=="asc") ? "desc" : "asc";
 	if(count($objects)) {
@@ -3313,8 +3314,9 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
  * @param $additional String added to the value id
  * @param $next String use it to change the method param 
  * @param $action_obj String. Action to acknowledge. Default: "delete" 
+ * @param $div_class String. Css class of ack message div. Default: "notice"
  */ 
-function ack_delete($object, $value = NULL, $message = NULL, $object_id = NULL, $value_id = NULL, $additional = NULL, $next = NULL, $action_obj="delete")
+function ack_delete($object, $value = NULL, $message = NULL, $object_id = NULL, $value_id = NULL, $additional = NULL, $next = NULL, $action_obj="delete", $div_class="notice")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module, $method;
@@ -3324,7 +3326,7 @@ function ack_delete($object, $value = NULL, $message = NULL, $object_id = NULL, 
 	if (!$value_id)
 		$value_id = getparam($object_id);
 
-	print "<div class=\"ack_delete notice\">Are you sure you want to $action_obj ".str_replace("_","&nbsp;",$object)." $value?";
+	print "<div class=\"ack_delete ".$div_class."\">Are you sure you want to $action_obj ".str_replace("_","&nbsp;",$object)." $value?";
 	if ($message) {
 		if (substr($message,0,2) != "__") {
 			if(substr($message,0,1) == ",")
