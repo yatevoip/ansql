@@ -111,20 +111,27 @@ function debug()
   		"enable_debug_buttons"=>array("value"=>$enable_debug_buttons, "display"=>"checkbox"),
 		"dump_xdebug"=>array("value"=>$dump_xdebug, "display"=>"checkbox", "comment"=>"Dump xdebug log in log file - not the php xdebug, but application and library specific xdebug."),
 		"debug_queries"=>array("value"=>$debug_queries, "display"=>"checkbox", "comment"=>"Dump query log in log file."),
-		"display_logs_on_web"=>array("column_name"=>"Display debug in web page","value"=>$display_logs_on_web, "display"=>"checkbox", "comment"=>"If checked the logs will be displayed on screen. If 'dump_xdebug'/'debug_queries' is not checked, just module logs will be displayed. By default logs are added in " . implode(",", $logs_in)),
-	  	"debug_modules"=>array("value"=>$debug_modules,  "comment"=>"Comma delimited list of tags for which the values must be displayed. Overwrites critical_tags, debug_tags value with provided value and debug_all variable becomes false."),
-		"debug_filters"=>array("value"=>$impl_filters, "comment"=>"Comma separated list of filters: tags or pieces of messages"),
-	  	// Setting php ini 
-		"objtitle2"=>array("display"=> "objtitle" , "value"=> "Settings overwriting php ini"),
-		"error_reporting"=>array($errors, "display"=>"select", "comment"=>"Controls php error_reporting. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."), 
-		"display_errors"=>array("value"=>$display_errors, "display"=>"checkbox", "comment"=>"Controls php display_errors. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."),
-		"log_errors"=>array("value"=>$log_errors, "display"=>"checkbox", "comment"=>"Controls php log_errors. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."),
-		"error_log"=>array("value"=>$error_log/*, "display"=>"checkbox"*/),
+		"display_logs_on_web"=>array("column_name"=>"Display debug in web page<sup>*</sup></br><font style='color:#aaa;size:5px;'>* All debug is shown if no Debug tags/filters are set</font>","value"=>$display_logs_on_web, "display"=>"checkbox", "comment"=>"If checked the logs will be displayed on screen. If 'dump_xdebug'/'debug_queries' is not checked, just module logs will be displayed. By default logs are added in " . implode(",", $logs_in)),
+	  	"debug_modules"=>array("value"=>$debug_modules,  "comment"=>"Comma delimited list of tags for which the values must be displayed. Overwrites critical_tags, debug_tags value with provided value and debug_all variable becomes false.", "column_name"=>"Debug tags"),
+		"debug_filters"=>array("value"=>$impl_filters, "comment"=>"Comma separated list of filters: tags or pieces of messages","column_name"=>"Debug filters(tags,pieces of messages)"),
+
+		"examples_title"=>array("display"=> "objtitle" , "value"=> "Usage examples"),
 		"examples"=>array(
 		  "display"=>"message", 
-		  "value"=>"Usage examples:
+		  "value"=>"
 			<ul>
-				<li> visualize logs in \$_Session['xdebug']</li>
+				<li> Display all Debug::debug_message() function output</li>
+					<ul>
+						<li> check 'Display debug in web page' </li>
+					</ul>
+
+				<li> Filter output from Debug::debug_message() </li>
+                                        <ul>
+						<li> Insert comma separated list of tags to be shown in page - Debug tags </li>
+						<li> Insert comma separated list of string to be matched agains tags or parts of the message - Debug filters </li>
+                                        </ul>
+
+				<li> View logs from \$_Session['xdebug']</li>
 					<ul>
 						<li> by default logs are displayed in \$_Session['xdebug']</li>
 						<li> use Dump \$_SESSION button to visualize them </li>	
@@ -144,16 +151,20 @@ function debug()
 						<li> check 'Display logs on web' field</li>
 						<li> add the tags in debug_modules field </li>
 					</ul>			
-				<li> display Debug::debug_message() function output</li>
-					<ul>
-						<li> check 'Display debug in web page'</li>
-					</ul>
 				<li> enable/disable debug buttons</li>
 					<ul>
 						<li> check/uncheck 'Enable debug buttons' option</li>
 					</ul>
 			</ul>",
-		  "no_escape"=>true)
+		  "no_escape"=>true),
+
+
+	  	// Setting php ini 
+		"objtitle2"=>array("display"=> "objtitle" , "value"=> "Overwriting settings from php.ini"),
+		"error_reporting"=>array($errors, "display"=>"select", "comment"=>"Controls php error_reporting. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."), 
+		"display_errors"=>array("value"=>$display_errors, "display"=>"checkbox", "comment"=>"Controls php display_errors. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."),
+		"log_errors"=>array("value"=>$log_errors, "display"=>"checkbox", "comment"=>"Controls php log_errors. If set it will be kept in session and it will modify error_reporting until logging out or modifying it again from this form."),
+		"error_log"=>array("value"=>$error_log/*, "display"=>"checkbox"*/),
 	);
 
 	if (is_auth("debug"))
@@ -170,7 +181,7 @@ function debug()
 ?>	<br/><br/>
 	<form action="debug_all.php" method="post"><?php
 	addHidden("database");
-	editObject(NULL,$arr, "Debug Settings", "no");
+	editObject(NULL,$arr, "Debug Settings - per session", "no");
 ?></form><?php
 }
 
