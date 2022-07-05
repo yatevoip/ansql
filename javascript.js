@@ -1769,4 +1769,10 @@ function build_restart_changes(field_name)
 		restartChanges.push(field_name); 
 }
 
+function show_alert_message(field, message)
+{	
+	if (document.getElementById(field).checked == true)
+		alert(message);
+}
+
 var restartChanges = Array();

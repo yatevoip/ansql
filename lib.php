@@ -1699,6 +1699,11 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print " CHECKED ";
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
+			else {
+				$result_alert_message = display_alert_message($form_identifier.$field_name);
+				if ($result_alert_message[0])
+					print($result_alert_message[1]);
+			}
 			if ($display=="checkbox-readonly")
 				print " disabled=''";
 			print '/>'.$field_comment;
@@ -8147,6 +8152,42 @@ function date_difference($start,$end=null)
 		return $diff->format('%i')."m ". $diff->format('%s')."s";
 	else
 		return $diff->format('%s')."s";
+}
+/**
+ *  Function display custom alert message for a specified field into $generate_alert_message array from structure.php
+ *  @param $fieldname string that specified the field name
+ *  @return Array where [0] is bool value showing whether action succesed , [1] is the default action
+ */
+function display_alert_message($fieldname) 
+{
+	global $generate_alert_message, $method;
+		
+	if (!is_array($generate_alert_message))
+		return array(false, "Not a valid array.");
+	
+	$check_last_digit = $fieldname[-1];
+	if (is_numeric($check_last_digit) && $fieldname[-2] == "_") {
+		$current_fieldname = substr($fieldname, 0, -1);
+		$current_fieldname = rtrim($current_fieldname, "_");
+	} elseif (is_numeric($check_last_digit) && $method == "network_settings")
+		$current_fieldname = substr($fieldname, 0, -1);
+		
+	foreach ($generate_alert_message as $key => $value) {
+		$keys = explode("/", $key);
+		$params = array();
+		foreach ($keys as $item) {
+			$item = trim($item);
+			array_push($params, $item);
+		}
+		
+		if ($method != $params[0])
+			continue;
+
+		if ((isset($current_fieldname) && in_array($current_fieldname, $params)) || in_array($fieldname, $params)) {
+			$message = $value["message"];
+			return array(true, "onchange = \"show_alert_message('$fieldname' , message = '$message');\""); 
+		}
+	}			
 }
 
 ?>
