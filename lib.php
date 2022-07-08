@@ -8165,12 +8165,12 @@ function display_alert_message($fieldname)
 	if (!is_array($generate_alert_message))
 		return array(false, "Not a valid array.");
 	
-	$check_last_digit = $fieldname[-1];
-	if (is_numeric($check_last_digit) && $fieldname[-2] == "_") {
-		$current_fieldname = substr($fieldname, 0, -1);
+	$check_last_digit = $fieldname[strlen($fieldname)-1];
+	if (is_numeric($check_last_digit) && ($fieldname[strlen($fieldname)-2] == "_")) {
+		$current_fieldname = substr($fieldname, 0, strlen($fieldname)-1);
 		$current_fieldname = rtrim($current_fieldname, "_");
 	} elseif (is_numeric($check_last_digit) && $method == "network_settings")
-		$current_fieldname = substr($fieldname, 0, -1);
+		$current_fieldname = substr($fieldname, 0, strlen($fieldname)-1);
 		
 	foreach ($generate_alert_message as $key => $value) {
 		$keys = explode("/", $key);
