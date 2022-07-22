@@ -176,7 +176,7 @@ function forbidden()
  * Defaults to global variable $module or 'current_form' if $module is not set or null
  * @param $class String. Fill the attribute class. No default value set.
  */ 
-function start_form($action = NULL, $method = "post", $allow_upload = false, $form_name = NULL, $class = NULL)
+function start_form($action = NULL, $method = "post", $allow_upload = false, $form_name = NULL, $class = NULL, $javascript = NULL)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -193,8 +193,8 @@ function start_form($action = NULL, $method = "post", $allow_upload = false, $fo
 		else
 			$action = "index.php";
 	}
-
-	?><form action="<?php print $action;?>" name="<?php print $form_name;?>" id="<?php print $form_name;?>" <?php if ($class) print "class=\"$class\"";?> method="<?php print $method;?>" <?php if($allow_upload) print 'enctype="multipart/form-data"';?>><?php
+	
+	?><form action="<?php print $action;?>" name="<?php print $form_name;?>" id="<?php print $form_name;?>" <?php if ($class) print "class=\"$class\"";?> method="<?php print $method;?>" <?php if($allow_upload) print 'enctype="multipart/form-data"';?><?php if ($javascript)	print $javascript;?>><?php
 }
 
 /**
