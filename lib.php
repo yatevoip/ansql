@@ -5990,6 +5990,14 @@ function build_net_addresses_dropdown($net_interfaces, $select=false, $type_ip =
 	return $interfaces_ips;
 }
 
+function build_net_addr_labels($net_interfaces, $dropdown_key = "sctp_ip")
+{
+	$interfaces_labels = array();
+	foreach ($net_interfaces["net_address"] as $interface) 
+		$interfaces_labels[] = array($dropdown_key."_id"=>$interface["interface"], $dropdown_key=>$interface["interface"]);
+	return $interfaces_labels;
+}
+
 /**
  * Change the old key with a new key in an specific array used to build 
  * a dropdown that is used to display:'select_without_non_selected'
