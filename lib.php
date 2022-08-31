@@ -125,6 +125,8 @@ function get_default_function()
 
 	global $module, $method, $action;
 
+	Debug::debug_message(__FUNCTION__, "module:".$module." | method:".$method." | action:".$action);
+	
 	if (!$method)
 		$method = $module;
 	if (substr($method,0,4) == "add_")
@@ -3348,7 +3350,9 @@ function ack_delete($object, $value = NULL, $message = NULL, $object_id = NULL, 
 		foreach ($_SESSION["previous_page"] as $param => $value)
 			$link .= "$param=$value&";
 	$link .= '&module=' . $module . '&method=' . $method . '&action=database&' . $object_id . '=' . $value_id . $additional;
-
+	
+	Debug::debug_message(__FUNCTION__, "'Link: ".$link);
+	
 	print '<a class="llink" href="'.htmlentities($link).'">Yes</a>';
 
 	print '&nbsp;&nbsp;&nbsp;&nbsp;'; 
