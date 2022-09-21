@@ -261,10 +261,12 @@ class Database
 		}
 		if (!self::$_connection) {
 			Debug::Output("config", _("Could not connect to the database")." $connection_index");
-			self::$_connection = self::connect($next_index);
+			global ${"db_host".$next_index};
+			if ( isset(${"db_host".$next_index}) )
+				self::$_connection = self::connect($next_index);
 			if (!self::$_connection) {
 				if (!isset($exit_gracefully) || !$exit_gracefully)
-					die("Could not connect to the database");
+					die("Could not connect to the database\n");
 				else
 					return; 
 			} elseif (isset($cb_when_backup) && is_callable($cb_when_backup))
