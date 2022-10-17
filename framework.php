@@ -1938,9 +1938,10 @@ class Model
 	  * @param $id_name Name of the id of this object
 	  * @param $columns_with_default Array. List of the columns with default values that should be added 
 	  * when building condition
+	  * @param $extra_conditions Array. List of additional conditions to take into account when db query is performed
 	  * @return id or the object that matches the conditions, false otherwise
 	  */
-	public function objectExists($id_name = NULL, $columns_with_default=array())
+	public function objectExists($id_name = NULL, $columns_with_default=array(), $extra_conditions=array())
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 
@@ -1982,6 +1983,7 @@ class Model
 		$where = ($value_id && $value_id != "NULL") ? "WHERE $fields AND ".esc($id_name)."!=$value_id" : "WHERE $fields";
 		if($value_id && $value_id != "NULL")
 			$conditions[$id_name] = "!=".$value_id;
+		$conditions = array_merge($conditions, $extra_conditions);
 		$where = $this->makeWhereClause($conditions,true);
 		$query = self::buildSelect($id_name,$table,$where);
 		$res = Database::query($query);
