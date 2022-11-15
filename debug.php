@@ -74,6 +74,14 @@ if(is_file("defaults.php"))
 if(is_file("config.php"))
 	include_once("config.php");
 
+function return_var_dump()
+{
+	ob_start();
+	call_user_func_array('var_dump', func_get_args());
+	return ob_get_clean();
+}
+
+
 class Debug
 {
 	// xdebug_log when running in cli mode

@@ -154,9 +154,12 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 		$api_secret = $token_alarm_center;
 	elseif ($json_api_secret && $trigger_report)
 		$api_secret = $json_api_secret;
+	//Debug::debug_message(__FUNCTION__,"Before json encode: ".return_var_dump($out));
+	$json = json_encode($out);
+	Debug::debug_message(__FUNCTION__,"Encoded json: ".$json);
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
-	curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($out));
+	curl_setopt($curl,CURLOPT_POSTFIELDS,$json);
 	if (!$api_secret)
 		curl_setopt($curl,CURLOPT_HTTPHEADER,array(
 	    	"Content-Type: application/json",
