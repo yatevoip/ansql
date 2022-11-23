@@ -315,7 +315,7 @@ function show_docs(category_id, comment_id)
 	
 	if (docs_always_visible == "" || docs_always_visible == "false") {
 		docs_always_visible = true;
-		set_cookie('docs_always_visible', docs_always_visible);
+		set_cookie('docs_always_visible', docs_always_visible, 730);
 	}
 
 	/* set reference_id with the id found in iframe html*/
@@ -495,7 +495,7 @@ function resize_left_iframe(obj, elem, scroll_to = null)
 function closeFrame() 
 {
 	docs_always_visible = false;
-	set_cookie('docs_always_visible', docs_always_visible);
+	set_cookie('docs_always_visible', docs_always_visible, 730);
 	if (isMissing(document.getElementById("docs_iframe"))) {	
 		return;
 	}
@@ -503,10 +503,25 @@ function closeFrame()
 	document.getElementById("page_id").style.width="100%";
 }
 
-function set_cookie(cname, cvalue)
+/**
+ * Function used to set a cookie;
+ * @param {string} cname Name of the cookie
+ * @param {string} cvalue Value to be set for the cookie
+ * @param {int} exdays Expiration time in days; Default is 0 and expiration date will be set when the browsing session ends.
+ */
+function set_cookie(cname, cvalue, exdays = 0)
 {
 	cvalue = encodeURIComponent(cvalue);
-	document.cookie = cname + "=" + cvalue + "; path=/";
+	
+	if (exdays == 0) {
+		document.cookie = cname + "=" + cvalue + "; path=/";
+	} else {
+		const d = new Date();
+		d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+		let expires = "expires="+d.toUTCString();
+		//console.log(expires);
+		document.cookie = cname + "=" + cvalue + ";" + expires + "; path=/";
+	}
 }
 
 function get_cookie(cname)
