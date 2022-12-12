@@ -1263,12 +1263,19 @@ function get_rand_int(min, max)
 /**
  * This function triggers the popup on a javascript event set on the html element (ex: button onclick, link onclick)
  * It uses make_request to make request to a link and call the js function that displays the popup 
- * @param popup_request_object Object contains: 
- * link - where to make request for content
- * cb_api_response  - this function will be called to display the popup (if not set, default function display_popup will be called)
- * cb_close_button  - this function will be called when user clicks on close button to close the popup (if not set, default function close_popup will be called)
- * cb_close_button_params - set the params for the function set in cb_close_button (if not set, function set in cb_close_button will be called with no parameters)
  * 
+ * @param popup_request_object Object contains: 
+ * 
+ * => link - URL where to make request for content
+ * => cb_api_response - the custom function to be called instead of the default display_popup function
+ *		      - this function arguments should always be html_content(returned content from link request) and popup_request_object(the same object set in request_popup)
+ *		      - parameters can be passed to this cb by adding extra properties the popup_request_object
+ * 
+ * object properties taken into account when using the default display_popup function:
+ * => cb_close_button        - this function will be called when user clicks on close button to close the popup (if not set, default function close_popup will be called)
+ * => cb_close_button_param - set the params for the function set in cb_close_button (if not set, function set in cb_close_button will be called with no parameters)
+ * => cb_post_load           - function that will be called after pop-up content is loaded (for ex prettify json)
+ * => cb_post_load_params    - set the params for the function set in cb_post_load (if not set, function set in cb_post_load will be called with no parameters)
  * Ex: obj = {"link":"pages.php?method=card_scan","cb_api_response":display_popup,"cb_close_button":minimize_success,"cb_close_button_params":{"method":"card_scan"}}
  */
 function request_popup(popup_request_object)
@@ -1286,7 +1293,11 @@ function request_popup(popup_request_object)
 /**
  * Displays the popup
  * @param html_content - returned content from link request
- * @param popup_request_object Object . The same object set in request_popup.
+ * @param popup_request_object Object . The same object set in request_popup. May contain:
+ *				=> cb_close_button        - this function will be called when user clicks on close button to close the popup (if not set, default function close_popup will be called)
+ *				=> cb_close_button_param - set the params for the function set in cb_close_button (if not set, function set in cb_close_button will be called with no parameters)
+ *				=> cb_post_load           - function that will be called after pop-up content is loaded (for ex prettify json)
+ *				=> cb_post_load_params    - set the params for the function set in cb_post_load (if not set, function set in cb_post_load will be called with no parameters)
  */
 function display_popup(html_content,popup_request_object)
 {
@@ -1320,7 +1331,14 @@ function display_popup(html_content,popup_request_object)
 	    } else
 		    document.getElementById("closebut").onclick = close_popup;
 	}
-
+	
+	if (typeof popup_request_object.cb_post_load === 'function') {
+		if (typeof popup_request_object.cb_post_load_params != 'undefined' || popup_request_object.cb_post_load_params!=null)
+			popup_request_object.cb_post_load(popup_request_object.cb_post_load_params);
+		else
+			popup_request_object.cb_post_load();
+	}
+	
 	if (container.style.display=="none") {
 		show_hide('maximize_overlay');
 		show_hide('maxedcontainer');
