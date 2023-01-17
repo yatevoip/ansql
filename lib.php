@@ -1299,7 +1299,7 @@ function html_quotes_escape($str)
 /**
  * Builds the HTML data for FORM
  */ 
-function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null, $label=null)
+function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null, $label=null, $hidden_field_input = "off")
 {
 	global $allow_code_comment, $use_comments_docs, $method, $add_selected_to_dropdown_if_missing;
 	
@@ -1560,6 +1560,11 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print ' multiple="multiple" size="5" name="'.$form_identifier.$field_name.'[]"';
 			else
 				print ' name="'.$form_identifier.$field_name.'"';
+			
+			//Added option to mark a dropdown as disabled. 
+			if (isset($field_format["disabled_select"]) &&  ($field_format["disabled_select"]== true))
+				print ' disabled';
+			
 			print '>';
 			//if ($display != "mul_select" && $display != "select_without_non_selected")
 			if ($display == "select")
@@ -1696,6 +1701,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			break;
 		case "checkbox":
 		case "checkbox-readonly":
+			if ($hidden_field_input == "on") {
+				print '<!-- Input type="hidden" has been set to all checkboxes. -->';
+				print '<input class="'.$css.'" type="hidden" name="'.$form_identifier.$field_name.'" value="off">';
+			}
 			print '<input class="'.$css.'" type="checkbox" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
 			if (bool_value($value) || $value=="on")
 				print " CHECKED ";

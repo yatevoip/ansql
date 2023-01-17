@@ -108,7 +108,7 @@ function advanced(identifier, scroll_to_top)
 
 	var elems = (myform!=null) ? myform.elements : [];
 	var elem_name;
-	
+	console.log("If the Advanced button doesn't work on your scenario, you have to set an Identifier into editObject() function.");
 	console.log("Found "+elems.length+" elements in form.");
 	//If checkbox-group is used, all the checkboxes in that group will have the same name (duplicates)
 	//Solution: Use this array to skip duplicates
