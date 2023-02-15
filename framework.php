@@ -3287,7 +3287,8 @@ class Model
 		// Arrays of operators that should be put at the beggining in $value 
 		// If none of this operators is used and $value does not have a special value then 
 		// the default operator is =
-		$two_dig_operators = array("<=",">=","!=");
+		//Added "<>" MySQL Operator into $two_dig_operators array
+		$two_dig_operators = array("<=",">=","!=", "<>");
 		$one_dig_operators = array(">","<","=");
 
 		$first_two = substr($value,0,2);
@@ -3310,6 +3311,11 @@ class Model
 				// refers to a column from a table
 				$value = substr($value, 6, strlen($value));
 				$clause .= " $t_k" . $first_two . "$value ";
+			} elseif ($first_two == "!=" ||  $first_two == "<>") {
+				//If the where operator is "!=" or "<>" => it will be used  NOT table.column <=> value.
+				$value = Database::escape($value);
+				$null_safe_equal_operator = "<=>";
+				$clause .= " NOT $t_k" . $null_safe_equal_operator . "'$value' ";
 			}else{
 				$value = Database::escape($value);
 				$clause .= " $t_k" . $first_two . "'$value' ";
