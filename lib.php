@@ -1485,6 +1485,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 
 	if ($label)
 		build_javascript_format($field_name, $field_format, $display, $label, $form_identifier);
+	
+	//Using the below format, function behavior has been improved to add custom html in front of each step fields, but in front of question mark. Ex: $conf[$fieldname]["pre_extra_html"] = array( "html" => "html_desired");
+	if (isset($field_format["pre_extra_html"]))
+		print $field_format["pre_extra_html"];
 
 	switch($display) {
 		case "textarea":
@@ -1701,6 +1705,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			break;
 		case "checkbox":
 		case "checkbox-readonly":
+			//Added possibility to not set "hidden_field" to a checkbox from framework. On this case, you have to set input type=hidden manually.
+			if (isset($field_format["no_hidden"]))
+				$hidden_field_input = "off";
+			
 			if ($hidden_field_input == "on") {
 				print '<!-- Input type="hidden" has been set to all checkboxes. -->';
 				print '<input class="'.$css.'" type="hidden" name="'.$form_identifier.$field_name.'" value="off">';
@@ -2048,6 +2056,11 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			if ($value)
 				print $value;
 			print $field_comment;
+	}
+	//Function behavior has been improved to add custom html behind to each step fields, but in front of question mark. Ex: $conf[$fieldname]["post_extra_html"] = array( "html" => "html_desired");
+	if (isset($field_format["post_extra_html"])) {
+		$html_content = $field_format["post_extra_html"]["html"];
+		print "{$html_content}";
 	}
 
 	print '</td>';
