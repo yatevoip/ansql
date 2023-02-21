@@ -8205,6 +8205,9 @@ function display_alert_message($fieldname)
 		$current_fieldname = rtrim($current_fieldname, "_");
 	} elseif (is_numeric($check_last_digit) && $method == "network_settings")
 		$current_fieldname = substr($fieldname, 0, strlen($fieldname)-1);
+	
+	if (!isset($current_fieldname))
+		return array(false, "Not set a specific alert message for the current field.");
 		
 	foreach ($generate_alert_message as $key => $value) {
 		$keys = explode("/", $key);
