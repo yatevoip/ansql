@@ -8195,7 +8195,7 @@ function date_difference($start,$end=null)
 function display_alert_message($fieldname) 
 {
 	global $generate_alert_message, $method;
-		
+
 	if (!is_array($generate_alert_message))
 		return array(false, "Not a valid array.");
 	
@@ -8220,9 +8220,9 @@ function display_alert_message($fieldname)
 		if ((isset($current_fieldname) && in_array($current_fieldname, $params)) || in_array($fieldname, $params)) {
 			$message = $value["message"];
 			return array(true, "onchange = \"show_alert_message('$fieldname' , message = '$message');\""); 
-		} else
-			return array(false, "Not set a specific alert message for the current field.");
-	}			
+		}
+	}
+	return array(false, "No need to set a specific alert message for the current field.");
 }
 
 ?>
