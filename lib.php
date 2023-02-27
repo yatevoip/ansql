@@ -2048,14 +2048,16 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			if (isset($field_format["advanced"]))
 				print '<input type="hidden" name="'.$form_identifier.$field_name.'">';
 
-			if (!is_callable($display))
+			if (!is_callable($display)) {
 				Debug::trigger_report('critical', "Callable ".print_r($display,true)." is not implemented.");
-
-			// callback here
-			$value = call_user_func_array($display, array($value,$form_identifier.$field_name)); 
-			if ($value)
-				print $value;
-			print $field_comment;
+				errornote("Callable '".print_r($display,true)."' is not implemented.");
+			} else {
+				// callback here
+				$value = call_user_func_array($display, array($value,$form_identifier.$field_name));
+				if ($value)
+					print $value;
+				print $field_comment;
+			}
 	}
 	//Function behavior has been improved to add custom html behind to each step fields, but in front of question mark. Ex: $conf[$fieldname]["post_extra_html"] = array( "html" => "html_desired");
 	if (isset($field_format["post_extra_html"])) {
@@ -5183,7 +5185,7 @@ function write_in_file($fh, $formats, $array, $sep, $key_val_arr=true, $col_head
 				} elseif (substr($names_in_array, 0, 15) == "retrieve_column") {
 					$col = explode(":", $names_in_array);
 					$function_name = $col[0];
-					$params = array($col[1] => array());
+					$params = array(array($col[1] => array()));
 					if (isset($array[$i][$col[1]]))
 						$params = array($array[$i][$col[1]]);
 					for ($no=2; $no < count($col); $no++) 
