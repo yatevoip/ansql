@@ -1486,7 +1486,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if ($label)
 		build_javascript_format($field_name, $field_format, $display, $label, $form_identifier);
 	
-	//Using the below format, function behavior has been improved to add custom html in front of each step fields, but in front of question mark. Ex: $conf[$fieldname]["pre_extra_html"] = array( "html" => "html_desired");
+	//add custom html before field input. Ex: $conf[$fieldname]["pre_extra_html"] = "html_desired";
 	if (isset($field_format["pre_extra_html"]))
 		print $field_format["pre_extra_html"];
 
@@ -1679,6 +1679,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			break;			
 		case "radios":
 		case "radio":
+		case "radios-readonly":
 			$options = (is_array($var_name)) ? $var_name : array();
 			$selected = selected_option($display, $field_name, $field_format, $options, $object);	
 			foreach ($options as $var=>$opt) {
@@ -1693,12 +1694,14 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					$value = $opt;
 					$name = $opt;
 				}
-				print '<input class="'.$css.'" type="radio" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
+				print '<input class="'.$css.'" type="radio" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'_'.strtolower(str_replace(" ", "_",$value)).'"';
 				print " value=".html_quotes_escape($value);
 				if ($value == $selected)
 					print ' CHECKED ';
 				if (isset($field_format["javascript"]))
 					print $field_format["javascript"];
+				if ($display=="radios-readonly")
+					print " disabled=''";
 				print '>' . $name . '&nbsp;&nbsp;';
 			}
 			print $field_comment;
@@ -2059,7 +2062,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print $field_comment;
 			}
 	}
-	//Function behavior has been improved to add custom html behind to each step fields, but in front of question mark. Ex: $conf[$fieldname]["post_extra_html"] = array( "html" => "html_desired");
+	//add custom html for the input field after the documentation question mark. Ex: $conf[$fieldname]["post_extra_html"] = array( "html" => "html_desired");
 	if (isset($field_format["post_extra_html"])) {
 		$html_content = $field_format["post_extra_html"]["html"];
 		print "{$html_content}";
