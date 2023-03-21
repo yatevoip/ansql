@@ -76,13 +76,15 @@ $call();
 
 function debug()
 {
-	global $array, $logs_in, $debug_modules, $debug_filters;
+	global $array, $logs_in, $debug_modules, $debug_filters, $debug_tags_js;
 
 	if (!is_array($debug_modules))
 		$debug_modules = array();
 	if (!is_array($debug_filters))
 		$debug_filters = array();
-	
+	if(!is_array($debug_tags_js))
+		$debug_tags_js = array();
+		
 	$error = ini_get("error_reporting");
 	$errors = $array;
 	if(isset($array[$error]))
@@ -100,6 +102,7 @@ function debug()
 	$enable_debug_buttons = (isset($_SESSION["enable_debug_buttons"])) ? $_SESSION["enable_debug_buttons"] : false;
 	$debug_modules = (isset($_SESSION["debug_modules"])) ? $_SESSION["debug_modules"] : implode(",", $debug_modules);
 	$impl_filters = (isset($_SESSION["debug_filters"])) ? $_SESSION["debug_filters"]  : implode(",", $debug_filters);
+	$debug_tags_js = (isset($_SESSION["debug_tags_js"])) ? $_SESSION["debug_tags_js"] : implode(",", $debug_tags_js);
 	
 	$log_errors = (ini_get("log_errors")) ? "t" : "f";
 	$error_log = ($a = ini_get("error_log")) ? $a : '';
@@ -108,12 +111,15 @@ function debug()
 		"pass_debug"=>array("compulsory"=>true, "column_name"=>"Password", "comment"=>"Password to be allowed to modify the debugging options (set in config.php usually)"),
 		// Setting debug levels
 		"objtitle1"=>array("display"=> "objtitle" , "value"=> "Setting/Activating debug levels"),
+		"objtitle3"=>array("display"=> "objtitle" , "value"=> "PHP debug options - Messages that appear in web page or log file"),
   		"enable_debug_buttons"=>array("value"=>$enable_debug_buttons, "display"=>"checkbox"),
 		"dump_xdebug"=>array("value"=>$dump_xdebug, "display"=>"checkbox", "comment"=>"Dump xdebug log in log file - not the php xdebug, but application and library specific xdebug."),
 		"debug_queries"=>array("value"=>$debug_queries, "display"=>"checkbox", "comment"=>"Dump query log in log file."),
 		"display_logs_on_web"=>array("column_name"=>"Display debug in web page<sup>*</sup></br><font style='color:#aaa;size:5px;'>* All debug is shown if no Debug tags/filters are set</font>","value"=>$display_logs_on_web, "display"=>"checkbox", "comment"=>"If checked the logs will be displayed on screen. If 'dump_xdebug'/'debug_queries' is not checked, just module logs will be displayed. By default logs are added in " . implode(",", $logs_in)),
 	  	"debug_modules"=>array("value"=>$debug_modules,  "comment"=>"Comma delimited list of tags for which the values must be displayed. Overwrites critical_tags, debug_tags value with provided value and debug_all variable becomes false.", "column_name"=>"Debug tags"),
 		"debug_filters"=>array("value"=>$impl_filters, "comment"=>"Comma separated list of filters: tags or pieces of messages","column_name"=>"Debug filters(tags,pieces of messages)"),
+		"objtitle4"=>array("display"=> "objtitle" , "value"=> "Javascript debug options - Messages that appear in browser console.log"),
+		"debug_tags_js"=>array("value"=>$debug_tags_js, "comment"=>"Comma delimited list of javascript function names", "column_name"=>"Debug javascript tags"),
 
 		"examples_title"=>array("display"=> "objtitle" , "value"=> "Usage examples"),
 		"examples"=>array(
@@ -213,6 +219,12 @@ function debug_database()
 	} else 
 		unset($_SESSION["debug_filters"]);
 	
+	if(getparam("debug_tags_js")) {
+		$debug_tags_js = getparam("debug_tags_js");
+		$_SESSION["debug_tags_js"] = $debug_tags_js;
+	} else 
+		unset($_SESSION["debug_tags_js"]);
+
 	if (getparam("enable_debug_buttons") == "on")
 		$_SESSION["enable_debug_buttons"] = "on";
 	else

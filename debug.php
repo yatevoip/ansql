@@ -46,6 +46,9 @@ if (!isset($max_xdebug_mess))
 if (!isset($debug_filters))
 	$debug_filters = array();
 
+if (!isset($debug_tags_js))
+	$debug_tags_js = array();
+
 /*
 // options to notify in case a report was triggered
 $debug_notify = array(
@@ -999,7 +1002,7 @@ function auto_clean_xdebug_session()
 
 function config_globals_from_session()
 {
-	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags, $debug_filters;
+	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags, $debug_filters, $debug_tags_js;
 	
 	if (isset($_SESSION["enable_debug_buttons"]))
 		$enable_debug_buttons = true;
@@ -1022,11 +1025,15 @@ function config_globals_from_session()
 		$debug_modules = explode(",",  $_SESSION["debug_modules"]);
 		$debug_modules = array_map("trim",$debug_modules);
 	}
+	if(isset($_SESSION["debug_tags_js"])) {
+		$debug_tags_js = explode(",", strtolower($_SESSION["debug_tags_js"]));
+		$debug_tags_js = array_map("trim", $debug_tags_js);
+	}
 	if (empty($debug_modules))
 		return;
 	$debug_all = false;
 	$debug_tags = $debug_modules;
-	$critical_tags = $debug_modules;
+	$critical_tags = $debug_modules;	
 }
 
 ?>

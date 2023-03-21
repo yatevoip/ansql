@@ -108,8 +108,8 @@ function advanced(identifier, scroll_to_top)
 
 	var elems = (myform!=null) ? myform.elements : [];
 	var elem_name;
-	console.log("If the Advanced button doesn't work on your scenario, you have to set an Identifier into editObject() function.");
-	console.log("Found "+elems.length+" elements in form.");
+	debug_message("If the Advanced button doesn't work on your scenario, you have to set an Identifier into editObject() function.");
+	debug_message("Found ",elems.length," elements in form.");
 	//If checkbox-group is used, all the checkboxes in that group will have the same name (duplicates)
 	//Solution: Use this array to skip duplicates
 	var unique_form_elems = [];
@@ -155,10 +155,9 @@ function advanced(identifier, scroll_to_top)
 			imgarray[imgarray.length-1] = "advanced."+extension ;
 			img.title = "Show advanced fields";
 		}
-
 		img.src = imgarray.join("/");
-	} else 
-		console.log("advanced() was called, but img is null and tagName='"+img.tagName+"'");
+	} else
+		debug_message("advanced() was called, but img is null and tagName='",img.tagName,"'");
 	
 	if (true===scroll_to_top)
 		scrollToTop();
@@ -267,11 +266,11 @@ function show_section(section_index,count_sections,part_ids,custom_css)
 		section_tab = document.getElementById("tab_"+part_ids+i);
 		section_div = document.getElementById("sect_"+part_ids+i);
 		if (section_tab==null) {
-			console.log("Don't have section tab for "+i);
+			debug_message("Don't have section tab for ",i);
 			continue;
 		}
 		if (section_div==null) {
-			console.log("Don't have section div for "+i);
+			debug_message("Don't have section div for ",i);
 			continue;
 		}
 		if (i==section_index) {
@@ -519,7 +518,7 @@ function set_cookie(cname, cvalue, exdays = 0)
 		const d = new Date();
 		d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
 		let expires = "expires="+d.toUTCString();
-		//console.log(expires);
+		//debug_message("",expires);
 		document.cookie = cname + "=" + cvalue + ";" + expires + "; path=/";
 	}
 }
@@ -726,7 +725,7 @@ function remove_spinner()
 function check_required_fields()
 {
 	if (typeof(required_fields) === "undefined") {
-		console.log("The required fields are not defined!");
+		debug_message("The required fields are not defined!");
 		return false;
 	}
 
@@ -741,7 +740,7 @@ function check_required_fields()
 			continue;
 
 		if (document.getElementById(field_name)==null) {
-			console.log("The required field: "+field_name+" has not an ID defined!");
+			debug_message("The required field: ",field_name," has not an ID defined!");
 			return false;
 		}
 
@@ -866,13 +865,13 @@ function set_html_obj(id, html)
  */
 function fields_another_obj(link_index, link_name, hidden_fields, level_fields, name_obj_title, border_elems, multiple_subtitle, advanced_id)
 {
-	console.log("Entered fields_another_obj() ", arguments);
+	func_start();
 
 	// global variable needed by wizard_advanced
 	current_object_index = link_index;
 
 	if (!is_numeric(link_index)) {
-		console.error("Called fields_another_obj with non numeric param link_index: "+link_index);
+		debug_message("Called fields_another_obj with non numeric param link_index: "+link_index);
 		return;
 	}
 
@@ -892,7 +891,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 	// retrieve all elements from same form as the clicked link
 	var parentform = parent_by_tag(document.getElementById(current_link_id),"form");
 	if (parentform==null) {
-		console.error("Can't retrieve parent for for element with id " + current_link_id);
+		debug_message("Can't retrieve parent for for element with id ",current_link_id);
 		return;
 	}
 	var elems = parentform.elements;
@@ -902,19 +901,19 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 		advanced_id = "advanced_wiz_button";
 	var show_advanced = document.getElementById(advanced_id);
 	if (show_advanced!=null) {
-		//	console.log("innerHTML advanced button:'"+show_advanced.innerHTML+"'");
+                //      debug_message("innerHTML advanced button:'",show_advanced.innerHTML,"'");
 		//	show_advanced = (show_advanced.innerHTML=="Advanced") ? false : true;
-		console.log("innerHTML advanced button:'"+show_advanced.src+"'");
+                debug_message("innerHTML advanced button:'",show_advanced.src,"'");
 		var str = show_advanced.src;
 		show_advanced = (str.indexOf("advanced")!=-1) ? false : true;
 	} else
 		show_advanced = false;
-	console.log("Show advanced: "+show_advanced);
+	debug_message("Show advanced: ",show_advanced);
 
 	// show objtitle, if defined
 	show("tr_" + name_obj_title + link_index);
 
-	console.log("level_fields="+level_fields);
+	debug_message("level_fields=",level_fields);
 	if (level_fields!=undefined && level_fields==true)
 		show("tr_"+name_obj_title+"_level_"+link_index);
 
@@ -926,7 +925,7 @@ function fields_another_obj(link_index, link_name, hidden_fields, level_fields, 
 			else
 				id_to_show = "tr_"+name_obj_title+"_level"+k+"_"+link_index;
 			show(id_to_show);
-			console.log("Tried to show:'"+id_to_show+"'");
+			debug_message("Tried to show:'",id_to_show,"'");
 		}
 	}
 
@@ -1040,7 +1039,7 @@ function link_from_fields(form_name)
 		}
 	}
 
-	console.log("Result link_from_fields: "+qs);
+	debug_message("Result link_from_fields: ",qs);
 	return qs;
 }
 
@@ -1466,13 +1465,13 @@ function build_html_element(elem)
 {
 	//Check if elem is object
 	if(!isObject(elem)) {
-		console.log("Invalid parameter in argument.");
+		debug_message("Invalid parameter in argument.");
 		return;
 	}
 	
 	//Check if element tag was defined
 	if (undefined === elem.tag || null === elem.tag) {
-		console.log("Missing element tag.");
+		debug_message("Missing element tag.");
 		return;
 	}
 	
@@ -1490,7 +1489,7 @@ function build_html_element(elem)
 	
 	//Check if element tag is implemented
 	if (undefined === standard_attributes[tag] || null === standard_attributes[tag]) {
-		console.log("Missing element implementation for tag '" + tag + "'");
+		debug_message("Missing element implementation for tag '",tag,"'");
 		return;
 	}
 	
@@ -1512,12 +1511,12 @@ function build_html_element(elem)
 }
 
 function display_custom_field(custom_value, table_id)
-{
+{ 
 	var custom_id = "custom_" + table_id;
 	var checkbox_id = table_id + "_custom_ck";
 	var checkbox = (undefined !== document.getElementById(checkbox_id) && null !== document.getElementById(checkbox_id)) ? document.getElementById(checkbox_id) : null;
 	if (checkbox === null) {
-		console.log("No checkbox found.");
+                debug_message("No checkbox found.");
 		return;
 	}
 	var custom_field = (undefined !== document.getElementById(custom_id) && null !== document.getElementById(custom_id)) ? document.getElementById(custom_id) : null;
@@ -1644,17 +1643,17 @@ function ucfirst(string)
 function display_elem_on_height(pivot_id, elem_id, height = 295)
 {
 	if (isEmpty(pivot_id)) {
-		console.log("display_elem_on_height: pivot_id argument is missing.");
+		debug_message("display_elem_on_height: pivot_id argument is missing.");
 		return;
 	}
 	
 	if (isEmpty(elem_id)) {
-		console.log("display_elem_on_height: elem_id argument is missing.");
+		debug_message("display_elem_on_height: elem_id argument is missing.");
 		return;
 	}
 		
 	if (!Number.isInteger(height)) {
-		console.log("display_elem_on_height: height argument is not integer");
+		debug_message("display_elem_on_height: height argument is not integer");
 		return;
 	}
 	
@@ -1662,12 +1661,12 @@ function display_elem_on_height(pivot_id, elem_id, height = 295)
 	var elem = document.getElementById(elem_id);
 	
 	if (isEmpty(pivot)) {
-		console.log("display_elem_on_height: No HTML element found with id'" + pivot_id + "'.");
+		debug_message("display_elem_on_height: No HTML element found with id'",pivot_id,"'.");
 		return;
 	}
 	
 	if (isEmpty(elem)) {
-		console.log("display_elem_on_height: No HTML element found with id'" + elem_id + "'.");
+		debug_message("display_elem_on_height: No HTML element found with id'",elem_id,"'.");
 		return;
 	}
 	
@@ -1681,7 +1680,7 @@ function display_elem_on_height(pivot_id, elem_id, height = 295)
 function get_form_parameters(form_id, form_identifier = '', exceptions = [])
 {
 	if (isMissing(document.getElementById(form_id))) {
-		console.log('Could not find form with form_id=' + form_id);
+		debug_message('Could not find form with form_id=',form_id);
 		return;
 	}
 	
@@ -1718,7 +1717,7 @@ function get_form_parameters(form_id, form_identifier = '', exceptions = [])
 function fill_form_parameters(form_id, parameters, form_identifier = '')
 {
 	if (isMissing(document.getElementById(form_id))) {
-		console.log('Could not find form with form_id=' + form_id);
+		debug_message('Could not find form with form_id=',form_id);
 		return;
 	}
 	
@@ -1806,6 +1805,88 @@ function show_alert_message(field, message)
 {	
 	if (document.getElementById(field).checked == true)
 		alert(message);
+}
+
+/**
+ * Function that helps us to build a formatted string used in func_start.
+ * @param {Array} arry. Contains the name of the arguments.
+ * @returns {String} args. A formatted string which contains the name of the arguments.
+ */
+function args_to_string(arry)
+{
+	var args = "";
+    	for(let i=0; i<arry.length; i++)
+	{
+   		switch(typeof arry[i])
+        	{
+            		case 'null':
+			args += "," + "null";
+               		break;
+            		case  'undefined':
+                	args += "," + "undefined";
+                	break;
+            		case 'function':
+                	func_name = arry[i].name;
+                	args += "," + func_name + "()"; 
+               		break;
+            		case 'string':
+                	args += (arry[i].length == 0)? "," + "''" : "," + arry[i]; 
+                	break;
+            		case 'object':
+                	if(Array.isArray(arry[i]) && !arry[i].length)
+                    		args += "," + "[]";
+                	else if(arry[i] instanceof HTMLElement || arry[i] instanceof Element)
+                    		args += "," + arry[i].outerHTML;
+                	else
+                    		args += "," + JSON.stringify(arry[i]);
+                	break;
+           		default:
+                	args += "," + arry[i].toString();
+        	}
+    	}
+    	args = args.slice(1);
+    	return args;
+}
+
+/**
+ * Function that console.log a message or a variable. Equivalent of "debug_message" from php.
+ * @param {String} message. Message to be displayed.
+ * @param {object/primitive} variable. Variable to printed (if we want). By default is an empty stiring.
+ * @param {String} opt_message. Optional message to be placed after variable.
+ * @param {String} func_name. Name of the function from where we are calling debug_message.
+ * @returns A message of the following form: message + variable + opt_message.
+ * Example of usage: debug_message("sortArray", "This: ", array, " is sorted").
+ */
+function debug_message(message="", variable="", opt_message="", func_name="")
+{
+	var func_start_text = (typeof variable == "object")? message + JSON.stringify(variable) + opt_message: message + variable + opt_message;
+    	var debug_message_text = debug_message.caller.name.toUpperCase() + "(): " + func_start_text;
+    
+    	func_name = (func_name === "")? debug_message.caller.name: func_name; //Verify if debug_message it's called from func_start
+    	if(js_tags_array && js_tags_array.includes(func_name.toLowerCase()))
+    	{
+        	if(debug_message.caller.name == "func_start")
+        	{
+			console.log(func_start_text);
+        	}
+        	else 
+        	{
+            	console.log(debug_message_text);
+        	}
+    	}
+}
+
+/**
+ * Used when entering a function. Equivalent of debug::func_start.
+ * @param {string} func_name. Name of the function form where we are calling func_name.
+ * @returns A message of the following form: "Entered" + func_name.
+ */
+function func_start()
+{
+    	func_name = func_start.caller.name;
+    	var args = args_to_string(func_start.caller.arguments);
+    	var formatted_name = func_name.toLowerCase() + "(" + args + ")";
+    	debug_message("Entered ", formatted_name, "", func_name);
 }
 
 var restartChanges = Array();
