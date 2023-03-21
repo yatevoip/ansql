@@ -203,7 +203,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 
 		$code = curl_getinfo($curl,CURLINFO_HTTP_CODE);
 		$type = curl_getinfo($curl,CURLINFO_CONTENT_TYPE);
-		if ($type == "application/json") {
+		if (substr($type,0,16) == "application/json") {
 			// if there are comments added to the end of a valid JSON
 			// remove the comment so that the JSON is parsed correctly
 			// and write a warning to the user 
