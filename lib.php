@@ -1681,7 +1681,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "radio":
 		case "radios-readonly":
 			$options = (is_array($var_name)) ? $var_name : array();
-			$selected = selected_option($display, $field_name, $field_format, $options, $object);	
+			$selected = selected_option($display, $field_name, $field_format, $options, $object);
+			if (isset($field_format["extra_css"])) {
+				print '<span class="'.$field_format["extra_css"].'" id="container_'.$form_identifier.$field_name.'">';
+			}
 			foreach ($options as $var=>$opt) {
 				if ($var === "selected" || $var === "SELECTED")
 					continue;
@@ -1704,6 +1707,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					print " disabled=''";
 				print '>' . $name . '&nbsp;&nbsp;';
 			}
+			if (isset($field_format["extra_css"]))
+				print "</span>";
 			print $field_comment;
 			break;
 		case "checkbox":
