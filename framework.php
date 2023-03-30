@@ -885,19 +885,34 @@ class Database
 				$index_name = "$table-index";
 			switch ($db_type) {
 				case "mysql":
+					$query_check = "SELECT COUNT(*) AS indexisthere FROM INFORMATION_SCHEMA.STATISTICS
+						WHERE table_schema=DATABASE() AND table_name='".$table."' AND index_name='".$index_name."';";
 					$query = "CREATE INDEX ".esc($index_name)." USING btree ON ".esc($table)."($index_columns)";
 					break;
 				case "postgresql":
+					$query_check = "SELECT COUNT(*) AS indexisthere FROM pg_indexes
+						WHERE tablename='".$table."' AND indexname='".$index_name."';";
 					$query = "CREATE INDEX ".esc($index_name)." ON ".esc($table)." USING btree ($index_columns)";
 					break;
 			}
-			$res = self::queryRaw($query);
-			if (!$res)
-			{
+
+			// check if index is already created
+			$res_check = self::queryRaw($query_check);
+			if (!$res_check) {
 				$no_error = false;
 				continue;
 			}
-			$make_vacuum = true;
+
+			// create index if it didn't exist and optimize table afterwards
+			if (isset($res_check[0]["indexisthere"]) && $res_check[0]["indexisthere"] == 0) {
+				$res = self::queryRaw($query);
+				if (!$res)
+				{
+					$no_error = false;
+					continue;
+				}
+				$make_vacuum = true;
+			}
 		}
 		if ($make_vacuum)
 			self::vacuum($table);
