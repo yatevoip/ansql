@@ -337,7 +337,7 @@ class Debug
 				$user .= "($reporter)";
 		} else {
 			exec('echo "$USER"',$user);
-			$user = implode($user,"\n");
+			$user = implode("\n",$user);;
 		}
 
 		return $user;
