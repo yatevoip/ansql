@@ -60,6 +60,18 @@ function check_valid_float($field_name, $field_value)
 	return array(true);
 }
 
+function check_valid_positive_integer($field_name, $field_value)
+{
+	$valid = check_valid_integer($field_name, $field_value);
+	if (!$valid[0])
+		return $valid;
+	
+	$field_value = (int) $field_value;
+	if ($field_value < 1)
+		return array(false, "Field '".$field_name."' has to be grater than 0.");
+	return array(true);
+}
+
 /**
  * validate a field value to be in a given array 
  * [Used for SELECT FIELDS]
