@@ -615,8 +615,11 @@ function make_request(url, cb, async, already_encoded)
  * @param cb Callback. If set, call it passing response from HTTP request as argument
  * @param aync Bool. If set, specifies if the request should be handled asynchronously or not. 
  * Default async is true (asynchronous)
+ * @param request_type String. Default POST.
+ * @param ignore_not_successful Bool. Default false.
+ * @param run_spinner Bool. Default false. If set, a spinner is inserted.
  */
-function make_api_request(url, cb, async, request_type, ignore_not_successful)
+function make_api_request(url, cb, async, request_type, ignore_not_successful, run_spinner)
 {
 	var xmlhttp = GetXmlHttpObject();
 	if (xmlhttp == null) {
@@ -626,6 +629,12 @@ function make_api_request(url, cb, async, request_type, ignore_not_successful)
 	
 	if (typeof ignore_not_successful === 'undefined')
 		ignore_not_successful = false;
+
+	if (typeof run_spinner === 'undefined')
+		run_spinner = false;
+
+	if (run_spinner)
+		insert_spinner();
 	    
 	xmlhttp.onreadystatechange = function() {
 		if (xmlhttp.readyState == 4) {

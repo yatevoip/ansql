@@ -68,7 +68,7 @@ function check_valid_positive_integer($field_name, $field_value)
 	
 	$field_value = (int) $field_value;
 	if ($field_value < 1)
-		return array(false, "Field '".$field_name."' has to be grater than 0.");
+		return array(false, "Field '".$field_name."' has to be greater than 0.");
 	return array(true);
 }
 
