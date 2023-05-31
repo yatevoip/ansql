@@ -2,7 +2,7 @@
 /**
  * lib-test.php
  *
- * Copyright (C) 2019 Null Team
+ * Copyright (C) 2019-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -15,6 +15,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */ 
+
+?>
+<?php
+
 function test_curl_request($url, $content=null, $ctype=null, $method='post', $print_url=true)
 {
 	global $upload_path;

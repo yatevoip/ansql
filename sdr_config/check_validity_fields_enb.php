@@ -2,9 +2,7 @@
 /**
  * check_validity_fields_enb.php
  *
- * This file is part of the Yate-LMI Project http://www.yatebts.com
- *
- * Copyright (C) 2016 Null Team
+ * Copyright (C) 2016-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -17,6 +15,9 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
+
+?>
+<?php
 
 /* validate CellIdentity from [basic] section */
 function validate_cell_identity($field_name, $field_value)

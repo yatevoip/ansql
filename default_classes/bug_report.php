@@ -2,6 +2,8 @@
 /**
  * bug_params.php
  *
+ * Copyright (C) 2016-2023 Null Team
+ * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -16,6 +18,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
+?>
+<?php
 
 require_once("ansql/framework.php");
 require_once("ansql/lib.php");

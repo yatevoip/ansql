@@ -1,9 +1,8 @@
 <?php
 /* 
  * lib_plugins.php
- * This file is part of the Yate-LMI Project http://www.yatebts.com
  *
- * Copyright (C) 2016 Null Team
+ * Copyright (C) 2016-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -16,6 +15,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
+
+?>
+<?php
+
 require_once ("ansql/debug.php");
 
 abstract class Plugin 

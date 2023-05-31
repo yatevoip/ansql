@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Copyright (C) 2012-2013 Null Team
+ * Copyright (C) 2012-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -14,6 +13,9 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */ 
+
+?>
+<?php
 
 require_once("debug.php");
 

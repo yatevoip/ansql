@@ -1,9 +1,8 @@
 <?php 
 /**
  * check_validity_fields_ybts.php
- * This file is part of the Yate-LMI Project http://www.yatebts.com
  *
- * Copyright (C) 2014 Null Team
+ * Copyright (C) 2014-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -17,6 +16,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+?>
+<?php
 
 /** 
  * Test the validity of [gsm] Radio.C0 param to be the right value for the chosen Radio.Band

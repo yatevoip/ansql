@@ -1,10 +1,8 @@
 <?php
 /**
  * actionlog.php
- * This file is part of the FreeSentral Project http://freesentral.com
  *
- * FreeSentral - is a Web Graphical User Interface for easy configuration of the Yate PBX software
- * Copyright (C) 2008-2009 Null Team
+ * Copyright (C) 2008-2023 Null Team
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +18,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
+?>
+<?php
 
 require_once("ansql/framework.php");
 require_once("ansql/lib.php");

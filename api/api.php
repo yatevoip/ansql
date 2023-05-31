@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Null Team
+ * Copyright (C) 2019-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -13,6 +13,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */ 
+
+?>
+<?php
+
 include_once "../../api/api_includes.php";
 
 // enable dump_xdebug in session if debug is set

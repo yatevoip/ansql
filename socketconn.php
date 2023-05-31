@@ -1,10 +1,8 @@
 <?php
 /**
  * socketconn.php
- * This file is part of the FreeSentral Project http://freesentral.com
  *
- * FreeSentral - is a Web Graphical User Interface for easy configuration of the Yate PBX software
- * Copyright (C) 2008-2014 Null Team
+ * Copyright (C) 2008-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -17,6 +15,9 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
+
+?>
+<?php
 
 require_once("debug.php");
 

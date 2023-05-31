@@ -1,10 +1,9 @@
 <?php
-
 /**
  * ybts_fields.php
  * This file is part of the Yate-BTS Project http://www.yatebts.com
  *
- * Copyright (C) 2014-2019 Null Team
+ * Copyright (C) 2014-2023 Null Team
  *
  * This software is distributed under multiple licenses;
  * see the COPYING file in the main directory for licensing
@@ -17,6 +16,9 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
+
+?>
+<?php
 
 /**
  * This returns the $fields array that consists of the SECTION and SUBSECTIONS for "ENB configuration" module (TAB). The subsections are the actual sections (their name) in enb.conf.
