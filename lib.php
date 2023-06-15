@@ -3070,8 +3070,9 @@ function trim_value(&$value)
   * @param $select_all Bool. If true select all checkboxes made when $insert_checkboxes=true. Defaults to false.
   * @param $order_by_columns Bool/Array Adds buttons to add links on the fields from the table header. Defaults to false.
   * @param $build_link_elements Array Contains the name of the elements used to build each row $element_actions.
+  * @param $optional_message Text If is set, replaces the generic message in case of first parameter ($array) is empty.
   */
-function table($array, $formats, $element_name, $id_name, $element_actions = array(), $general_actions = array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names = array(), $table_id = null, $select_all = false, $order_by_columns = false, $build_link_elements = array(), $add_empty_row=false)
+function table($array, $formats, $element_name, $id_name, $element_actions = array(), $general_actions = array(), $base = NULL, $insert_checkboxes = false, $css = "content", $conditional_css = array(), $object_actions_names = array(), $table_id = null, $select_all = false, $order_by_columns = false, $build_link_elements = array(), $add_empty_row =false, $optional_message = null)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 	global $module, $do_not_apply_htmlentities, $level, $go_to_prev_page_link, $display_table_headers;
@@ -3097,7 +3098,8 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 		}
 
 		$plural = get_plural_form($element_name);
-		plainmessage("<table class=\"$css\"><tr><td>There aren't any $plural.</td></tr>", false);
+		$message = (isset($optional_message)) ? $optional_message : "There aren't any defined $plural.";
+		plainmessage("<table class=\"$css\"><tr><td>". $message. "</td></tr>", false);
 		if (!count($general_actions)) {
 			print '</table>';
 			return;
@@ -3202,7 +3204,8 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 
 			$ths .= '</tr><tr><td class="'.$css.' last_row left_align_monitoring"  colspan="'.count($formats).'" >';
 			print($ths);
-			plainmessage("There aren't any $plural in the database.");
+			$message = (isset($optional_message)) ? $optional_message : "There aren't any defined $plural.";
+			plainmessage($message);
 			print('</td></tr>');
 
 			if (!count($general_actions)) {
