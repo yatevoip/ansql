@@ -226,6 +226,15 @@ function include_js_plugins()
 	Plugin::includeJSPlugins();
 }
 
+/**
+ * Includes css for plugins located in plugins/ directory
+ * Function should be called between html tags <head> && </head>
+ */
+function include_cs_plugins()
+{
+	Plugin::includeCSSPlugins();
+}
+
 function register_hook($hook_name, $hook_handler, $plugin_name=NULL, $unicity_tags=array())
 {
 	Plugin::registerHook($hook_name, $hook_handler, $unicity_tags, $plugin_name);
