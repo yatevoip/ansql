@@ -7872,15 +7872,14 @@ function timezones_grouped_by_offset()
 function sorted_timezone_offsets_list()
 {
 	$timezones_list = timezones_grouped_by_offset();
-	
+
 	//sort the list by offsets
 	ksort($timezones_list);
-	
-	//sort each timezones group by timezone name
-	array_map("asort", $timezones_list);
 
 	$timezone_offsets = array();
 	foreach ($timezones_list as $offset => $timezones) {
+		//Sort each timezones group by timezone name
+		asort($timezones);
 		foreach ($timezones as $timezone) {
 			$timezone_offsets[$timezone] = $offset;
 		}
