@@ -30,6 +30,7 @@ class ActionLog extends Model
 	public static function variables()
 	{
 		return array(
+					"actionlog_id" => new Variable("serial"),
 					"date" => new Variable("timestamp"),
 					"log" => new Variable("text"), // log in human readable form meant to be displayed
 					"performer_id" => new Variable("text"), // id of the one performing the action (taken from $_SESSION)
