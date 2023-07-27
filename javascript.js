@@ -1118,7 +1118,7 @@ function add_element(parent_id, element_id, html)
  * @param custom_value String. Value to set in the newly added field
  * @param dropdown_id String. Id of the dropdown 
  */
-function custom_value_dropdown(custom_value,dropdown_id,js_on)
+function custom_value_dropdown(custom_value,dropdown_id,js_on,type="text")
 {
 	// the id of the custom field that will be added
 	var custom_id = "custom_"+dropdown_id;
@@ -1132,7 +1132,7 @@ function custom_value_dropdown(custom_value,dropdown_id,js_on)
 			parent_td.appendChild(document.createElement("br"));
 			// custom_field wasn't added in the page => add it here
 			var input = document.createElement("INPUT");
-			input.setAttribute("type", "text");
+			input.setAttribute("type", type);
 			input.setAttribute("class", "margintop");
 			input.setAttribute("id", ''+custom_id+'');
 			input.setAttribute("name", ''+custom_id+'');
