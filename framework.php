@@ -1272,10 +1272,12 @@ class Model
 			$foreign_key_to = $var->_key;
 			// name of variable in table $foreign_key_to $var_name references 
 			$references_var = $var->_matchkey;
-			$join_type = $var->_join_type;
+			$join_type = strtoupper($var->_join_type);
 			$var_type = $var->_type;
 			if(!$join_type)
 				$join_type = "LEFT";
+			if($join_type != "INNER")
+				$join_type .= " OUTER";
 			if ($columns != '')
 				$columns .= ', ';
 			$added_fields[$var_name] = true;
@@ -1315,9 +1317,9 @@ class Model
 				}
 				// this table was already added in the FROM clause
 				if(isset($from_tables[$foreign_key_to])) {
-					if($join_type != "LEFT") {
+					if($join_type != "LEFT OUTER") {
 						// must overrite old join type with new join type
-						$from_clause = str_replace("LEFT OUTER JOIN ".esc($foreign_key_to), "$join_type OUTER JOIN ".esc($foreign_key_to), $from_clause);
+						$from_clause = str_replace("LEFT OUTER JOIN ".esc($foreign_key_to), "$join_type JOIN ".esc($foreign_key_to), $from_clause);
 					}
 					continue;
 				}
@@ -1328,7 +1330,7 @@ class Model
 				{
 					// must add table inside the FROM clause and build the join
 					$key = ($references_var) ? $references_var : $var_name;
-					$from_clause .= "$join_type OUTER JOIN ".esc($foreign_key_to)." ON ".esc($table).".".esc($var_name)."=".esc($foreign_key_to).".".esc($key);
+					$from_clause .= "$join_type JOIN ".esc($foreign_key_to)." ON ".esc($table).".".esc($var_name)."=".esc($foreign_key_to).".".esc($key);
 					continue;
 				}
 				// keeping in mind that the $var_name fields that were added using the extend method are always at the end 
@@ -1347,7 +1349,7 @@ class Model
 					if($obj_var->_key != $table)
 						continue;
 					$referenced = ($obj_var->_matchkey) ? $obj_var->_matchkey : $varname;
-					$from_clause .= "$join_type OUTER JOIN ".esc($foreign_key_to)." ON ".esc($table).".".esc($referenced)."=".esc($foreign_key_to).".".esc($varname);
+					$from_clause .= "$join_type JOIN ".esc($foreign_key_to)." ON ".esc($table).".".esc($referenced)."=".esc($foreign_key_to).".".esc($varname);
 					//found the condition for join=> break from this for and the continue in the loop to pass to the next var 
 					$continue = true;
 					break;
@@ -1369,7 +1371,7 @@ class Model
 					else
 						$columns .= "bin($col) as ".esc($var_name);
 					$columns .= " as ".esc($var_name);
-					$from_clause .= "$join_type OUTER JOIN ".esc($foreign_key_to)." as $foreign_key_to" . "1" . " ON ".esc($table).".".esc($var_name)."=$foreign_key_to"."1".".".esc($references_var);
+					$from_clause .= "$join_type JOIN ".esc($foreign_key_to)." as $foreign_key_to" . "1" . " ON ".esc($table).".".esc($var_name)."=$foreign_key_to"."1".".".esc($references_var);
 				} else {
 					// 1 level recursive relation
 					$col = "$table".'1'.".".esc($references_var);
@@ -2352,6 +2354,7 @@ class Model
 	 */
 	public function extend($vars)
 	{
+		global $db_type;
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 
 		foreach($vars as $var_name=>$table_name) 
@@ -2389,7 +2392,21 @@ class Model
 
 				exit(_("Can't get referenced variable for var_name=$var_name"));
 			}
-			$join_type = (is_array($table_name)) ? $table_name["join"] : NULL;	
+			$join_type = (is_array($table_name)) ? strtoupper($table_name["join"]) : NULL;
+
+			// in MYSQL FULL OUTER JOIN is not supported
+			if ($db_type == "mysql" && $join_type == "FULL") {
+				Debug::trigger_report('critical', _("Wrong developer implementation, JOIN TYPE 'FULL' is not supported."));
+				exit(_("Wrong developer implementation, JOIN TYPE 'FULL' is not supported."));
+			}
+
+			// check the allowed types of JOIN
+			$allowed_types = array("RIGHT", "LEFT", "INNER", "FULL");
+			if ($join_type != NULL && !in_array($join_type, $allowed_types)) {
+				Debug::trigger_report('critical', _("Wrong developer implementation, JOIN TYPE is incorrect").": ".$join_type);
+				exit(_("Wrong developer implementation, JOIN TYPE is incorrect").": ".$join_type.". "._("The allowed JOIN TYPES are: 'RIGHT', 'LEFT', 'INNER', 'FULL'."));
+			}
+
 			$this->_model[$var_name] = new Variable($ref_var->_type,null,$tb_name,false,$references,$join_type);
 			$this->{$var_name} = NULL;
 		}
