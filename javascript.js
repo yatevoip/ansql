@@ -458,12 +458,22 @@ function resize_iframe(obj, scroll_to = null)
 	if (scroll_to === null)
 		return;
 	
-	var iframe = document.getElementById('iframe_param');
-	var iframe_doc = get_iframe_doc(iframe);
-	var iframe_win = get_iframe_win(iframe);
-	var element = iframe_doc.getElementById(scroll_to);
-	if (element) 
-		iframe_win.scroll(0, get_offset_top(element));
+	//scroll to correspondig documentation section if present
+	//this is done using setInterval as some documentation may be included after iframe is loaded
+	var time = 500;
+	var elem_scroll = setInterval (function(){
+				var iframe = document.getElementById('iframe_param');
+				var iframe_doc = get_iframe_doc(iframe);
+				var iframe_win = get_iframe_win(iframe);
+				var element = iframe_doc.getElementById(scroll_to);
+				if (element)
+					iframe_win.scroll(0, get_offset_top(element));
+				//clearInterval if section is found or if more than 4 seconds passed since trying
+				if (element || time == 4000)
+					clearInterval(elem_scroll);
+				else
+					time = time + 500;
+			}, 500);
 }
 
 /**
