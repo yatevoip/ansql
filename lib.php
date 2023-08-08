@@ -1618,6 +1618,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 						$jquery_title = " title=\"".str_replace("<img","",$expl[0])."\"";
 					} else
 						$jquery_title = '';
+					
+					//Added possibility to set the 'title' attribute to the dropdown options.
+					if (isset($opt["title"]))
+						$jquery_title = ' title="'.$opt["title"].'"';
 
 					if (is_string($selected) && (string)$opt[$optval] === "$selected" || (is_array($selected) && in_array($opt[$optval],$selected))) {
 						print '<option';
