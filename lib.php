@@ -6683,6 +6683,8 @@ function import_file_iframe($additional_params = array())
 
 function open_html_iframe() 
 {
+	global $debug_tags_js;
+
 	print "<html>";
 	print "<head>";
 	print "<meta http-equiv='content-type' content='text/html; charset=UTF-8'/>";
@@ -6693,6 +6695,7 @@ function open_html_iframe()
 	print "<link type=\"text/css\" rel=\"stylesheet\" href=\"" . set_file_version("css/wizard.css") . "\" />";
 	print "<script type=\"text/javascript\" src=\"" . set_file_version("javascript/lib_wizard.js") . "\"></script>";
 	print "<script type=\"text/javascript\" src=\"" . set_file_version("ansql/javascript.js") . "\"></script>";
+	print "<script> var js_tags_array = ".json_encode($debug_tags_js) . ";</script>";
 	print "</head>";
 	print "<body class=\"mainbody\">";
 	print "<div id=\"import_form\">";
