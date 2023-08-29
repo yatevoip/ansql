@@ -7320,8 +7320,24 @@ function getBrowser($return_all_in_name = true)
 	return $res;
 } 
 
-function get_request_protocol()
+/**
+ * Function used to return the protocol per equipment or from $_SERVER scheme
+ * @param string $eq_id 
+ * @return string "http" or "https"
+ */
+function get_request_protocol($eq_id=null)
 {
+	//Select the fields from the equipment with that id
+	if(isset($eq_id))
+	{
+		$equipment = new Equipment;
+		$equipment->equipment_id = $eq_id;
+		$equipment->select();
+		$protocol = $equipment->management_request_protocol;
+	}
+	if(isset($protocol) && $protocol!="automatically")
+		return $protocol;
+
 	if ( (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https') || 
 	  (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || 
 	  (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') )
