@@ -459,6 +459,11 @@ class Database
 					$warning = "$warn_count warning(s) when running query: '$query'. ".implode(", ",$warnings);
 					Debug::trigger_report('critical', $warning);
 				}
+				$err = mysqli_error(self::$_connection);
+				if ($err) {
+					$err = "The query: ". $query . " failed with error: ". $err;
+					Debug::trigger_report('critical', $err);
+				}
 				return $res;
 				break;
 			case "postgresql":
