@@ -1727,6 +1727,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print '<input class="'.$css.'" type="hidden" name="'.$form_identifier.$field_name.'" value="off">';
 			}
 			print '<input class="'.$css.'" type="checkbox" name="'.$form_identifier.$field_name.'" id="'.$form_identifier.$field_name.'"';
+			if (isset($field_format["title"])){
+				print(' title="'.$field_format["title"].'"');
+			}
+			
 			if (bool_value($value) || $value=="on")
 				print " CHECKED ";
 			if (isset($field_format["javascript"]))
