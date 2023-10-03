@@ -389,8 +389,10 @@ class Database
 				if ($res===false || $res===NULL) {
 					$mess = $query;
 					$err = self::get_last_db_error();
-					if ($err)
+					if ($err) {
 						$mess .= ". Error: ".$err;
+						Debug::trigger_report('critical', "The query: ". $query . " failed with error: ". $err);
+					}
 					Debug::Output("query failed", $mess);
 				}
 				return $res;
@@ -457,12 +459,9 @@ class Database
 						$warnings[] = $warning->message;
 					} while ($warning->next()); 
 					$warning = "$warn_count warning(s) when running query: '$query'. ".implode(", ",$warnings);
-					Debug::trigger_report('critical', $warning);
-				}
-				$err = mysqli_error(self::$_connection);
-				if ($err) {
-					$err = "The query: ". $query . " failed with error: ". $err;
-					Debug::trigger_report('critical', $err);
+					if (substr(strtoupper($query),1,4) !== "DROP") {
+						Debug::trigger_report('critical', $warning);
+					}
 				}
 				return $res;
 				break;
