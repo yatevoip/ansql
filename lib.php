@@ -7508,6 +7508,8 @@ function auto_return_button($button_name = "Return", $container_div = true, $ali
 	//set custom return button for methods specified in the global $custom_return_button array -->
 	
 	if (isset($custom_return_button[$method])) {
+		if (isset($custom_return_button[$method]["skip_return_button"]))
+			return;
 		//default function on onclick is 'make_request'
 		$onclick = (isset($custom_return_button[$method]["onclick_func"])) ? $custom_return_button[$method]["onclick_func"] : "make_request";
 		
