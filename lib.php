@@ -1860,6 +1860,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print " disabled=''";
 			if (isset($field_format["autocomplete"]))
 				print " autocomplete=\"".$field_format["autocomplete"]."\"";
+			if (isset($field_format["title"]))
+				print(' title="'.$field_format["title"].'"');
 
 			print '>'.$field_comment;
 
