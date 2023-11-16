@@ -6660,6 +6660,20 @@ function str_to_arr($str, $delimiter=",", $extra="trim")
 	return $arr;
 }
 
+/* 
+ * Check if a parameter is set and its length is bigger than 0. 
+ * @param String $param
+ * @return Boolean.
+ */
+function is_set($param)
+{
+	if (!isset($param))
+		return false;
+	if (!strlen(strval($param)))
+		return false;
+	return true;
+}
+
 /**
  * Prints iframe having content(src) from 'pages.php?method=". getparam("form_method")
  * 
