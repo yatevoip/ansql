@@ -1774,6 +1774,9 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					$checkboxes[$row][$col]["javascript"] = " ".$opt["javascript"];
 				
 				$checkboxes[$row][$col]["disabled"] = (is_array($opt) && isset($opt["disabled"]) && $opt["disabled"]) ? true : false;
+				//if disabled_checkbox all checkboxes should be disabled
+				if (isset($field_format["disabled_checkbox"]) &&  ($field_format["disabled_checkbox"]== true))
+					$checkboxes[$row][$col]["disabled"] = true;
 				$checkboxes[$row][$col]["css"] = (is_array($opt) && isset($opt["css"]) && $opt["css"]) ? " ".$opt["css"] : "";	
 				
 				if (isset($field_format["max_cols"])) {
