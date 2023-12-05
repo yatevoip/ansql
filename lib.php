@@ -1241,7 +1241,8 @@ function build_restart_warning($label,$restart_fields,$form_identifier=null)
 
 	$restart = $glue = "";
 	$restart_fields = explode(", ",$restart_fields);
-	foreach ($equipment_restart_list as $fields_labeled) {
+	foreach ($equipment_restart_list as $fields_labeled=>$fieldname) {
+		$fields_labeled = (!is_string($fields_labeled)) ? $fieldname : $fields_labeled;
 		$identifier = explode("-", $fields_labeled);
 		if ($identifier[0] != $label)
 			continue;
@@ -1249,6 +1250,7 @@ function build_restart_warning($label,$restart_fields,$form_identifier=null)
 		if (in_array($field,$restart_fields)) {
 			if ($form_identifier)
 				$field = str_replace($form_identifier,"",$field);
+			$field = (strlen($fieldname)) ? $fieldname : $field;
 			$restart .= $glue . $field;
 			$glue = ", ";
 		}
