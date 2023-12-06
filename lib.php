@@ -1230,7 +1230,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 	print '</table>';
 }
 
-function build_restart_warning($label,$restart_fields,$form_identifier=null)
+function build_restart_warning($label,$restart_fields,$form_identifier=null, $agregate_notice=false)
 {
 	global $equipment_restart_list;
 
@@ -1255,7 +1255,10 @@ function build_restart_warning($label,$restart_fields,$form_identifier=null)
 			$glue = ", ";
 		}
 	}
-
+	/*Return the params name that require a equipment restart when they are changed, but not display the notice.*/
+	if ($agregate_notice && strlen($restart))
+		return $restart;
+	
 	if (strlen($restart))
 		warning_mess("The equipment must be restarted because these parameters were changed: " . $restart, "no");
 }
