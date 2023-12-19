@@ -3269,8 +3269,7 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 			print '<td class="'.$css. "$cond_css" . " " . $css_col;
 			if ($i%2 == 0)
 				print " evenrow";
-
-			if ($j == count($formats)-1 && !count($array))
+			if ($j == count($formats)-1)
 				print " end_cell";
 			print '">';
 			$use_vars = explode(",", $names_in_array);
@@ -3300,6 +3299,7 @@ function table($array, $formats, $element_name, $id_name, $element_actions = arr
 			} else
 				print "&nbsp;";
 			print '</td>';
+			$j++;
 		}
 		$link = '';
 		foreach ($array[$i] as $col_name => $col_value) {
