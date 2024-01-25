@@ -19,7 +19,7 @@
 
 require_once("debug.php");
 
-function make_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true)
+function make_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $extra_headers = array())
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -38,10 +38,12 @@ function make_request($out, $request=null, $response_is_array=true, $recursive=t
 	if (isset($out["params"]) && is_callable("transform_request_params"))
 		transform_request_params($out["params"]);
 
-	return $func($out,$request,$response_is_array,$recursive,$wrap_printed_error);
+	if ($func == "make_curl_request")
+		return $func($out,$request,$response_is_array,$recursive,$wrap_printed_error,false,true,$extra_headers);
+	return $func($out,$request,$response_is_array,$recursive,$wrap_printed_error,$extra_headers);
 }
 
-function make_direct_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true)
+function make_direct_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $extra_headers = array())
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -65,7 +67,10 @@ function make_direct_request($out, $request=null, $response_is_array=true, $recu
 
 	check_errors($inp);
 	if (($inp["code"]=="215" || $inp["code"]=="226") && $recursive) {
-		$res = make_curl_request(array(),"get_user",true,false);
+		if (is_array($extra_headers) && count($extra_headers))
+			$res = make_curl_request(array(),"get_user",true,false,true,false,true,$extra_headers);
+		else
+			$res = make_curl_request(array(),"get_user",true,false);
 		if ($res["code"]=="0" && isset($res["user"])) 
 			$_SESSION["site_user"] = $res["user"];
 		else
@@ -88,7 +93,7 @@ function build_request_url(&$out,&$request)
 	return $url;
 }
 
-function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $token_alarm_center = false, $trigger_report = true)
+function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $token_alarm_center = false, $trigger_report = true, $extra_headers = array())
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -162,20 +167,15 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	curl_setopt($curl,CURLOPT_POST,true);
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
 	curl_setopt($curl,CURLOPT_POSTFIELDS,$json);
-	if (!$api_secret)
-		curl_setopt($curl,CURLOPT_HTTPHEADER,array(
-	    	"Content-Type: application/json",
-	    	"Accept: application/json,text/x-json,application/x-httpd-php",
-	    	"Accept-Encoding: gzip, deflate"
-		));
-	else
-		curl_setopt($curl,CURLOPT_HTTPHEADER,array(
-	    	"X-Authentication: ".$api_secret,
-	    	"Content-Type: application/json",
-	    	"Accept: application/json,text/x-json,application/x-httpd-php",
-	    	"Accept-Encoding: gzip, deflate"
-		));
-
+	/*Set request headers.*/
+	$headers = array("Content-Type: application/json", "Accept: application/json,text/x-json,application/x-httpd-php", "Accept-Encoding: gzip, deflate");
+	if ($api_secret)
+		$headers = array_merge(array("X-Authentication: ".$api_secret), $headers);
+	
+	if (is_array($extra_headers) && count($extra_headers))
+		$headers = array_merge($headers, $extra_headers);
+	
+	curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 	curl_setopt($curl,CURLOPT_RETURNTRANSFER, 1);
 	// handle_api_headers will be called for each header line and must return number of handled bytes
 	if (is_callable($func_handle_headers))
@@ -190,7 +190,6 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 
 	$http_code = "-";
 	$ret = curl_exec($curl);
-
 	if ($ret === false) {
 		$error = curl_error($curl);
 		// if no response from api / request times out this will be received

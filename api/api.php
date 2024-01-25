@@ -55,6 +55,9 @@ if (isset($response["data"])) {
 function process_request($req, $params)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"api");
+	
+	global $func_build_success_api_response;
+	
 	// in case POST/PUT type of HTTP requests was used, rename them to mare readable add_ / edit_ ..
 	// GET and DELETE are clear enough
 	$renamed_req = str_replace(array("post_", "put_", "delete_"), array("add_", "edit_", "del_"), $req);
@@ -77,8 +80,12 @@ function process_request($req, $params)
 	
 	$res = call_user_func($func_name, $params);
 	$log_params = array("request"=>$req,"params"=>$params);
-	if ($res[0])
+	if ($res[0]) {
+		/*Check if the global variable is set and its name is a valid function.*/
+		if (isset($func_build_success_api_response) && is_callable($func_build_success_api_response))
+			return $func_build_success_api_response($res[1], $log_params);
 		return build_success($res[1], $log_params);
+	}
 
 	return build_error($res[1], $res[2], $log_params);
 }

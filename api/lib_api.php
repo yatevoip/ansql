@@ -34,7 +34,7 @@ function translate_error_to_code($res)
 	if (isset($res[1])) {
 		if (strpos($res[1], " is required")!==false || strpos($res[1]," not set.")!==false)
 			return array(false, "402", "Missing or empty parameters. ". $res[1]);
-		elseif (strpos($res[1], "is already defined")!==false)
+		elseif (strpos($res[1], "is already defined")!==false || strpos($res[1], "associated to another")!==false)
 			return array(false, "403", "Duplicate entity. ". $res[1]);
 		elseif (strpos($res[1], "invalid")!==false)
 			return array(false, "401", "Invalid parameter(s) value. ".$res[1]);
