@@ -78,6 +78,14 @@ if(is_file("defaults.php"))
 if(is_file("config.php"))
 	include_once("config.php");
 
+/*Include bug_report.php file.*/
+if (is_file("ansql/default_classes/bug_report.php"))
+	include_once("ansql/default_classes/bug_report.php");
+else if (is_file("../ansql/default_classes/bug_report.php")){
+	set_include_path(get_include_path().":../");
+	include_once("ansql/default_classes/bug_report.php");
+}
+
 function return_var_dump()
 {
 	ob_start();
@@ -299,8 +307,11 @@ class Debug
 				);	
 				if ($dev_debug_mail)
 					$out["email"] = $dev_debug_mail;
-				if (Bug_report::aggregate_report($out))
+				
+				if (class_exists("Bug_report") && Bug_report::aggregate_report($out))
 					$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,false,false);
+				else
+					self::output("Critical", "Class 'Bug_report' not found.");
 				// integromat hook response 200 ok with json content ["code":0]
 				// do nothing with result from curl 
 				break;
