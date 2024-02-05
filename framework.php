@@ -162,15 +162,15 @@ class Database
 			"mysql" => array(
 				"int2" => "int(4)",
 				"int4" => "int(11)",
-				"int8" => "bigint(20)",
+				"int8" => "bigint",
 				"float4" => "float",
 				"float8" => "double precision",
 				"bool" => "tinyint(1)",
 				"int" => "int(11)",
 				// mysql doesn't know bigserial
 				// postgresql has both serial and bigserial. check documentation for type limits
-				"serial" => "bigint(20) unsigned NOT NULL auto_increment",
-				"bigserial" => "bigint(20) unsigned NOT NULL auto_increment",
+				"serial" => "bigint unsigned NOT NULL auto_increment",
+				"bigserial" => "bigint unsigned NOT NULL auto_increment",
 				"interval" => "time"
 			)
 		);
@@ -620,18 +620,18 @@ class Database
 					if ($var->_key != "")
 						$type = "int8";
 					break;
-				case "bigint(20) unsigned not null auto_increment":
+				case "bigint unsigned not null auto_increment":
 					if ($var->_key != "")
-						$type = "bigint(20)";
+						$type = "bigint";
 					break;
 			}
 			if ($query != "")
 				$query.= ",";
 
-			if ($type=="serial" || $type=="bigserial" || $type=="bigint(20) unsigned not null auto_increment") {
+			if ($type=="serial" || $type=="bigserial" || $type=="bigint unsigned not null auto_increment") {
 				$nr_serial_fields++;
 				$query.= esc($name)." $type"; 
-				if ($type == "bigint(20) unsigned not null auto_increment")
+				if ($type == "bigint unsigned not null auto_increment")
 					$query.= ", primary key ($name)";
 			} else {
 				if (substr($table,0,6)=="_temp_" && ($name == 'inserted' || $name == 'deleted')) {
@@ -747,9 +747,9 @@ class Database
 					$type = "int4";
 				if ($type == "bigserial")
 					$type = "int8";
-				if ($type == "bigint(20) unsigned not null auto_increment") {
+				if ($type == "bigint unsigned not null auto_increment") {
 					if ($db_type!="mysql" || strlen($var->_key)) {
-						$type = "bigint(20)";
+						$type = "bigint";
 					} else {
 						$type .= ", ADD primary key ($name)";
 					}
@@ -807,7 +807,7 @@ class Database
 
 					if ($dbtype == $type && $db_default==$class_default && $db_not_null===$var->_required)
 						continue;
-					elseif (($dbtype == "bigint(20) unsigned" || $dbtype == "bigint(20)")  && $type == "bigint(20) unsigned not null auto_increment")
+					elseif (($dbtype == "bigint unsigned" || $dbtype == "bigint")  && $type == "bigint unsigned not null auto_increment")
 						continue;
 					elseif ($dbtype!=$type) {
 						if ($db_type=='postgresql')
@@ -837,7 +837,7 @@ class Database
 					$dbtype = $cols[$name]["type"];
 					if ($dbtype == $type)
 						continue;
-					elseif (($dbtype == "bigint(20) unsigned" || $dbtype == "bigint(20)")  && $type == "bigint(20) unsigned not null auto_increment")
+					elseif (($dbtype == "bigint unsigned" || $dbtype == "bigint")  && $type == "bigint unsigned not null auto_increment")
 						continue;
 					elseif ($dbtype!=$type) {
 

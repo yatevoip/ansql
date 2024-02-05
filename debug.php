@@ -79,11 +79,13 @@ if(is_file("config.php"))
 	include_once("config.php");
 
 /*Include bug_report.php file.*/
-if (is_file("ansql/default_classes/bug_report.php"))
+if (is_file("ansql/default_classes/bug_report.php")) {
 	include_once("ansql/default_classes/bug_report.php");
-else if (is_file("../ansql/default_classes/bug_report.php")){
+	include_once("ansql/use_json_requests.php");
+} else if (is_file("../ansql/default_classes/bug_report.php")){
 	set_include_path(get_include_path().":../");
 	include_once("ansql/default_classes/bug_report.php");
+	include_once("ansql/use_json_requests.php");
 }
 
 function return_var_dump()
