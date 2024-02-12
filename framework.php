@@ -160,13 +160,12 @@ class Database
 	// Ex: in mysl if you use "bool" the column type will be tinyint(1) or int is int(11)
 	private static $_translate_sql_types = array(
 			"mysql" => array(
-				"int2" => "int(4)",
-				"int4" => "int(11)",
+				"int2" => "smallint",
+				"int4" => "int",
 				"int8" => "bigint",
 				"float4" => "float",
 				"float8" => "double precision",
-				"bool" => "tinyint(1)",
-				"int" => "int(11)",
+				"bool" => "tinyint",
 				// mysql doesn't know bigserial
 				// postgresql has both serial and bigserial. check documentation for type limits
 				"serial" => "bigint unsigned NOT NULL auto_increment",
@@ -708,7 +707,7 @@ class Database
 				}
 				$cols = array();
 				for ($i=0; $i<count($res); $i++)
-					$cols[$res[$i]["Field"]] = array("type"=>$res[$i]["Type"], "not_null"=>(($res[$i]["Null"]=="NO") ? true : false), "default"=>$res[$i]['Default']);
+					$cols[$res[$i]["Field"]] = array("type"=>$res[$i]["Type"], "not_null"=>(($res[$i]["Null"]=="NO") ? true : false), "default"=>$res[$i]['Default'], "extra"=>$res[$i]['Extra']);
 				break;
 			case "postgresql":
 				$query = "SELECT pg_attribute.attname as name, pg_type.typname as type, (CASE WHEN atthasdef IS TRUE THEN pg_get_expr(adbin,'pg_catalog.pg_class'::regclass) ELSE NULL END) as default, pg_attribute.attnotnull as not_null FROM pg_class, pg_type, pg_attribute LEFT OUTER JOIN pg_attrdef ON pg_attribute.attnum=pg_attrdef.adnum WHERE pg_class.oid=pg_attribute.attrelid and pg_class.relname='$table' and pg_class.relkind='r' and pg_type.oid=pg_attribute.atttypid";
@@ -727,7 +726,7 @@ class Database
 						$default = substr($default,1);
 					} else
 						$default = $default[0];
-					$cols[$row["name"]] = array("type"=>$row["type"], "not_null"=>(($row["not_null"]=="t") ? true : false), "default"=>$default);
+					$cols[$row["name"]] = array("type"=>$row["type"], "not_null"=>(($row["not_null"]=="t") ? true : false), "default"=>$default, "extra"=>"");
 				}
 				break;
 		}
@@ -797,8 +796,18 @@ class Database
 				}
 
 
+				$dbtype = $cols[$name]["type"];
+				preg_match('#\((.*?)\)#',$dbtype,$dbtype_brackets);
+				if (isset($dbtype_brackets[0])) {
+					$accepted_val = array("int", "int unsigned", "bigint", "bigint unsigned", "tinyint", "smallint");
+					$stripped_val = str_replace($dbtype_brackets[0],"",$dbtype);
+					if (in_array($stripped_val,$accepted_val))
+						$dbtype = $stripped_val;
+				}
+
+				$full_dbtype = $dbtype." DEFAULT ".$cols[$name]["default"]." ".$cols[$name]["extra"];
+
 				if ($enforce_basic_constrains && $critical_col_diff) {
-					$dbtype = $cols[$name]["type"];
 					if ($dbtype=="bool")
 						$cols[$name]["default"] = ($cols[$name]["default"]=="true" || $cols[$name]["default"]=="1") ? true : false;
 					$db_default = $var->escape($cols[$name]["default"]);
@@ -808,6 +817,8 @@ class Database
 					if ($dbtype == $type && $db_default==$class_default && $db_not_null===$var->_required)
 						continue;
 					elseif (($dbtype == "bigint unsigned" || $dbtype == "bigint")  && $type == "bigint unsigned not null auto_increment")
+						continue;
+					elseif ($dbtype == "timestamp" && strtolower($full_dbtype) == $type)
 						continue;
 					elseif ($dbtype!=$type) {
 						if ($db_type=='postgresql')
@@ -834,11 +845,12 @@ class Database
 				} else {
 					// Maintain compatibility with previous implementation
 					// Don't force user to set DEFAULT VALUES and NOT NULL for columns when their projects didn't need to
-					$dbtype = $cols[$name]["type"];
 					if ($dbtype == $type)
 						continue;
 					elseif (($dbtype == "bigint unsigned" || $dbtype == "bigint")  && $type == "bigint unsigned not null auto_increment")
 						continue;
+					 elseif ($dbtype == "timestamp" && strtolower($full_dbtype) == $type)
+                                                continue;
 					elseif ($dbtype!=$type) {
 
 						if ($db_type=='postgresql')
