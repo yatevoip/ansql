@@ -818,7 +818,7 @@ class Database
 						continue;
 					elseif (($dbtype == "bigint unsigned" || $dbtype == "bigint")  && $type == "bigint unsigned not null auto_increment")
 						continue;
-					elseif ($dbtype == "timestamp" && strtolower($full_dbtype) == $type)
+					elseif ($dbtype == "timestamp" && (strtolower($full_dbtype) == $type || $type == "timestamp default current_timestamp on update current_timestamp"))
 						continue;
 					elseif ($dbtype!=$type) {
 						if ($db_type=='postgresql')
@@ -849,7 +849,7 @@ class Database
 						continue;
 					elseif (($dbtype == "bigint unsigned" || $dbtype == "bigint")  && $type == "bigint unsigned not null auto_increment")
 						continue;
-					 elseif ($dbtype == "timestamp" && strtolower($full_dbtype) == $type)
+					elseif ($dbtype == "timestamp" && (strtolower($full_dbtype) == $type || $type == "timestamp default current_timestamp on update current_timestamp"))
                                                 continue;
 					elseif ($dbtype!=$type) {
 
