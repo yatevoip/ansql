@@ -218,7 +218,7 @@ class Database
                         return;
                 }
 
-		$db_data = array("db_host","db_user","db_database","db_passwd","db_type");
+		$db_data = array("db_host","db_user","db_database","db_passwd","db_type","db_port");
 		for ($i=0; $i<count($db_data); $i++) {
 			$db_setting = $db_data[$i].$connection_index;
 			global ${$db_setting};
@@ -226,7 +226,7 @@ class Database
 				${$db_setting} = ${$db_data[$i]};
 			if ($db_data[$i]=="db_type" && $connection_index!="")
 				$db_type = ${$db_setting};
-			if (!isset(${$db_setting})) {
+			if (!isset(${$db_setting}) && $db_data!="db_port") {
 				Debug::Output("config", _("Missing setting")." '$".$db_setting."' ");
 				return;
 			}
@@ -240,16 +240,20 @@ class Database
 					Debug::Output("config", _("You don't have mysqli package for php installed."));
 					die("You don't have mysqli package for php installed.");
 				}
-				if (self::$_connection === true || !self::$_connection) 
-					self::$_connection = mysqli_connect(${"db_host$connection_index"}, ${"db_user$connection_index"}, ${"db_passwd$connection_index"}, ${"db_database$connection_index"});
+				if (self::$_connection === true || !self::$_connection) { 
+					$port = (isset(${"db_port$connection_index"})) ? ${"db_port$connection_index"} : NULL;
+					self::$_connection = mysqli_connect(${"db_host$connection_index"}, ${"db_user$connection_index"}, ${"db_passwd$connection_index"}, ${"db_database$connection_index"}, $port);
+				} 
 				break;
 			case "postgresql":
 				if (!function_exists("pg_connect")) {
 					Debug::Output("config", _("You don't have php-pgsql package installed."));
 					die("You don't have php-pgsql package installed.");
 				}
-				if (self::$_connection === true || !self::$_connection)
-					self::$_connection = pg_connect("host='".${"db_host$connection_index"}."' dbname='".${"db_database$connection_index"}."' user='".${"db_user$connection_index"}."' password='".${"db_passwd$connection_index"}."'");
+				if (self::$_connection === true || !self::$_connection) {
+					$port = (isset(${"db_port$connection_index"})) ? " port=".${"db_port$connection_index"} : '';
+					self::$_connection = pg_connect("host='".${"db_host$connection_index"}."' $port dbname='".${"db_database$connection_index"}."' user='".${"db_user$connection_index"}."' password='".${"db_passwd$connection_index"}."'");
+				}
 				break;
 			default:
 				Debug::Output("config", _("Unsupported or unspecified database type")." db_type='$db_type'");
