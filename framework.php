@@ -226,7 +226,7 @@ class Database
 				${$db_setting} = ${$db_data[$i]};
 			if ($db_data[$i]=="db_type" && $connection_index!="")
 				$db_type = ${$db_setting};
-			if (!isset(${$db_setting}) && $db_data!="db_port") {
+			if (!isset(${$db_setting}) && $db_data[$i]!="db_port") {
 				Debug::Output("config", _("Missing setting")." '$".$db_setting."' ");
 				return;
 			}
