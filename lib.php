@@ -2070,6 +2070,15 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print "&nbsp;";
 			print $field_comment;
 			break;
+		case "fixed-encoded":
+			$value = html_entity_decode($value);
+			if (strlen($value))
+				print $value;
+			else
+				print "&nbsp;";
+			print $field_comment;
+			break;
+
 		default:
 			// make sure the function that displays the advanced field is included
 			if (isset($field_format["advanced"]))
