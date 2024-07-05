@@ -695,14 +695,14 @@ class Database
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"dbstruct");
 
-		global $db_type, $critical_col_diff, $error_sql_update, $enforce_basic_constrains;
+		global $db_type, $db_database, $critical_col_diff, $error_sql_update, $enforce_basic_constrains;
 
 		if (!self::connect())
 			return false;
 
 		switch ($db_type) {
 			case "mysql":
-				$query = "SHOW COLUMNS FROM $table";
+				$query = "SHOW TABLES FROM ".$db_database." LIKE '".$table."'";
 				$res = self::queryRaw($query);
 				if (!$res)
 				{
@@ -710,6 +710,8 @@ class Database
 					return self::createTable($table,$vars);
 				}
 				$cols = array();
+				$query = "SHOW COLUMNS FROM $table";
+				$res = self::queryRaw($query);
 				for ($i=0; $i<count($res); $i++)
 					$cols[$res[$i]["Field"]] = array("type"=>$res[$i]["Type"], "not_null"=>(($res[$i]["Null"]=="NO") ? true : false), "default"=>$res[$i]['Default'], "extra"=>$res[$i]['Extra']);
 				break;
