@@ -56,7 +56,7 @@ function process_request($req, $params)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	
-	global $func_build_success_api_response;
+	global $func_build_success_api_response, $func_build_error_api_response, $func_specific_process_request;
 	
 	// in case POST/PUT type of HTTP requests was used, rename them to mare readable add_ / edit_ ..
 	// GET and DELETE are clear enough
@@ -78,15 +78,24 @@ function process_request($req, $params)
 	// before calling function with same name as request, see if api_$req exists 
 	$func_name = (is_callable("api_".$req)) ? "api_".$req : $req;
 	
-	$res = call_user_func($func_name, $params);
-	$log_params = array("request"=>$req,"params"=>$params);
+	// If $func_specific_process_request is set the auth token is checked and validate and then the API is called.
+	if (isset($func_specific_process_request) && is_callable($func_specific_process_request)) {
+		$res = call_user_func_array($func_specific_process_request, array($func_name, $params));
+	} else {
+		$res = call_user_func($func_name, $params);
+	}
+	
+	$log_params = array("request" => $req, "params" => $params);
 	if ($res[0]) {
 		/*Check if the global variable is set and its name is a valid function.*/
 		if (isset($func_build_success_api_response) && is_callable($func_build_success_api_response))
 			return $func_build_success_api_response($res[1], $log_params);
 		return build_success($res[1], $log_params);
 	}
-
+	
+	// If $func_build_error_api_response sets the response will contain HTTP 200 "OK" Code, but the response towards the user will be {"code": "Error Code", "message": "Error Message"}.
+	if (isset($func_build_error_api_response) && is_callable($func_build_error_api_response))
+		return $func_build_error_api_response($res, $log_params);
 	return build_error($res[1], $res[2], $log_params);
 }
 
