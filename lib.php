@@ -1371,8 +1371,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	$field_note = (isset($field_format["field_note"])) ? $field_format["field_note"] : array();
 	$column_name = (!isset($field_format["column_name"])) ? ucfirst(str_replace("_","&nbsp;",$field_name)) : $field_format["column_name"];
 	$reload = (isset($field_note["reload"])) ? $field_note["reload"] : false;
-	if (isset($show_notes)) {
-		$note = isset($field_note["note"]) ? $field_note["note"] : "";
+	if (isset($show_notes) && $show_notes) {
+		$note = isset($field_note["note"]) ? str_replace("\n","<br>",$field_note["note"]) : "";
 		$hidden = "";
 		if (!isset($field_note["note"]))
 			$hidden = 'style="display:none;"';
@@ -1382,7 +1382,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		if (!strlen($note_css))
 			$note_css = $hidden;
 		print '<tr id="tr_'.$form_identifier.'comment-'.$field_name.'" '.$note_css.'><td class="comment_field" id="comment-'.$field_name.'" class="'.$css.'" colspan="2">'.$note;
-		if ($show_notes && is_addon("font-awesome") && isset($field_format["field_note"]))
+		if (is_addon("font-awesome") && isset($field_format["field_note"]))
 			print '&nbsp;&nbsp;<i class="fa fa-pencil pointer pencil_icon" aria-hidden="true"  onClick="show_note(\''.$field_name.'\', \''.$field_note["object_name"].'\', \''.$field_note["object_id"].'\', \''.$column_name.'\', \''.$reload.'\',\''.$form_identifier.'\');"></i>';
 		print '</td></tr>';
 	}
@@ -1504,9 +1504,13 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print "<img src='images/error.png' class='field_error' id='err_$field_name' style='display:none;'>";
 	}
 	if (isset($show_notes) && is_addon("font-awesome") && isset($field_format["field_note"])) {
-		print '&nbsp;&nbsp;<i class="fa fa-comment-o pointer note_icon" aria-hidden="true"';
-		if (!$show_notes && isset($field_note["note"]))
-			print ' title="'.$field_note["note"].'" ';
+		$css_icon = "note_icon";
+		$title_icon = "";
+		if (!$show_notes && isset($field_note["note"])) {
+			$title_icon = ' title="'.$field_note["note"].'" ';
+			$css_icon = "note_icon_filled";
+		}
+		print '&nbsp;&nbsp;<i class="fa fa-comment-o pointer '.$css_icon.'" aria-hidden="true" '.$title_icon;
 		if (isset($field_note["object_name"]) && isset($field_note["object_id"]))
 			print ' onClick="show_note(\''.$field_name.'\', \''.$field_note["object_name"].'\', \''.$field_note["object_id"].'\', \''.$column_name.'\', \''.$reload.'\',\''.$form_identifier.'\');"';
 		print '></i>';
