@@ -138,7 +138,7 @@ function advanced(identifier, scroll_to_top)
 		}
 
 		if (document.getElementById("tr_"+identifier+"comment-"+elem_name)) {
-			var comment = document.getElementById("comment-"+elem_name).innerHTML;
+			var comment = document.getElementById(identifier+"comment-"+elem_name).innerHTML;
 			var comm = comment.substr(0,20);
 			if (comm && comm != "&nbsp;&nbsp;<i class") {
 				show_hide("tr_"+identifier+"comment-"+elem_name);
