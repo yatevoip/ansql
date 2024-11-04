@@ -1370,7 +1370,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	// For alaways visible notes
 	$field_note = (isset($field_format["field_note"])) ? $field_format["field_note"] : array();
 	$column_name = (!isset($field_format["column_name"])) ? ucfirst(str_replace("_","&nbsp;",$field_name)) : $field_format["column_name"];
-	if (isset($show_notes) && $show_notes) {
+	if (isset($show_notes) && $show_notes && count($field_note)) {
 		$note = isset($field_note["note"]) ? str_replace("\n","<br>",$field_note["note"]) : "";
 		$hidden = "";
 		if (!isset($field_note["note"]))
