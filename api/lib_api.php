@@ -81,7 +81,7 @@ function build_error($code, $message, $params=array(), $extra=null)
 	
 }
 
-function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0)
+function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0, $custom_content = "")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	global $logs_file;
@@ -115,7 +115,14 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 	else
 		$out = "DataOut: ". $out."\n";
 
-	fwrite($fh, "------ " . date("Y-m-d H:i:s") . ", ip=$addr\nURI: ".$_SERVER['REQUEST_URI']."\nJson: " . json_encode($inp)."\n$out");
+	$content = "------ " . date("Y-m-d H:i:s") . ", ip=$addr\nURI: ".$_SERVER['REQUEST_URI'];
+	
+	// If the user id of the request owner is present, add it to the logs file.
+	if ($custom_content)
+		$content .= $custom_content;
+	
+	$content .= "\nJson: " . json_encode($inp)."\n$out";
+	fwrite($fh, $content);
 	if ($start_time)
 		fwrite($fh, sprintf("Handled: %0.3f\n",microtime(true) - $start_time)."\n");
 	fclose($fh);

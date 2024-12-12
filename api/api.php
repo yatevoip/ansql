@@ -26,8 +26,14 @@ if (isset($debug))
 $time = microtime(true);
 $response = do_request();
 
+$custom_content = "";
+// If $func_custom_content_log_request is set in defaults.php file, the function result will be added to the requests log files from json_api directory.
+if (isset($func_custom_content_log_request) && is_callable($func_custom_content_log_request)) {
+	$custom_content = call_user_func($func_custom_content_log_request, $response);
+}
+
 // log requests to /var/log/json_api so that all MMI API logs will be in the same file as all API logs from products
-log_request($response["params"], $response["data"], true, $time);
+log_request($response["params"], $response["data"], true, $time, $custom_content);
 
 if (isset($debug)) {
 	Debug::xdebug("api", "The response of the request when debug is activated from api_config.php: \n".print_r($response["data"],true));
@@ -88,8 +94,10 @@ function process_request($req, $params)
 	$log_params = array("request" => $req, "params" => $params);
 	if ($res[0]) {
 		/*Check if the global variable is set and its name is a valid function.*/
-		if (isset($func_build_success_api_response) && is_callable($func_build_success_api_response))
-			return $func_build_success_api_response($res[1], $log_params);
+		if (isset($func_build_success_api_response) && is_callable($func_build_success_api_response)) {
+			$others = (isset($res[2])) ? $res[2] : array();
+			return $func_build_success_api_response($res[1], $log_params, $others);
+		}
 		return build_success($res[1], $log_params);
 	}
 	
