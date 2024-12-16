@@ -1054,10 +1054,16 @@ function addHidden($action=NULL, $additional = array(), $empty_page_params=false
  * @param $hide_advanced Bool default false. When true advanced fields will be always hidden when displaying form
  * @param $scroll_top_advanced Bool. Default false. Scrool to top after advanced fields are displayed
  * @param $label String. Default NULL. The identifier for the fields. Used in warning message to user.
+ * @param $field_note Array. Default empty array. The values to identify the note of each field. Used in display_pair() to view/edit notes.
+ * Ex: $field_name = array(
+ * 			"object_name" => "ps_profile",
+ * 			"object_id" => 1,
+ * 			"note-".$field_name => "This is the comment for this field."
  */
-function editObject($object, $fields, $title, $submit="Submit", $compulsory_notice=NULL, $no_reset=false, $css=NULL, $form_identifier='', $td_width=NULL, $hide_advanced=false, $scroll_top_advanced=false, $label=NULL)
+function editObject($object, $fields, $title, $submit="Submit", $compulsory_notice=NULL, $no_reset=false, $css=NULL, $form_identifier='', $td_width=NULL, $hide_advanced=false, $scroll_top_advanced=false, $label=NULL, $field_note=array())
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");	
+
 	
 	global $level, $method, $only_cancel_button, $exceptions_only_cancel_button;
 
@@ -1124,7 +1130,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 
 	foreach($fields as $field_name=>$field_format) {
 		if (!isset($field_format["display"]) || $field_format["display"]!="custom_submit")
-			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, null, $label);
+			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, null, $label, "off", format_field_note($field_note,$field_name));
 		else
 			$custom_submit[$field_name] = $field_format;
 	}
@@ -1177,7 +1183,7 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 
 	if(is_array($custom_submit) && count($custom_submit))
 		foreach($custom_submit as $field_name=>$field_format)
-			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, null, $label);
+			display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, null, $label, "off", format_field_note($field_note,$field_name));
 
 	// don't display submit buttons if $submit value is "no" or "no_submit"
 	if (in_array($submit, array("no", "no_submit"))) {
@@ -1228,6 +1234,17 @@ function editObject($object, $fields, $title, $submit="Submit", $compulsory_noti
 	print '</td>';
 	print '</tr>';
 	print '</table>';
+}
+
+function format_field_note($field_note, $field_name)
+{
+	$fn = array();
+	if (count($field_note)) {
+		$fn = array("object_name"=>$field_note["object_name"], "object_id"=>$field_note["object_id"]);
+		if (isset($field_note["note-".$field_name]))
+			$fn["note"]	= $field_note["note-".$field_name];
+	}
+	return $fn;
 }
 
 function build_restart_warning($label,$restart_fields,$form_identifier=null, $agregate_notice=false)
@@ -1305,7 +1322,7 @@ function html_quotes_escape($str)
 /**
  * Builds the HTML data for FORM
  */ 
-function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null, $label=null, $hidden_field_input = "off")
+function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null, $label=null, $hidden_field_input = "off", $field_note=array())
 {
 	global $allow_code_comment, $use_comments_docs, $method, $add_selected_to_dropdown_if_missing;
 	global $show_notes;
@@ -1366,22 +1383,24 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		// if $value is resulted by callign a function then that function is responsible for running htmlentities 
 		$htmlentities_onvalue = false;
 	}
-
 	// For alaways visible notes
-	$field_note = (isset($field_format["field_note"])) ? $field_format["field_note"] : array();
+	if (!count($field_note))
+		$field_note = (isset($field_format["field_note"])) ? $field_format["field_note"] : array();
 	$column_name = (!isset($field_format["column_name"])) ? ucfirst(str_replace("_","&nbsp;",$field_name)) : $field_format["column_name"];
 	if (isset($show_notes) && $show_notes && count($field_note)) {
 		$note = isset($field_note["note"]) ? str_replace("\n","<br>",$field_note["note"]) : "";
 		$hidden = "";
 		if (!isset($field_note["note"]))
 			$hidden = 'style="display:none;"';
-		$note_css = "";
+		$note_css = 'class="'.$css.'"';
 		if (isset($field_format["advanced"]))
-			$note_css = 'class="advancedrow" style="display:none;" advanced="true"';
+			$note_css = 'class="'.$css.' advancedrow" style="display:none;" advanced="true"';
 		if (!strlen($note_css))
 			$note_css = $hidden;
-		print '<tr id="tr_'.$form_identifier.'comment-'.$field_name.'" '.$note_css.'><td class="comment_field" id="'.$form_identifier.'comment-'.$field_name.'" class="'.$css.'" colspan="2">'.$note;
-		if (is_addon("font-awesome") && isset($field_format["field_note"]))
+		$td_css = (isset($field_format["custom_css_left"])) ? $field_format["custom_css_left"] : "";
+
+		print '<tr id="tr_'.$form_identifier.'comment-'.$field_name.'" '.$note_css.'><td class="comment_field '.$td_css.'" id="'.$form_identifier.'comment-'.$field_name.'" colspan="2">'.$note;
+		if (is_addon("font-awesome") && $note)
 			print '&nbsp;&nbsp;<i class="fa fa-pencil pointer pencil_icon" aria-hidden="true" onClick="show_note(\''.$field_name.'\', \''.$field_note["object_name"].'\', \''.$field_note["object_id"].'\', \''.$column_name.'\',\''.$form_identifier.'\');"></i>';
 		print '</td></tr>';
 	}
@@ -1502,7 +1521,7 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		if ($use_error_icon)
 			print "<img src='images/error.png' class='field_error' id='err_$field_name' style='display:none;'>";
 	}
-	if (isset($show_notes) && is_addon("font-awesome") && isset($field_format["field_note"])) {
+	if (isset($show_notes) && is_addon("font-awesome") && count($field_note)) {
 		$css_icon = "fa fa-comment-o pointer note_icon";
 		$title_icon = "";
 		if (!$show_notes && isset($field_note["note"])) {
