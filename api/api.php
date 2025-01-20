@@ -296,7 +296,7 @@ function do_request($method = "POST")
 
 function valid_ctype($ctype)
 {
-	$valid_ctypes = array("application/json", "text/x-json", "application/x-www-form-urlencoded", "");
+	$valid_ctypes = array("application/json", "text/x-json", "application/x-www-form-urlencoded", "multipart/form-data","");
 	return in_array($ctype, $valid_ctypes);
 }
 
