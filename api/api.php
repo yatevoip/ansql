@@ -98,12 +98,16 @@ function process_request($req, $params)
 			$others = (isset($res[2])) ? $res[2] : array();
 			return $func_build_success_api_response($res[1], $log_params, $others);
 		}
+		if (isset($res[2]))
+			return build_success($res[1], $log_params, $res[2]);
 		return build_success($res[1], $log_params);
 	}
 	
 	// If $func_build_error_api_response sets the response will contain HTTP 200 "OK" Code, but the response towards the user will be {"code": "Error Code", "message": "Error Message"}.
 	if (isset($func_build_error_api_response) && is_callable($func_build_error_api_response))
 		return $func_build_error_api_response($res, $log_params);
+	if (isset($res[3]))
+		return build_error($res[1], $res[2], $log_params, $res[3]);
 	return build_error($res[1], $res[2], $log_params);
 }
 
