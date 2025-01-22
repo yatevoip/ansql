@@ -1308,6 +1308,7 @@ function html_quotes_escape($str)
 function display_pair($field_name, $field_format, $object, $form_identifier, $css, $show_advanced, $td_width, $category_id=null, $label=null, $hidden_field_input = "off")
 {
 	global $allow_code_comment, $use_comments_docs, $method, $add_selected_to_dropdown_if_missing;
+	global $show_notes;
 	
 	// Set this variable to true in defaults.php to add error icon for each field
 	global $use_error_icon;
@@ -1366,6 +1367,29 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		$htmlentities_onvalue = false;
 	}
 
+	// For alaways visible notes
+	$field_note = (isset($field_format["field_note"])) ? $field_format["field_note"] : array();
+	$column_name = (!isset($field_format["column_name"])) ? ucfirst(str_replace("_","&nbsp;",$field_name)) : $field_format["column_name"];
+	if (isset($show_notes) && $show_notes && count($field_note)) {
+		$note = isset($field_note["note"]) ? str_replace("\n","<br>",$field_note["note"]) : "";
+		$hidden = "";
+		if (!isset($field_note["note"]))
+			$hidden = 'style="display:none;"';
+		$note_css = "";
+		if (isset($field_format["advanced"]))
+			$note_css = 'class="advancedrow" style="display:none;" advanced="true"';
+		if (!strlen($note_css))
+			$note_css = $hidden;
+		print '<tr id="tr_'.$form_identifier.'comment-'.$field_name.'" '.$note_css.'><td class="comment_field" id="'.$form_identifier.'comment-'.$field_name.'" class="'.$css.'" colspan="2">'.$note;
+		if (is_addon("font-awesome") && isset($field_format["field_note"]))
+			print '&nbsp;&nbsp;<i class="fa fa-pencil pointer pencil_icon" aria-hidden="true" onClick="show_note(\''.$field_name.'\', \''.$field_note["object_name"].'\', \''.$field_note["object_id"].'\', \''.$column_name.'\',\''.$form_identifier.'\');"></i>';
+		print '</td></tr>';
+	}
+	if (isset($field_note["note"])) {
+		$field_format["javascript"] = (isset($field_format["javascript"])) ? $field_format["javascript"] : "";
+		$field_format["javascript"] .= " onChange=note_reminder();";
+	}
+
 	print '<tr id="tr_'.$form_identifier.$field_name.'"';
 //		if($needs_trigger == true)	
 //			print 'name="'.$form_identifier.$field_name.'triggered'.$field_format["triggered_by"].'"';
@@ -1399,7 +1423,6 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	} else
 		print "\"";
 	print '>';
-
 	// if $var_name is an array we won't use it
 	$var_name = (isset($field_format[0])) ? $field_format[0] : $field_name;
 
@@ -1449,13 +1472,17 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	if ($ident) {
 		print "<div class=\"indentation_css\">";	
 	}
-	if (!isset($field_format["column_name"]))
-		print ucfirst(str_replace("_","&nbsp;",$field_name));
-	else {
+	if (!isset($field_format["column_name"])) {
+		$column_name = ucfirst(str_replace("_","&nbsp;",$field_name));
+		print $column_name;
+	} else {
 		$parts = explode('<', $field_format["column_name"], 2);
 		print ucfirst(str_replace(" ","&nbsp;",$parts[0]));
-		if (isset($parts[1]))
+		$column_name = ucfirst(str_replace(" ","&nbsp;",$parts[0]));
+		if (isset($parts[1])) {
 			print "<" . $parts[1];
+			$column_name .= "<" . $parts[1];
+		}
 	}
 	if (isset($field_format["required"]))
 		$field_format["compulsory"] = $field_format["required"];
@@ -1474,6 +1501,18 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	} else {
 		if ($use_error_icon)
 			print "<img src='images/error.png' class='field_error' id='err_$field_name' style='display:none;'>";
+	}
+	if (isset($show_notes) && is_addon("font-awesome") && isset($field_format["field_note"])) {
+		$css_icon = "fa fa-comment-o pointer note_icon";
+		$title_icon = "";
+		if (!$show_notes && isset($field_note["note"])) {
+			$title_icon = ' title="'.$field_note["note"].'" ';
+			$css_icon = "fa fa-comment pointer note_icon";
+		}
+		print '&nbsp;&nbsp;<i class="'.$css_icon.'" aria-hidden="true" id="'.$form_identifier.'icon-'.$field_name.'" '.$title_icon;
+		if (isset($field_note["object_name"]) && isset($field_note["object_id"]))
+			print ' onClick="show_note(\''.$field_name.'\', \''.$field_note["object_name"].'\', \''.$field_note["object_id"].'\', \''.$column_name.'\', \''.$form_identifier.'\');"';
+		print '></i>';
 	}
 	print '&nbsp;</td>';
 	print '<td class="'.$css.' right_td ';

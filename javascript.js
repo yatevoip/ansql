@@ -130,6 +130,21 @@ function advanced(identifier, scroll_to_top)
 			continue;
 		show_hide("tr_"+elem_name);
 		unique_form_elems.push(elem_name);
+
+		// show/hide also the notes on the advanced fields if they are visible in the form
+		if (identifier) {
+			var element_name = elem_name.split(identifier);
+			elem_name = element_name[1];
+		}
+
+		if (document.getElementById("tr_"+identifier+"comment-"+elem_name)) {
+			var comment = document.getElementById(identifier+"comment-"+elem_name).innerHTML;
+			var comm = comment.substr(0,20);
+			if (comm && comm != "&nbsp;&nbsp;<i class") {
+				show_hide("tr_"+identifier+"comment-"+elem_name);
+				unique_form_elems.push("comment-"+elem_name);
+			}
+		}
 	}
 
 	// show objtitles that were marked as advanced and are not for objects with specific index (_$index)
