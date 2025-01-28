@@ -1398,6 +1398,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		if (!strlen($note_css))
 			$note_css = $hidden;
 		$td_css = (isset($field_format["custom_css_left"])) ? $field_format["custom_css_left"] : "";
+		if (substr($td_css,0,15) == "indentation_css")
+			$td_css = str_replace("indentation_css", "comment_indentation_css",$td_css);
 
 		print '<tr id="tr_'.$form_identifier.'comment-'.$field_name.'" '.$note_css.'><td class="comment_field '.$td_css.'" id="'.$form_identifier.'comment-'.$field_name.'" colspan="2">'.$note;
 		if (is_addon("font-awesome") && $note)
@@ -1520,18 +1522,6 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	} else {
 		if ($use_error_icon)
 			print "<img src='images/error.png' class='field_error' id='err_$field_name' style='display:none;'>";
-	}
-	if (isset($show_notes) && is_addon("font-awesome") && count($field_note)) {
-		$css_icon = "fa fa-comment-o pointer note_icon";
-		$title_icon = "";
-		if (!$show_notes && isset($field_note["note"])) {
-			$title_icon = ' title="'.$field_note["note"].'" ';
-			$css_icon = "fa fa-comment pointer note_icon";
-		}
-		print '&nbsp;&nbsp;<i class="'.$css_icon.'" aria-hidden="true" id="'.$form_identifier.'icon-'.$field_name.'" '.$title_icon;
-		if (isset($field_note["object_name"]) && isset($field_note["object_id"]))
-			print ' onClick="show_note(\''.$field_name.'\', \''.$field_note["object_name"].'\', \''.$field_note["object_id"].'\', \''.$column_name.'\', \''.$form_identifier.'\');"';
-		print '></i>';
 	}
 	print '&nbsp;</td>';
 	print '<td class="'.$css.' right_td ';
@@ -2152,6 +2142,19 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 					print $value;
 				print $field_comment;
 			}
+	}
+
+	if (isset($show_notes) && is_addon("font-awesome") && count($field_note)) {
+		$css_icon = "fa fa-comment-o pointer note_icon";
+		$title_icon = "";
+		if (!$show_notes && isset($field_note["note"])) {
+			$title_icon = ' title="'.$field_note["note"].'" ';
+			$css_icon = "fa fa-comment pointer note_icon";
+		}
+		print '&nbsp;&nbsp;<i class="'.$css_icon.'" aria-hidden="true" id="'.$form_identifier.'icon-'.$field_name.'" '.$title_icon;
+		if (isset($field_note["object_name"]) && isset($field_note["object_id"]))
+			print ' onClick="show_note(\''.$field_name.'\', \''.$field_note["object_name"].'\', \''.$field_note["object_id"].'\', \''.$column_name.'\', \''.$form_identifier.'\');"';
+		print '></i>';
 	}
 	//add custom html for the input field after the documentation question mark. Ex: $conf[$fieldname]["post_extra_html"] = array( "html" => "html_desired");
 	if (isset($field_format["post_extra_html"])) {
