@@ -86,6 +86,7 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	global $logs_file;
 	global $logs_dir;
+	global $func_manage_log_request_content;
 
 	if ($write_api_logs) {
 		// the path where all products will write the API logs
@@ -108,6 +109,11 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 		return;
 	}
 
+	// If $func_manage_log_request_content is set in defaults.php file, the function result will be added to the requests log files from json_api directory.
+	if (isset($func_manage_log_request_content) && is_callable($func_manage_log_request_content)) {
+		call_user_func_array($func_manage_log_request_content, array(&$inp, &$out));
+	}
+	
 	if ($out === null)
 		$out = "";
 	elseif (json_encode($out))
@@ -124,7 +130,7 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 	$content .= "\nJson: " . json_encode($inp)."\n$out";
 	fwrite($fh, $content);
 	if ($start_time)
-		fwrite($fh, sprintf("Handled: %0.3f\n",microtime(true) - $start_time)."\n");
+		fwrite($fh, sprintf("Handled: %0.3f microseconds\n",microtime(true) - $start_time)."\n");
 	fclose($fh);
 }
 
