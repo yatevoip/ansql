@@ -2451,11 +2451,11 @@ function tree($array, $func="copacClick", $class="copac", $title=NULL)
 	    		for (;$level>$j;$level--)
 				print "</ul>";
 	    		if ($j > $level) {
-				print "\n<ul class=\"copac_${level}\" id=\"copac_ul_${i}_${level}\" style=\"display:none\">";
+				print "\n<ul class=\"copac_{$level}\" id=\"copac_ul_{$i}_{$level}\" style=\"display:none\">";
 				$level++;
 			}
 			$tip = ($j+1 < $num) ? "disc" : "square";
-			print "\n<li class=\"copac_${j} \" id=\"copac_li_${i}_${j}\" type=\"${tip}\"><a class=\"copac\" href=\"#\" onClick=\"${func}(${i},${j},'${fld}'); return false\">$val</a></li>";
+			print "\n<li class=\"copac_{$j} \" id=\"copac_li_{$i}_{$j}\" type=\"{$tip}\"><a class=\"copac\" href=\"#\" onClick=\"{$func}({$i},{$j},'{$fld}'); return false\">$val</a></li>";
 			$verify[$j] = $val;
 			for ($k=$j+1; $k<$num; $k++)
 				$verify[$k] = "";
@@ -8049,7 +8049,7 @@ function pretty_timezone_list($offset_format="H:i", $prefix="GMT")
 
 		$pretty_offset = $prefix . $offset_prefix . $offset_formatted;
 
-		$timezone_list[$timezone] = "(${pretty_offset}) $timezone";
+		$timezone_list[$timezone] = "({$pretty_offset}) $timezone";
 	}
 
 	return $timezone_list;
