@@ -93,7 +93,7 @@ function build_request_url(&$out,&$request)
 	return $url;
 }
 
-function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $token_alarm_center = false, $trigger_report = true, $extra_headers = array())
+function make_curl_request($out, $request=null, $response_is_array=true, $recursive=true, $wrap_printed_error = true, $token_alarm_center = false, $trigger_report = true, $extra_headers = array(), $http_method="post")
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
@@ -164,9 +164,11 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 	//Debug::debug_message(__FUNCTION__,"Before json encode: ".return_var_dump($out));
 	$json = json_encode($out);
 	Debug::debug_message(__FUNCTION__,"Encoded json: ".$json);
-	curl_setopt($curl,CURLOPT_POST,true);
+	if ($http_method=="post") {
+		curl_setopt($curl,CURLOPT_POST,true);
+		curl_setopt($curl,CURLOPT_POSTFIELDS,$json);
+	}
 	curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, 0); # Equivalent to -k or --insecure 
-	curl_setopt($curl,CURLOPT_POSTFIELDS,$json);
 	/*Set request headers.*/
 	$headers = array("Content-Type: application/json", "Accept: application/json,text/x-json,application/x-httpd-php", "Accept-Encoding: gzip, deflate");
 	if ($api_secret)
