@@ -130,7 +130,7 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 	$content .= "\nJson: " . json_encode($inp)."\n$out";
 	fwrite($fh, $content);
 	if ($start_time)
-		fwrite($fh, sprintf("Handled: %0.3f microseconds\n",microtime(true) - $start_time)."\n");
+		fwrite($fh, sprintf("Handled: %0.3f seconds\n",microtime(true) - $start_time)."\n");
 	fclose($fh);
 }
 
