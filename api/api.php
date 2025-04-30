@@ -19,44 +19,63 @@
 
 include_once "../../api/api_includes.php";
 
-// enable dump_xdebug in session if debug is set
-if (isset($debug))
-	$_SESSION["dump_xdebug"] = "on";
 
-$time = microtime(true);
-$response = do_request();
+if (!isset($cb_main_api_function))
+	$cb_main_api_function = "default_api_function";
 
-$custom_content = "";
-// If $func_custom_content_log_request is set in defaults.php file, the function result will be added to the requests log files from json_api directory.
-if (isset($func_custom_content_log_request) && is_callable($func_custom_content_log_request)) {
-	$custom_content = call_user_func($func_custom_content_log_request, $response);
+if (!is_callable($cb_main_api_function)) {
+	Debug::trigger_report("Main api function is not callable '$cb_main_api_function'");
+	exit();
 }
 
-// log requests to /var/log/json_api so that all MMI API logs will be in the same file as all API logs from products
-log_request($response["params"], $response["data"], true, $time, $custom_content);
+call_user_func($cb_main_api_function);
 
-if (isset($debug)) {
-	Debug::xdebug("api", "The response of the request when debug is activated from api_config.php: \n".print_r($response["data"],true));
-	// we don't want to register other debug after request is registered in file
-	unset($_SESSION["dump_xdebug"],$_SESSION["xdebug"]);
+
+function default_api_function()
+{
+	global $debug, $func_custom_content_log_request;
+
+	// enable dump_xdebug in session if debug is set
+	if (isset($debug))
+		$_SESSION["dump_xdebug"] = "on";
+
+
+	$time = microtime(true);
+	$response = do_request();
+
+	$custom_content = "";
+	// If $func_custom_content_log_request is set in defaults.php file, the function result will be added to the requests log files from json_api directory.
+	if (isset($func_custom_content_log_request) && is_callable($func_custom_content_log_request)) {
+		$custom_content = call_user_func($func_custom_content_log_request, $response);
+	}
+
+	// log requests to /var/log/json_api so that all MMI API logs will be in the same file as all API logs from products
+	log_request($response["params"], $response["data"], true, $time, $custom_content);
+
+	if (isset($debug)) {
+		Debug::xdebug("api", "The response of the request when debug is activated from api_config.php: \n".print_r($response["data"],true));
+		// we don't want to register other debug after request is registered in file
+		unset($_SESSION["dump_xdebug"],$_SESSION["xdebug"]);
+	}
+
+	$mess = str_replace("\n","", $response["message"]);
+	header("HTTP/1.1 " . $response["code"] . " " . $mess);
+	if (isset($response["download"]) && isset($response["data"])) {
+		header("Content-Type: application/octet-stream");
+		header("Content-Disposition: attachment; filename=".$response["download"]);
+		header("Content-Transfer-Encoding: binary");
+		header("Content-Length: ".strlen($response["data"]));
+		echo $response["data"];
+		exit;
+	}
+
+	if (isset($response["data"])) {
+		header("Content-Type: application/json");
+		echo json_encode($response["data"]);
+		exit;
+	}
 }
 
-$mess = str_replace("\n","", $response["message"]);
-header("HTTP/1.1 " . $response["code"] . " " . $mess);
-if (isset($response["download"]) && isset($response["data"])) {
-	header("Content-Type: application/octet-stream");
-	header("Content-Disposition: attachment; filename=".$response["download"]);
-	header("Content-Transfer-Encoding: binary");
-	header("Content-Length: ".strlen($response["data"]));
-	echo $response["data"];
-	exit;
-}
-
-if (isset($response["data"])) {
-	header("Content-Type: application/json");
-	echo json_encode($response["data"]);
-	exit;
-}
 
 function process_request($req, $params)
 {
