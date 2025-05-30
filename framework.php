@@ -1290,10 +1290,28 @@ class Model
 
 		$from_clause = '';
 		$columns = '';
+
+
+		$ref_tables = array();
+		// pass once over object vars to just find how many times each table is referenced
+		foreach($vars as $var_name => $var) 
+		{
+			// name of table $var_name is a foreign key to
+			$foreign_key_to = $var->_key;
+			if (!isset($ref_tables[$foreign_key_to]))
+				$ref_tables[$foreign_key_to] = 1;
+			else
+				$ref_tables[$foreign_key_to]++;
+		}
+
 		foreach($vars as $var_name => $var)
 		{
 			// name of table $var_name is a foreign key to
 			$foreign_key_to = $var->_key;
+
+			if (!isset($ref_tables[$foreign_key_to]) || $ref_tables[$foreign_key_to]==1)
+				$foreign_key_to = NULL;
+
 			// name of variable in table $foreign_key_to $var_name references 
 			$references_var = $var->_matchkey;
 			$join_type = strtoupper($var->_join_type);
@@ -1310,7 +1328,7 @@ class Model
 			{
 				if($from_clause == '')
 					$from_clause = " ".esc($table)." ";
-				else
+				elseif(!isset($from_tables[$foreign_key_to]))
 					$from_clause = " ($from_clause) ";
 			}
 
