@@ -1353,6 +1353,11 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		$needs_trigger = true;
 
 	$display = (isset($field_format["display"])) ? $field_format["display"] : "text";
+
+	if ($display=="raw") {
+		display_custom_field($form_identifier.$field_name,$field_format["raw"]);
+		return;
+	}
 	$form_display_elements = array("text","textarea","textarea-nonedit","tri_bool","select","mul_select","select_without_non_selected","radios","radio","checkbox","checkbox-readonly","password","file","text-nonedit","checkbox-group" );
 
 	$def_val = (isset($field_format["value"])) ? $field_format["value"] : null;
@@ -2165,6 +2170,19 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 	print '</td>';
 	print '</tr>';
 }
+
+/**
+ * Display a custom field in the FORM
+ * @param string $field_id. The css id value.
+ * @param string $raw. The HTMLto be displayed in the custom field.
+ */
+function display_custom_field($field_id, $raw)
+{
+	print '<tr><td colspan="2" id="'.$field_id.'">';
+	print $raw;
+	print '</td></tr>';
+}
+
 
 /**
  * Builds the javascript format to use javascript function 
