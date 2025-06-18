@@ -1320,8 +1320,6 @@ class Model
 				$join_type = "LEFT";
 			if($join_type != "INNER")
 				$join_type .= " OUTER";
-			if ($columns != '')
-				$columns .= ', ';
 			$added_fields[$var_name] = true;
 
 			if($foreign_key_to)
@@ -1334,6 +1332,8 @@ class Model
 
 			// if this is not a foreign key to another table and is a valid variable inside the corresponding object
 			if(!$foreign_key_to && self::inTable($var_name,$table)) {
+				if ($columns != '')
+					$columns .= ', ';
 				$col = esc($table).".".esc($var_name);
 				$columns .= " ";
 				if (substr($var_type,0,4) != "bit(")
@@ -1342,6 +1342,8 @@ class Model
 					$columns .= "bin($col) as ".esc($var_name);
 			// if this is a foreign key to another table, but does not define a recursive relation inside the $table
 			} elseif($foreign_key_to && $foreign_key_to != $table) {
+				if ($columns != '')
+					$columns .= ', ';
 				$columns .= " ";
 				if($references_var) {
 					// when extending one might need to use another name than the one used in the actual table
@@ -1405,6 +1407,8 @@ class Model
 				$from_clause .= ", ".esc($foreign_key_to)." ";
 			} elseif($foreign_key_to && $foreign_key_to == $table) {
 				// this defines a recursive relation inside the same table, just 1 level
+				if ($columns != '')
+					$columns .= ', ';
 				if(self::inTable($var_name,$table)) {
 					$col = "$table".'1'.".".esc($references_var);
 					$columns .= " ";
