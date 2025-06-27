@@ -380,7 +380,7 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
-	global $parse_errors, $display_parse_error, $error_type_func;
+	global $parse_errors, $display_parse_error, $error_type_func, $db_log, $log_db_conn;
 
 	$user_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "-";
 	$text = "------".date("Y-m-d H:i:s").",request=$request,url=$url,user_id=$user_id\n"
@@ -407,7 +407,13 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 		}
 	}
 
-	if (isset($parse_errors) && strlen($parse_errors)) {
+	if (isset($db_log) && $db_log == true) {
+		$string = mysqli_real_escape_string($log_db_conn, $text);
+		$query = "INSERT INTO logs (date, log_tag, log_type, performer, log) VALUES (now(),'json_requests', 'parse_errors', '', '$string')";
+		$result = mysqli_query($log_db_conn, $query);
+		if (!$result)
+			Debug::trigger_report('critical', "Couldn't insert log to the database: ".mysqli_error($log_db_conn));
+	} elseif (isset($parse_errors) && strlen($parse_errors)) {
 		$fh = fopen($parse_errors, "a");
 		if ($fh) {
 			fwrite($fh,$text);

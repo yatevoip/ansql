@@ -88,6 +88,10 @@ if (is_file("ansql/default_classes/bug_report.php")) {
 	include_once("ansql/use_json_requests.php");
 }
 
+if (!isset($log_db_conn))
+	$log_db_conn = connect_database_log();
+
+
 function return_var_dump()
 {
 	ob_start();
@@ -312,8 +316,10 @@ class Debug
 				
 				if (class_exists("Bug_report") && Bug_report::aggregate_report($out))
 					$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,false,false);
-				else
-					self::output("Critical", "Class 'Bug_report' not found.");
+				else {
+					$declared_classes = get_declared_classes();
+					self::output("Critical", "Class 'Bug_report' not found. Declared classes are :".implode(", ",$declared_classes));
+				}
 				// integromat hook response 200 ok with json content ["code":0]
 				// do nothing with result from curl 
 				break;
@@ -590,7 +596,7 @@ class Debug
 
 	/**
 	 * Logs/Prints a message
-	 * output is controled by $logs_in setting
+	 * output is controlled by $logs_in setting
 	 * Ex: $logs_in = array("web", "/var/log/applog.txt", "php://stdout");
 	 * 'web' prints messages on web page
 	 * If $logs_in is not configured default is $logs_in = array("web")
@@ -601,7 +607,7 @@ class Debug
 	 */
 	public static function output($tag,$msg=NULL,$write_to_xdebug=true)
 	{
-		global $logs_in;
+		global $logs_in, $db_log, $log_db_conn;
 
 		// log output in xdebug as well
 		// if xdebug is written then this log will be duplicated
@@ -635,6 +641,12 @@ class Debug
 		for ($i=0; $i<count($arr); $i++) {
 			if ($arr[$i] == "web") {
 				print "\n<p class='debugmess'>$msg</p>\n";
+			} elseif (isset($db_log) && $db_log == true) {
+				$string = mysqli_real_escape_string($log_db_conn, $msg);
+				$query = "INSERT INTO logs (date, log_tag, log_type, performer, log) VALUES (now(),'$tag', '$arr[$i]', '', '".$string."')";
+				$result = mysqli_query($log_db_conn, $query);
+				if (!$result)
+					Debug::trigger_report('critical', "Couldn't insert log to the database: ".mysqli_error($log_db_conn));
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
 				// check that file is writtable or if output would be stdout (force_update in cli mode)
@@ -1050,4 +1062,47 @@ function config_globals_from_session()
 	$critical_tags = $debug_modules;	
 }
 
+function connect_database_log()
+{
+	global $db_log,$log_db_host,$log_db_user,$log_db_database,$log_db_passwd,$log_db_type,$log_db_port;
+
+	if (!isset($db_log) || $db_log == false) {
+		return;
+	}
+
+	if (!function_exists("mysqli_connect")) {
+		Debug::trigger_report('critical', "You don't have mysqli package for php installed on ". $log_db_host);
+                return;
+	}
+
+	$conn = mysqli_connect($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, null);
+	if (!$conn) {
+		Debug::trigger_report('critical', "Connection failed to the log database: ". mysqli_connect_error());
+                return;
+	}
+
+	return $conn;
+}
+
+function create_database_log()
+{
+	global $log_db_conn, $db_log_specifics,$log_db_database;
+
+	if (!$log_db_conn) {
+		return false;
+	}
+
+	$query = "SHOW TABLES FROM ".$log_db_database." LIKE 'logs'";
+	$result = mysqli_query($log_db_conn, $query);
+
+	if (!$result || $result->num_rows == 0) {
+		$query = "CREATE TABLE logs (log_id bigint unsigned not null auto_increment, primary key (log_id), date timestamp, log_tag varchar(100), log_type varchar(100), performer varchar(100), log longtext)";
+		$result = mysqli_query($log_db_conn, $query);
+		if (!$result)
+			Debug::trigger_report('critical', "Could not create logs table: ". mysqli_error());
+			return;
+	}
+
+	//TBI update table with specific columns
+}
 ?>
