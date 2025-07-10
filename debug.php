@@ -642,11 +642,7 @@ class Debug
 			if ($arr[$i] == "web") {
 				print "\n<p class='debugmess'>$msg</p>\n";
 			} elseif (isset($db_log) && $db_log == true) {
-				$string = mysqli_real_escape_string($log_db_conn, $msg);
-				$query = "INSERT INTO logs (date, log_tag, log_type, performer, log) VALUES (now(),'$tag', '$arr[$i]', '', '".$string."')";
-				$result = mysqli_query($log_db_conn, $query);
-				if (!$result)
-					Debug::trigger_report('critical', "Couldn't insert log to the database: ".mysqli_error($log_db_conn));
+				add_db_log($msg,array(),$tag);
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
 				// check that file is writtable or if output would be stdout (force_update in cli mode)
@@ -1089,20 +1085,79 @@ function create_database_log()
 	global $log_db_conn, $db_log_specifics,$log_db_database;
 
 	if (!$log_db_conn) {
-		return false;
+		Debug::trigger_report('critical', "Couldn't connect to the log database.");
+		return;
 	}
 
 	$query = "SHOW TABLES FROM ".$log_db_database." LIKE 'logs'";
 	$result = mysqli_query($log_db_conn, $query);
 
 	if (!$result || $result->num_rows == 0) {
-		$query = "CREATE TABLE logs (log_id bigint unsigned not null auto_increment, primary key (log_id), date timestamp, log_tag varchar(100), log_type varchar(100), performer varchar(100), log longtext)";
+		$query = "CREATE TABLE logs (log_id bigint unsigned not null auto_increment, primary key (log_id), date timestamp, log_tag varchar(100), log_type varchar(100), log_from varchar(100), log longtext, performer_id varchar(100), performer varchar(100))";
 		$result = mysqli_query($log_db_conn, $query);
 		if (!$result)
 			Debug::trigger_report('critical', "Could not create logs table: ". mysqli_error());
 			return;
 	}
+}
 
-	//TBI update table with specific columns
+function get_log_from()
+{
+	global $argv;
+
+	if (php_sapi_name() == "cli") {
+		$log_from = (isset($argv[0])) ? $argv[0] : null;
+	} else {
+		$log_from = $_SERVER["SCRIPT_NAME"];
+	}
+
+	return $log_from;
+}
+
+function get_log_type($log_from=null)
+{
+	if (strpos($log_from, "index.php") || strpos($log_from, "main.php"))
+		$log_type = "interface_ansql";
+	elseif (strpos($log_from, "api.php"))
+		$log_type = "api_ansql";
+	else {
+		$log_from = explode("/",$log_from);
+		$log_type = end($log_from);
+	}
+
+	return $log_type;
+}
+
+/**
+ * Function used to add logs to the database.
+ * @global type $log_db_conn
+ * @global type $log_performer_info
+ * @param string $msg The log to be added to the database.
+ * @param mixed(array|string) $additional_log_type The log type.
+ *		Empty array - default type will be associated, it will be calculated using log from: if origin is index or main, log type is 'interface_ansql'; if log from is api.php, log type is 'api_ansql'; otrherwisw log type will be equal to log from.
+ *		Array with elements - additionally to the default types, the one from the array will be added separated by comma
+ *		String - only the type specified will be associated, default type will be overwritten
+ * @param string $tag The log type if exists: query, output, cron...etc. This usually is taken from the debug message tag.
+ */
+function add_db_log($msg, $additional_log_type = array(), $tag = '')
+{
+	global $log_db_conn,$log_performer_info;
+
+	$string = mysqli_real_escape_string($log_db_conn, $msg);
+	$log_from = get_log_from();
+	if (!is_array($additional_log_type))
+		$log_type = $additional_log_type;
+	else {
+		$orig_log_type = get_log_type($log_from);
+		$additional_log_type[] = $orig_log_type;
+		$log_type = implode(",", $additional_log_type);
+	}
+	$performer_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "";
+	$performer_param = (isset($log_performer_info["performer"])) ? $log_performer_info["performer"] : "username";
+	$performer = (isset($_SESSION[$performer_param])) ? $_SESSION[$performer_param] : "";
+	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer) VALUES (now(), '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer')";
+	$result = mysqli_query($log_db_conn, $query);
+	if (!$result)
+		Debug::trigger_report('critical', "Couldn't insert log to the database: " . mysqli_error($log_db_conn));
 }
 ?>

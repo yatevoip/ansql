@@ -44,6 +44,9 @@ if (isset($logs_in)) {
 } else 
 	$logs_in = $stdout;
 
+if (isset($db_log) && $db_log)
+	create_database_log();
+
 $res = Model::updateAll();
 if ($res)
 	Debug::Output("Succesfully performed sql structure update.");

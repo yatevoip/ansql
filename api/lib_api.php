@@ -87,7 +87,7 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 	global $logs_file;
 	global $logs_dir;
 	global $func_manage_log_request_content;
-	global $db_log, $log_db_conn;
+	global $db_log, $log_db_conn, $save_api_log_to_db;
 
 	$addr = (isset($_SERVER['REMOTE_ADDR'])) ? $_SERVER['REMOTE_ADDR'] : "unknown";
 
@@ -111,36 +111,38 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 	
 	$content .= "\nJson: " . json_encode($inp)."\n$out";
 	if (isset($db_log) && $db_log == true) {
-		$string = mysqli_real_escape_string($log_db_conn, $content);
-		$query = "INSERT INTO logs (date, log_tag, log_type, performer, log) VALUES (now(),'api_requests', 'logs', '', '".$string."')";
-		$result = mysqli_query($log_db_conn, $query);
-		if (!$result)
-			Debug::trigger_report('critical', "Couldn't insert log to the database: ".mysqli_error($log_db_conn));
-	} else {
-		if ($write_api_logs) {
-			// the path where all products will write the API logs
-			$logs_dir = "/var/log/json_api";
-			$logs_file = (is_writeable($logs_dir)) ? "$logs_dir/requests_log.txt" : null;
+		if (isset($save_api_log_to_db) && ($save_api_log_to_db == true || $save_api_log_to_db == "both")) {
+			$log_type = "api_logs";
+			add_db_log($content,$log_type);
 		}
 
-		if (!$logs_file) {
-			if (false !== $logs_file)
-				Debug::xdebug("api", "Not writeable $logs_dir");
+		if (isset($save_api_log_to_db) && $save_api_log_to_db == true)
 			return;
-		}
-	
-		$day = date("Y-m-d");
-		$file = str_replace(".txt","$day.txt",$logs_file);
-		$fh = fopen($file, "a");
-		if (!$fh) {
-			Debug::xdebug("api", "Can't write to $file");
-			return;
-		}
-		fwrite($fh, $content);
-		if ($start_time)
-			fwrite($fh, sprintf("Handled: %0.3f seconds\n",microtime(true) - $start_time)."\n");
-		fclose($fh);
 	}
+
+	if ($write_api_logs) {
+		// the path where all products will write the API logs
+		$logs_dir = "/var/log/json_api";
+		$logs_file = (is_writeable($logs_dir)) ? "$logs_dir/requests_log.txt" : null;
+	}
+
+	if (!$logs_file) {
+		if (false !== $logs_file)
+			Debug::xdebug("api", "Not writeable $logs_dir");
+		return;
+	}
+
+	$day = date("Y-m-d");
+	$file = str_replace(".txt","$day.txt",$logs_file);
+	$fh = fopen($file, "a");
+	if (!$fh) {
+		Debug::xdebug("api", "Can't write to $file");
+		return;
+	}
+	fwrite($fh, $content);
+	if ($start_time)
+		fwrite($fh, sprintf("Handled: %0.3f seconds\n",microtime(true) - $start_time)."\n");
+	fclose($fh);
 }
 
 function decode_post_put($ctype, $method, $uri)

@@ -408,11 +408,8 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 	}
 
 	if (isset($db_log) && $db_log == true) {
-		$string = mysqli_real_escape_string($log_db_conn, $text);
-		$query = "INSERT INTO logs (date, log_tag, log_type, performer, log) VALUES (now(),'json_requests', 'parse_errors', '', '$string')";
-		$result = mysqli_query($log_db_conn, $query);
-		if (!$result)
-			Debug::trigger_report('critical', "Couldn't insert log to the database: ".mysqli_error($log_db_conn));
+		$log_type = array("parse_errors");
+		add_db_log($text,$log_type);
 	} elseif (isset($parse_errors) && strlen($parse_errors)) {
 		$fh = fopen($parse_errors, "a");
 		if ($fh) {
