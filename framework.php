@@ -1290,8 +1290,7 @@ class Model
 
 		$from_clause = '';
 		$columns = '';
-
-
+		$class_vars = self::getVariables(get_class($this));
 		$ref_tables = array();
 		// pass once over object vars to just find how many times each table is referenced
 		foreach($vars as $var_name => $var) 
@@ -1308,8 +1307,15 @@ class Model
 		{
 			// name of table $var_name is a foreign key to
 			$foreign_key_to = $var->_key;
-
-			if (!isset($ref_tables[$foreign_key_to]) || $ref_tables[$foreign_key_to]==1)
+				
+			// Set foreign_key_to=null to not let framework auto join unnecessary tables
+			// Conditions to set foreign_key_to=null: If table foreign_key_to is not referenced (should not happen) OR 
+			//	 the table is referenced ONLY once and the variable is defined in the class (in method variables())
+			// This case allows to use the reverse extend (The extended object will be joined with the referenced table by using the key in the referenced table). 
+			// A  normal extend has the join key in the extended object, no in the referenced one.
+			// Allow both normal and reverse extend.
+			// For a normal extend we need at least 2 refences. For reverse extend one reference is enough.
+			if (!isset($ref_tables[$foreign_key_to]) || (isset($class_vars[$var_name]) && $ref_tables[$foreign_key_to]==1))
 				$foreign_key_to = NULL;
 
 			// name of variable in table $foreign_key_to $var_name references 
@@ -1329,7 +1335,7 @@ class Model
 				elseif(!isset($from_tables[$foreign_key_to]))
 					$from_clause = " ($from_clause) ";
 			}
-
+			
 			// if this is not a foreign key to another table and is a valid variable inside the corresponding object
 			if(!$foreign_key_to && self::inTable($var_name,$table)) {
 				if ($columns != '')
@@ -1460,7 +1466,7 @@ class Model
 				$single_object =true;
 			}
 		}
-
+		
 		$query = self::buildSelect($columns, $from_clause,$where,$order,$limit,$offset); 
 		$res = Database::query($query);
 		if($res===false)
