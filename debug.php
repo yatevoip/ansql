@@ -1160,4 +1160,144 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 	if (!$result)
 		Debug::trigger_report('critical', "Couldn't insert log to the database: " . mysqli_error($log_db_conn));
 }
+
+/**
+ * Function used to display database API logs with pagination and search bar. This function can be used as additional module to the application.
+ */
+function display_db_api_logs()
+{
+	global $log_db_conn, $method, $limit, $page;
+
+	/* Need to be set in order to create and display the "Cancel" button created using editObject() function. */
+	$_SESSION["previous_page"] = array("module" => "display_db_api_logs");
+	$method = "display_db_api_logs";
+
+	$total = getparam("total");
+	$conditions = build_db_log_conditions();
+
+	$query = "SELECT count(*) FROM logs ".$conditions.";";
+	$res = mysqli_query($log_db_conn, $query);
+	$result = mysqli_fetch_assoc($res);
+	if (isset($result["count(*)"]))
+		$total = $result["count(*)"];
+	items_on_page($total, null,  array("log_tag","log_type","log_from","performer","performer_id","from_date", "to_date"));
+	pages($total, array("log_tag","log_type","log_from","performer","performer_id","from_date", "to_date"),true);
+
+	system_db_search_box($conditions);
+	br();
+
+	$formats = array(
+		"Date"		=> "date",
+		"Log tag"	=> "log_tag",
+		"Log type"	=> "log_type",
+		"Log from"	=> "log_from",
+		"Performer"	=> "performer",
+		"Performer ID"	=> "performer_id",
+		"Log"		=> "log",
+	);
+
+	$query = "SELECT * FROM logs ".$conditions." order by log_id DESC limit ".$limit." offset ".$page.";";
+	$result = mysqli_query($log_db_conn, $query);
+	$logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
+	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
+}
+
+/**
+ * Function used to build database API logs display conditions.
+ * @return string
+ */
+function build_db_log_conditions()
+{
+	global $log_db_conn;
+
+	$conditions = array();
+
+	$fields = array("performer","performer_id","log_tag","log_type","log_from");
+	foreach ($fields as $param) {
+	    $val = getparam($param);
+	    if ($val && $val!="not selected")
+		    $conditions[$param] = "='".$val."'";
+	}
+
+	$from_date = getparam("from_date");
+	$to_date = getparam("to_date");
+	if ($from_date || $to_date) {
+		$start = $end = null;
+		if($from_date)
+		    $start = $from_date." 00:00:00";
+		if($to_date)
+		    $end = $to_date." 23:59:59.99";
+		if ($start && $end)
+		    $conditions["date"] = ">'".$start."' AND date<'".$end."'";
+		elseif(!isset($start))
+		    $conditions["date"] = "<'".$end."'";
+		elseif (!isset($end))
+		    $conditions["date"] = ">'".$start."'";
+	}
+
+	$where = "";
+	$count = 1;
+	foreach($conditions as $parameter=>$value) {
+		$where .= ($count == 1) ? " WHERE " : " AND ";
+		$where .= $parameter.$value;
+		$count++;
+	}
+
+	return $where;
+}
+
+/**
+ * Function builds database API logs search bar.
+ */
+function system_db_search_box()
+{
+	global $log_db_conn;
+
+	$filters = array("log_tag","log_from");
+	foreach ($filters as $filter) {
+		${$filter} = array();
+		$query = "SELECT DISTINCT ".$filter." FROM logs;";
+		$res = mysqli_query($log_db_conn, $query);
+		if (mysqli_num_rows($res) > 0) {
+			// output data of each row
+			while($row = mysqli_fetch_assoc($res)) {
+			    ${$filter}[] = $row[$filter];
+			}
+		}
+		${$filter} = format_for_dropdown(${$filter});
+		${$filter}["selected"] = (getparam($filter)) ? getparam($filter) : "not selected";
+	}
+
+	$title = array("Performer", "Performer ID","Log tag", "Log type", "Log from", "Date", "&nbsp;", "&nbsp;");
+	$fields = array(
+			array(
+			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer"))." name=\"performer\" id=\"performer\" size=\"10\"/>",
+			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer_id"))." name=\"performer_id\" id=\"performer_id\" size=\"10\"/>",
+			    build_dropdown($log_tag,"log_tag",true,"","","",false,false,"not selected"),
+			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_type"))." name=\"log_type\" id=\"log_type\" size=\"10\"/>",
+			    build_dropdown($log_from,"log_from",true,"","","",false,false,"not selected"),
+			    '<span id="filter_by_date">'.
+			    '<label for="from_date">From: </label>'.'<input type="date" name="from_date" value="'.getparam("from_date").'"/>'."&nbsp;&nbsp;&nbsp;".
+			    '<label for="to_date">To: </label>'.'<input type="date" name="to_date" value="'.getparam("to_date").'"/>'.'</span>',
+			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
+			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
+			)
+		    );
+
+	$hidden_params = array(
+		"page"		    => 0,
+		"performer_id"	    => getparam("performer_id"),
+		"performer"	    => getparam("performer"),
+		"log_type"	    => getparam("log_type"),
+		"log_tag"	    => getparam("log_tag"),
+		"log_from"	    => getparam("log_from"),
+		"from_date"	    => getparam("from_date"),
+		"to_date"	    => getparam("to_date"),
+	    );
+
+	start_form(null,"get");
+	addHidden(null, $hidden_params);
+	formTable($fields,$title);
+	end_form();
+}
 ?>
