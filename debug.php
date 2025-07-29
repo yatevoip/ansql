@@ -1060,7 +1060,7 @@ function config_globals_from_session()
 
 function connect_database_log()
 {
-	global $db_log,$log_db_host,$log_db_user,$log_db_database,$log_db_passwd,$log_db_type,$log_db_port;
+	global $db_log,$log_db_host,$log_db_user,$log_db_database,$log_db_passwd,$log_db_port;
 
 	if (!isset($db_log) || $db_log == false) {
 		return;
@@ -1071,7 +1071,7 @@ function connect_database_log()
                 return;
 	}
 
-	$conn = mysqli_connect($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, null);
+	$conn = mysqli_connect($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, $log_db_port);
 	if (!$conn) {
 		Debug::trigger_report('critical', "Connection failed to the log database: ". mysqli_connect_error());
                 return;
