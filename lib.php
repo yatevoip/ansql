@@ -1572,6 +1572,8 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print $field_format["javascript"];
 			if ($display == "textarea-nonedit")
 				print " readonly=''";
+			if (isset($field_format["placeholder"]))
+				print " placeholder='".$field_format["placeholder"]."'";
 			print '>';
 			print $value;
 			print '</textarea>';
@@ -1610,12 +1612,23 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 		case "select":
 		case "mul_select":
 		case "select_without_non_selected":
+		case "field_and_select":
 			
 			if ($add_selected_to_dropdown_if_missing) {
 				$is_selected = false;
 				$arr_is_selected = array();
 			}
-
+			// Added to display a field and a dropdown on the same row.
+			if ($display == "field_and_select"){
+				print '<input class="'.$css.'" type="text" name="'.$form_identifier.$field_name.'_value" id="'.$form_identifier.$field_name.'_value"';
+				if (isset($field_format["size"]))
+					print " size='".$field_format["size"]."'";
+				print " value=".$value["field_value"];
+				print '>';
+				nbsp(3);
+				$display = "select_without_non_selected";
+				$value = $value["dropdown_value"];
+			}
 			print '<select class="'.$css.'" id="'.$form_identifier.$field_name.'" ';
 			if (isset($field_format["javascript"]))
 				print $field_format["javascript"];
@@ -2016,15 +2029,10 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print $field_comment;
 			break;
 		case "date_time":
-//			value format:
-//			$field_format["value"] = array(
-//				"date"=>1979-12-31,
-//				"time"=>23:59:59.999,
-//				"timezone"=>Europe/Bucharest
-//			);
+			//value format:
+			//$field_format["value"] = array( "date"=>1979-12-31, "time"=>23:59:59.999, "timezone"=>Europe/Bucharest );
 			
-			//~~~DATE INPUT~~~
-			// date value ex: 1979-12-31
+			//~~~DATE INPUT~~~ // date value ex: 1979-12-31
 			
 			print "<input type=\"date\" id=\"{$field_name}_date\" name=\"{$field_name}_date\"";
 			
@@ -2045,15 +2053,15 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			elseif (isset($field_format["javascript"]["all"]))
 				print " ".$field_format["javascript"]["all"];
 			
-			
 			print " >&nbsp;";
 			
 			//stop here display just date field if $field_format["no_time"]=true
-			if (isset($field_format["no_time"]) && $field_format["no_time"]===true) 
+			if (isset($field_format["no_time"]) && $field_format["no_time"]===true) {
+				print $field_comment;
 				break;
+			}
 			
-			//~~~TIME INPUT~~~
-			// time value format ex: 23:59:59.999
+			//~~~TIME INPUT~~~ // time value format ex: 23:59:59.999
 			
 			print "<input type=\"time\" id=\"{$field_name}_time\" name=\"{$field_name}_time\" ";
 			
@@ -2085,18 +2093,20 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 			print " >&nbsp;";
 			
 			//stop here display just date and time fields if $field_format["no_date"]=true
-			if (isset($field_format["no_timezone"]) && $field_format["no_timezone"]===true) 
+			if (isset($field_format["no_timezone"]) && $field_format["no_timezone"]===true) {
+				print $field_comment;
 				break;
+			}
 			
 			//~~~TIMEZONE INPUT~~~
-
+			
 			if (isset($field_format["timezones_cb"]))
 				$timezones = call_user_func ($field_format["timezones_cb"]);
 			else
 				$timezones = pretty_timezone_list();
-
+			
 			$timezones = format_for_dropdown_assoc_opt($timezones,"{$field_name}_timezone");
-
+			
 			$js = "";
 			if (isset($field_format["javascript"]["timezone"]))
 				$js = " ".$field_format["javascript"]["timezone"];
@@ -2104,16 +2114,15 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				$js = " ".$field_format["javascript"];
 			elseif (isset($field_format["javascript"]["all"]))
 				$js = " ".$field_format["javascript"]["all"];
-
+			
 			if (isset($value["timezone"]))
 				$timezones["selected"]=$value["timezone"];
-
+			
 			print build_dropdown($timezones, "{$field_name}_timezone", false, false, $css, $js, false, false, null, false);
-
 			//Extra Button: Ex: Use UTC button to auto select UTC timezone
 			if (isset($field_format["button"]["js"]) && isset($field_format["button"]["name"]))
 				print "<button type=\"button\" " . $field_format["button"]["js"] . " >" . $field_format["button"]["name"] . "</button> ";
-
+			
 			print $field_comment;
 			break;
 		case "fixed":
@@ -4556,6 +4565,12 @@ function set_form_fields(&$fields, $error_fields, $field_prefix='', $use_urldeco
 
 			if ($val["date"]===null && $val["time"]===null && $val["timezone"]===null )
 				$val = null;
+		} elseif ($def["display"] == "field_and_select") {
+			$val = array("field_value" => null, "dropdown_value" => null);
+			if (isset($_REQUEST["{$field_prefix}{$name}_value"]))
+				$val["field_value"] = $_REQUEST["{$field_prefix}{$name}_value"];
+			if (isset($_REQUEST["{$field_prefix}{$name}"]))
+				$val["dropdown_value"] = $_REQUEST["{$field_prefix}{$name}"];
 		} else
 			$val = (isset($_REQUEST[$field_prefix.$name])) ? $_REQUEST[$field_prefix.$name] : null;
 
