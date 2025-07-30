@@ -1067,14 +1067,16 @@ function connect_database_log()
 	}
 
 	if (!function_exists("mysqli_connect")) {
+		error_log("Missing mysqli package for php installed on ". $log_db_host);
 		Debug::trigger_report('critical', "You don't have mysqli package for php installed on ". $log_db_host);
-                return;
+                return false;
 	}
 
 	$conn = mysqli_connect($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, $log_db_port);
 	if (!$conn) {
+		error_log("Connection failed to the log database: ". mysqli_connect_error());
 		Debug::trigger_report('critical', "Connection failed to the log database: ". mysqli_connect_error());
-                return;
+                return false;
 	}
 
 	return $conn;
@@ -1085,6 +1087,7 @@ function create_database_log()
 	global $log_db_conn, $db_log_specifics,$log_db_database;
 
 	if (!$log_db_conn) {
+		error_log("Connection failed to the log database: ".$log_db_database);
 		Debug::trigger_report('critical', "Couldn't connect to the log database.");
 		return;
 	}
@@ -1095,9 +1098,10 @@ function create_database_log()
 	if (!$result || $result->num_rows == 0) {
 		$query = "CREATE TABLE logs (log_id bigint unsigned not null auto_increment, primary key (log_id), date timestamp, log_tag varchar(100), log_type varchar(100), log_from varchar(100), log longtext, performer_id varchar(100), performer varchar(100))";
 		$result = mysqli_query($log_db_conn, $query);
-		if (!$result)
+		if (!$result) {
+			error_log("Could not create logs table: ". mysqli_error());
 			Debug::trigger_report('critical', "Could not create logs table: ". mysqli_error());
-			return;
+		}
 	}
 }
 
@@ -1143,6 +1147,13 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 {
 	global $log_db_conn,$log_performer_info;
 
+	if (!isset($log_db_conn))
+              $log_db_conn = connect_database_log();
+
+	if ($log_db_conn == false) {
+		return;
+	}
+
 	$string = mysqli_real_escape_string($log_db_conn, $msg);
 	$log_from = get_log_from();
 	if (!is_array($additional_log_type))
@@ -1157,8 +1168,10 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 	$performer = (isset($_SESSION[$performer_param])) ? $_SESSION[$performer_param] : "";
 	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer) VALUES (now(), '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer')";
 	$result = mysqli_query($log_db_conn, $query);
-	if (!$result)
+	if (!$result) {
+		error_log("Couldn't insert log to the database: " . mysqli_error($log_db_conn));
 		Debug::trigger_report('critical', "Couldn't insert log to the database: " . mysqli_error($log_db_conn));
+	}
 }
 
 /**
@@ -1167,6 +1180,11 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 function display_db_api_logs()
 {
 	global $log_db_conn, $method, $limit, $page;
+
+	if (!isset($log_db_conn)) {
+		errormess("Connection to log database failed.");
+		return;
+	}
 
 	/* Need to be set in order to create and display the "Cancel" button created using editObject() function. */
 	$_SESSION["previous_page"] = array("module" => "display_db_api_logs");
@@ -1193,7 +1211,7 @@ function display_db_api_logs()
 		"Log from"	=> "log_from",
 		"Performer"	=> "performer",
 		"Performer ID"	=> "performer_id",
-		"Log"		=> "log",
+		"function_log_display:Log"		=> "log",
 	);
 
 	$query = "SELECT * FROM logs ".$conditions." order by log_id DESC limit ".$limit." offset ".$page.";";
@@ -1202,6 +1220,10 @@ function display_db_api_logs()
 	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
 }
 
+function log_display($log)
+{
+	print "<span style='overflow-wrap:anywhere;width:65%'>".$log."</span>";
+}
 /**
  * Function used to build database API logs display conditions.
  * @return string
