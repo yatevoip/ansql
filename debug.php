@@ -1222,7 +1222,7 @@ function display_db_api_logs()
 
 function log_display($log)
 {
-	print "<span style='overflow-wrap:anywhere;width:65%'>".$log."</span>";
+	print "<div style='overflow-wrap:anywhere;text-align:left;'>".$log."</div>";
 }
 /**
  * Function used to build database API logs display conditions.
@@ -1283,7 +1283,8 @@ function system_db_search_box()
 		if (mysqli_num_rows($res) > 0) {
 			// output data of each row
 			while($row = mysqli_fetch_assoc($res)) {
-			    ${$filter}[] = $row[$filter];
+				if ($row[$filter])
+					${$filter}[] = $row[$filter];
 			}
 		}
 		${$filter} = format_for_dropdown(${$filter});
