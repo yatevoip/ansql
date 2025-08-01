@@ -1154,6 +1154,7 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 		return;
 	}
 
+	$msg = str_replace("\n", "<br>", $msg);
 	$string = mysqli_real_escape_string($log_db_conn, $msg);
 	$log_from = get_log_from();
 	if (!is_array($additional_log_type))
