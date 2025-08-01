@@ -1214,7 +1214,7 @@ function display_db_api_logs()
 		"function_log_display:Log"		=> "log",
 	);
 
-	$query = "SELECT * FROM logs ".$conditions." order by log_id DESC limit ".$limit." offset ".$page.";";
+	$query = "SELECT * FROM logs ".$conditions." limit ".$limit." offset ".$page.";";
 	$result = mysqli_query($log_db_conn, $query);
 	$logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
 	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
