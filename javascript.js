@@ -1924,3 +1924,44 @@ function func_start()
 }
 
 var restartChanges = Array();
+
+
+/**
+ * Function used to allow multiple selection for datalist
+ * @param {object} e Event object.
+ * @param {array} options The datalist options.
+ */
+function suggestions_list(e, options)
+{
+	if (e.key !== ",")
+		return;
+
+	var elem_id = e.target.id;
+	var data_list = document.querySelector('#'+elem_id+'_list');
+	var auth_inp = document.querySelector('#'+elem_id);
+
+	// get input value, and remove any spaces between values
+	var inp_text = auth_inp.value;
+	inp_text = inp_text.replace(/\s/g, '');
+
+	// get input values as array
+	var inp_list = inp_text.split(',');
+	inp_list = inp_list.slice(0, inp_list.length-1);
+	var prefix = inp_list.join(', ');
+
+	// build options values, while removing the used ones
+	var options_list = [];
+	for (var i of options){
+		if (inp_list.includes(i))
+			continue;
+		options_list.push(i);
+	}
+
+	// create new datalist options
+	data_list.innerHTML = '';
+	for (var i of options_list){
+		var new_option = document.createElement('option');
+		new_option.textContent = prefix + ', ' + i;
+		data_list.appendChild(new_option);
+	}
+}

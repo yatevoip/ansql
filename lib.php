@@ -8379,4 +8379,26 @@ function display_alert_message($fieldname)
 	return array(false, "No need to set a specific alert message for the current field.");
 }
 
+/**
+ * Function used to build datalist fields
+ * @param array $values The values to be set as options in the datalist
+ * @param string $name The name of the field
+ * @return string
+ */
+function build_datalist($values,$name)
+{
+	$js_values = json_encode($values);
+	$value = getparam($name);
+
+	$datalist = "<input type='text' list='".$name."_list' multiple name='$name' id='$name' onkeyup='suggestions_list(event,$js_values);' value='$value'/>";
+	$datalist .= "<datalist id='".$name."_list'>";
+
+	foreach($values as $value) {
+		$datalist .= "<option>$value</option>";
+	}
+
+	$datalist .= "</datalist>";
+
+	return $datalist;
+}
 ?>

@@ -91,6 +91,8 @@ if (is_file("ansql/default_classes/bug_report.php")) {
 if (!isset($log_db_conn))
 	$log_db_conn = connect_database_log();
 
+if (!isset($run_id))
+	$run_id = generate_run_id();
 
 function return_var_dump()
 {
@@ -1103,6 +1105,42 @@ function create_database_log()
 			Debug::trigger_report('critical', "Could not create logs table: ". mysqli_error());
 		}
 	}
+
+	$table_columns = array(
+		"date" => "timestamp",
+		"log_tag" => "varchar(100)",
+		"log_type" => "varchar(100)",
+		"log_from" => "varchar(100)",
+		"log" => "longtext",
+		"performer_id" => "varchar(100)",
+		"performer" => "varchar(100)",
+		"run_id" => "varchar(100)",
+		"session_id" => "varchar(100)"
+	);
+
+	$query = 'SHOW COLUMNS FROM logs';
+	$result = mysqli_query($log_db_conn, $query);
+	$column_names = array();
+	while($row = mysqli_fetch_array($result)){
+		$column_names[] = $row['Field'];;
+	}
+
+	foreach($table_columns as $column_name=>$type) {
+		if (!in_array($column_name,$column_names)) {
+			$res = mysqli_query($log_db_conn, "ALTER TABLE logs ADD ".$column_name." ".$type.";");
+			if (!$res) {
+				error_log("Could not add column '".$column_name."' to the logs table: ". mysqli_error());
+				Debug::trigger_report('critical', "Could not add column '".$column_name."' to the logs table: ". mysqli_error());
+			}
+		}
+	}
+}
+
+function generate_run_id()
+{
+	$run_id = time()."_".rand();
+
+	return $run_id;
 }
 
 function get_log_from()
@@ -1145,7 +1183,7 @@ function get_log_type($log_from=null)
  */
 function add_db_log($msg, $additional_log_type = array(), $tag = '')
 {
-	global $log_db_conn,$log_performer_info;
+	global $log_db_conn,$run_id,$log_performer_info;
 
 	if (!isset($log_db_conn))
               $log_db_conn = connect_database_log();
@@ -1167,7 +1205,8 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 	$performer_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "";
 	$performer_param = (isset($log_performer_info["performer"])) ? $log_performer_info["performer"] : "username";
 	$performer = (isset($_SESSION[$performer_param])) ? $_SESSION[$performer_param] : "";
-	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer) VALUES (now(), '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer')";
+	$session_id = session_id();
+	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES (now(), '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
 	$result = mysqli_query($log_db_conn, $query);
 	if (!$result) {
 		error_log("Couldn't insert log to the database: " . mysqli_error($log_db_conn));
@@ -1200,8 +1239,8 @@ function display_db_api_logs()
 	if (isset($result["count(*)"]))
 		$total = $result["count(*)"];
 
-	items_on_page($total, null,  array("log_tag[]","log_type[]","log_from[]","performer","performer_id","from_date", "to_date"));
-	pages($total, array("log_tag[]","log_type[]","log_from[]","performer","performer_id","from_date", "to_date"),true);
+	items_on_page($total, null,  array("log_tag","log_type","log_from","performer","performer_id","from_date", "to_date"));
+	pages($total, array("log_tag","log_type","log_from","performer","performer_id","from_date", "to_date"),true);
 
 	system_db_search_box($conditions);
 	br();
@@ -1213,6 +1252,7 @@ function display_db_api_logs()
 		"Log from"	=> "log_from",
 		"Performer"	=> "performer",
 		"Performer ID"	=> "performer_id",
+		"Run ID"	=> "run_id",
 		"function_log_display:Log"		=> "log",
 	);
 
@@ -1247,19 +1287,18 @@ function build_db_log_conditions()
 		}
 	}
 
-	$select_fields = array("log_tag","log_type","log_from");
-	foreach ($select_fields as $select) {
-		$val = getparam($select);
-		if (!is_array($val))
+	$multival_fields = array("log_tag","log_type","log_from");
+	foreach ($multival_fields as $param) {
+		$val = getparam($param);
+		if (!strlen($val))
 			continue;
-		if (($key = array_search("not selected", $val)) !== false) {
-			unset($val[$key]);
-		}
+		$val = str_replace(" ", "", $val);
+		$val = explode(",",$val);
 		if (count($val)) {
-			if ($select == "log_type")
-				$conditions[$select] = " LIKE '%".implode("%' OR ".$select." LIKE '%",$val)."%'";
+			if ($param == "log_type")
+				$conditions[$param] = " LIKE '%".implode("%' OR ".$param." LIKE '%",$val)."%'";
 			else
-				$conditions[$select] = "='".implode("' OR ".$select."='",$val)."'";
+				$conditions[$param] = "='".implode("' OR ".$param."='",$val)."'";
 		}
 	}
 
@@ -1318,8 +1357,6 @@ function system_db_search_box($conditions = "")
 				}
 			}
 		}
-		${$filter} = format_for_dropdown(${$filter});
-		${$filter}["selected"] = (getparam($filter)) ? getparam($filter) : "not selected";
 	}
 
 	$from_date = getparam("from_date");
@@ -1338,9 +1375,9 @@ function system_db_search_box($conditions = "")
 			    '<div><label for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp; </label>'.'<input type="date" name="to_date" value="'.getparam("to_date").'"/></div>'.'</span>',
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer"))." name=\"performer\" id=\"performer\" size=\"10\"/>",
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer_id"))." name=\"performer_id\" id=\"performer_id\" size=\"10\"/>",
-			    build_dropdown($log_tag,"log_tag[]",true,"","","",false,false,"not selected",true),
-			    build_dropdown($log_type,"log_type[]",true,"","","",false,false,"not selected", true),
-			    build_dropdown($log_from,"log_from[]",true,"","","",false,false,"not selected", true),
+			    build_datalist($log_tag,'log_tag'),
+			    build_datalist($log_type,'log_type'),
+			    build_datalist($log_from,'log_from'),
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_contains"))." name=\"log_contains\" id=\"log_contains\" size=\"20\"/>",
 			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
 			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
@@ -1351,9 +1388,6 @@ function system_db_search_box($conditions = "")
 		"page"		    => 0,
 		"performer_id"	    => getparam("performer_id"),
 		"performer"	    => getparam("performer"),
-		"log_type"	    => getparam("log_type"),
-		"log_tag"	    => getparam("log_tag"),
-		"log_from"	    => getparam("log_from"),
 		"log_contains"	    => getparam("log_contains"),
 		"from_date"	    => getparam("from_date"),
 		"to_date"	    => getparam("to_date"),
