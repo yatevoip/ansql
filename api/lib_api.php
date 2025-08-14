@@ -110,13 +110,18 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 		$content .= $custom_content;
 	
 	$content .= "\nJson: " . json_encode($inp)."\n$out";
-	if (isset($db_log) && $db_log == true) {
-		if (isset($save_api_log_to_db) && ($save_api_log_to_db == true || $save_api_log_to_db == "both")) {
+
+	$request_duration = microtime(true) - $start_time;
+	$content .= sprintf("Handled: %0.3f seconds\n",$request_duration);
+
+	if (isset($db_log) && $db_log===true && isset($save_api_log_to_db)) {
+		// if true or 'both'
+		if ($save_api_log_to_db) {
 			$log_type = "api_logs";
 			add_db_log($content,$log_type);
 		}
 
-		if (isset($save_api_log_to_db) && $save_api_log_to_db == true)
+		if ($save_api_log_to_db === true)
 			return;
 	}
 
@@ -140,8 +145,6 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 		return;
 	}
 	fwrite($fh, $content);
-	if ($start_time)
-		fwrite($fh, sprintf("Handled: %0.3f seconds\n",microtime(true) - $start_time)."\n");
 	fclose($fh);
 }
 
