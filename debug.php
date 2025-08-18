@@ -1122,7 +1122,7 @@ function create_database_log()
 	$result = mysqli_query($log_db_conn, $query);
 	$column_names = array();
 	while($row = mysqli_fetch_array($result)){
-		$column_names[] = $row['Field'];;
+		$column_names[] = $row['Field'];
 	}
 
 	foreach($table_columns as $column_name=>$type) {
@@ -1165,6 +1165,7 @@ function get_log_type($log_from=null)
 	else {
 		$log_from = explode("/",$log_from);
 		$log_type = end($log_from);
+		$log_type = str_replace(".php", "", $log_type);
 	}
 
 	return $log_type;
@@ -1190,6 +1191,11 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 
 	if ($log_db_conn == false) {
 		return;
+	}
+
+	if (!isset($run_id)) {
+		error_log("Missing run_id value.");
+		Debug::trigger_report('critical', "Missing run_id value.");
 	}
 
 	$msg = str_replace("\n", "<br>", $msg);
