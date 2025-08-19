@@ -1245,8 +1245,8 @@ function display_db_api_logs()
 	if (isset($result["count(*)"]))
 		$total = $result["count(*)"];
 
-	items_on_page($total, null,  array("log_tag","log_type","log_from","performer","performer_id","from_date", "to_date"));
-	pages($total, array("log_tag","log_type","log_from","performer","performer_id","from_date", "to_date"),true);
+	items_on_page($total, null,  array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","run_id"));
+	pages($total, array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","run_id"),true);
 
 	system_db_search_box($conditions);
 	br();
@@ -1258,7 +1258,7 @@ function display_db_api_logs()
 		"Log from"	=> "log_from",
 		"Performer"	=> "performer",
 		"Performer ID"	=> "performer_id",
-		"Run ID"	=> "run_id",
+		"function_run_id_filter:Run ID"		=> "run_id",
 		"function_log_display:Log"		=> "log",
 	);
 
@@ -1266,6 +1266,26 @@ function display_db_api_logs()
 	$result = mysqli_query($log_db_conn, $query);
 	$logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
 	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
+}
+
+/*
+ * Function used to display run_id as a link that opens in new web page and displays all related logs;
+ */
+function run_id_filter($run_id)
+{
+	$actual_link = (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+	// remove limit and page parameters before opening new tab
+	$arr_link = explode("&",$actual_link);
+	foreach($arr_link as $key=>$value) {
+		if ((strpos($value, "page") !== false) || (strpos($value, "limit") !== false))
+			unset($arr_link[$key]);
+	}
+
+	$link = implode("&", $arr_link);
+	$new_link = $link."&run_id=".$run_id;
+
+	print "<a class='llink' href='$new_link' target='_blank'>".$run_id."</a>";
 }
 
 function log_display($log)
@@ -1282,7 +1302,7 @@ function build_db_log_conditions()
 
 	$conditions = array();
 
-	$fields = array("performer","performer_id","log_contains");
+	$fields = array("performer","performer_id","log_contains","run_id");
 	foreach ($fields as $param) {
 		$val = getparam($param);
 		if ($val) {
