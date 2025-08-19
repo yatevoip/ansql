@@ -1417,6 +1417,7 @@ function system_db_search_box($conditions = "")
 		"log_contains"	    => getparam("log_contains"),
 		"from_date"	    => getparam("from_date"),
 		"to_date"	    => getparam("to_date"),
+		"run_id"	    => getparam("run_id")
 	    );
 
 	start_form(null,"get");
