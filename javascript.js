@@ -1933,7 +1933,7 @@ var restartChanges = Array();
  */
 function suggestions_list(e, options)
 {
-	if (e.key !== ",")
+	if (e.key !== "," && e.key !== "Backspace" && e.key !== "Delete")
 		return;
 
 	var elem_id = e.target.id;
@@ -1943,6 +1943,9 @@ function suggestions_list(e, options)
 	// get input value, and remove any spaces between values
 	var inp_text = auth_inp.value;
 	inp_text = inp_text.replace(/\s/g, '');
+
+	if (inp_text && inp_text.slice(-1) !== ",")
+		return;
 
 	// get input values as array
 	var inp_list = inp_text.split(',');
@@ -1961,7 +1964,10 @@ function suggestions_list(e, options)
 	data_list.innerHTML = '';
 	for (var i of options_list){
 		var new_option = document.createElement('option');
-		new_option.textContent = prefix + ', ' + i;
+		if (prefix)
+			new_option.textContent = prefix + ', ' + i;
+		else
+			new_option.textContent = i;
 		data_list.appendChild(new_option);
 	}
 }
