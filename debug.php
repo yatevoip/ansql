@@ -1245,8 +1245,8 @@ function display_db_api_logs()
 	if (isset($result["count(*)"]))
 		$total = $result["count(*)"];
 
-	items_on_page($total, null,  array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","run_id"));
-	pages($total, array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","run_id"),true);
+	items_on_page($total, null,  array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","start_time","end_time","run_id"));
+	pages($total, array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true);
 
 	system_db_search_box($conditions);
 	br();
@@ -1332,10 +1332,14 @@ function build_db_log_conditions()
 	$to_date = getparam("to_date");
 	if ($from_date || $to_date) {
 		$start = $end = null;
-		if($from_date)
-			$start = $from_date." 00:00:00";
-		if($to_date)
-			$end = $to_date." 23:59:59.99";
+		if ($from_date) {
+			$start_time = (getparam("start_time")) ? getparam("start_time") : "00:00:00";
+			$start = $from_date." ".$start_time;
+		}
+		if ($to_date) {
+			$end_time = (getparam("end_time")) ? getparam("end_time") : "23:59:59.99";
+			$end = $to_date." ".$end_time;
+		}
 		if ($start && $end)
 			$conditions["date"] = ">'".$start."' AND date<'".$end."'";
 		elseif(!isset($start))
@@ -1397,8 +1401,8 @@ function system_db_search_box($conditions = "")
 	$fields = array(
 			array(
 			    '<span id="filter_by_date">'.
-			    '<div><label for="from_date">From: </label>'.'<input type="date" name="from_date" value="'.$from_date.'"/>'."</div><br>".
-			    '<div><label for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp; </label>'.'<input type="date" name="to_date" value="'.getparam("to_date").'"/></div>'.'</span>',
+			    '<div style="padding-top:5px;><label for="from_date">From: </label>'.'<input type="date" name="from_date" value="'.$from_date.'"/>&nbsp;<input type="time" id="start_time" name="start_time" value="'.getparam("start_time").'"/></div>'.
+			    '<div style="padding-top:5px;"><label for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp; </label><input type="date" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></div>'.'</span>',
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer"))." name=\"performer\" id=\"performer\" size=\"10\"/>",
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer_id"))." name=\"performer_id\" id=\"performer_id\" size=\"10\"/>",
 			    build_datalist($log_tag,'log_tag'),
