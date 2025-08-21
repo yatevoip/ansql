@@ -1245,8 +1245,8 @@ function display_db_api_logs()
 	if (isset($result["count(*)"]))
 		$total = $result["count(*)"];
 
-	items_on_page($total, null,  array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","start_time","end_time","run_id"));
-	pages($total, array("log_tag","log_type","log_from","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true);
+	items_on_page($total, null,  array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"));
+	pages($total, array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true);
 
 	system_db_search_box($conditions);
 	br();
@@ -1413,6 +1413,11 @@ function system_db_search_box($conditions = "")
 			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
 			)
 		    );
+
+	if (getparam("run_id")) {
+		$title = array_merge(array("Filter by Run ID"), $title);
+		$fields[0] = array_merge(array("<span style='color:#000;'>".getparam("run_id")."</span> <input type='checkbox' id='filter_run_id' name='filter_run_id' onchange='remove_run_id();' checked/>"), $fields[0]);
+	}
 
 	$hidden_params = array(
 		"page"		    => 0,

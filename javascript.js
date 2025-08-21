@@ -1971,3 +1971,17 @@ function suggestions_list(e, options)
 		data_list.appendChild(new_option);
 	}
 }
+
+/**
+ * Function used to load database log page after removing filter by run_id while keeping all the other filters if present
+ */
+function remove_run_id()
+{
+	var current_url = window.location.href;
+
+	var arr = current_url.split("&");
+	var filteredarray = arr.filter(elem => elem.includes("run_id") !== true);
+	var link = filteredarray.join("&");
+
+	window.location.replace(link);
+}
