@@ -1401,8 +1401,8 @@ function system_db_search_box($conditions = "")
 	$fields = array(
 			array(
 			    '<span id="filter_by_date">'.
-			    '<div style="padding-top:5px;><label for="from_date">From: </label>'.'<input type="date" name="from_date" value="'.$from_date.'"/>&nbsp;<input type="time" id="start_time" name="start_time" value="'.getparam("start_time").'"/></div>'.
-			    '<div style="padding-top:5px;"><label for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp; </label><input type="date" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></div>'.'</span>',
+			    '<div style="padding-top:5px;"><label style="display:inline-block; width:40px;" for="from_date">From:&nbsp;</label>'.'<input type="date" name="from_date" style="width:100px;" value="'.$from_date.'"/>&nbsp;<input type="time" style="width:100px;" id="start_time" name="start_time" value="'.getparam("start_time").'"/></div>'.
+			    '<div style="padding-top:5px;"><label style="display:inline-block; width:40px;" for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label><input type="date" style="width:100px;" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" style="width:100px;" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></div>'.'</span>',
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer"))." name=\"performer\" id=\"performer\" size=\"10\"/>",
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer_id"))." name=\"performer_id\" id=\"performer_id\" size=\"10\"/>",
 			    build_datalist($log_tag,'log_tag'),
