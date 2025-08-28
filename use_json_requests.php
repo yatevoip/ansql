@@ -417,7 +417,8 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 			fclose($fh);
 		}
 	}
-	if ((isset($display_parse_error) && $display_parse_error) || (isset($_SESSION["debug_all"]) && $_SESSION["debug_all"]=="on")) {
+	//if ((isset($display_parse_error) && $display_parse_error) || (isset($_SESSION["debug_all"]) && $_SESSION["debug_all"]=="on")) {
+	if (isset($display_parse_error) && $display_parse_error) {
 		$text = str_replace("\n", "<br/>", $text);
 		print $text;
 	}
