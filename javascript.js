@@ -1985,3 +1985,93 @@ function remove_run_id()
 
 	window.location.replace(link);
 }
+
+
+/**
+ * Function used to hide or show checkboxes of a specific dropdown (default is hidden)
+ * @param {string} checkboxes_id ID of the element containing the checkboxes to be show/hidden
+ */
+function show_select_checkboxes(checkboxes_id)
+{
+	var checkboxes = document.getElementById(checkboxes_id);
+	if (checkboxes.style.display == "none") {
+		checkboxes.style.display = "block";
+	} else {
+		checkboxes.style.display = "none";
+	}
+}
+
+/**
+ * Function used to hide dropdown checkboxes action is performed outside the select element
+ * @param {object} event
+ * @param {array} fieldnames Name of the fields of the dropdown checkboxes that we want to close
+ */
+function hide_select_checkboxes(event,fieldnames = [])
+{
+	var options = [];
+	var select_ids = [];
+
+	for (var fieldname of fieldnames) {
+		var checkboxes = document.getElementById(fieldname+"_checkboxes");
+		var tags = checkboxes.getElementsByTagName("input");
+
+		for (var i = 0; i < tags.length; i++) {
+			var alltags = tags[i].id + "1";
+			options.push(alltags);
+		}
+		var select_id = fieldname+"_select_filterbox";
+		select_ids.push(select_id);
+	}
+
+	var target = event.target || event.srcElement;
+	var id = target.id;
+
+	if (select_ids.includes(id))
+		return;
+
+	if ((!options.includes(id))&&(!options.includes(id+"1"))){
+		for (var fieldname of fieldnames) {
+			var checkboxes = document.getElementById(fieldname+"_checkboxes");
+			if (checkboxes.style.display !== "none")
+				checkboxes.style.display = "none";
+		}
+	}
+}
+
+/**
+ * Function used to get checked options from dropdown
+ * @param {string} fieldname The field name.
+ * @returns {Array|get_selected_options.selected_options}
+ */
+function get_selected_options(fieldname)
+{
+	var checkboxes = document.getElementById(fieldname+"_checkboxes");
+	var tags = checkboxes.getElementsByTagName("input");
+	var selected_options = [];
+
+	//if checkbox is checked, add option to the selected_options array
+	for (var i = 0; i < tags.length; i++) {
+		if (tags[i].checked) {
+			selected_options.push(tags[i].value);
+		}
+	}
+	return selected_options;
+}
+
+/**
+ * Function saves selected checkboxes value in specific hidden field
+ * @param {string} fieldname The field name.
+ */
+function save_selected_checkboxes(fieldname)
+{
+	var selected_options = get_selected_options(fieldname);
+	var output_box = document.getElementById(fieldname);
+	var sel_value = "";
+
+	if (selected_options) {
+		sel_value = selected_options.join(",");
+	}
+
+	//write selected options to the hidden field
+	output_box.value = sel_value;
+}

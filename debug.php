@@ -1414,13 +1414,13 @@ function system_db_search_box($conditions = "")
 	$fields = array(
 			array(
 			    '<span id="filter_by_date">'.
-			    '<div style="padding-top:5px;><label for="from_date">From: </label>'.'<input type="date" name="from_date" value="'.$from_date.'"/>&nbsp;<input type="time" id="start_time" name="start_time" value="'.getparam("start_time").'"/></div>'.
-			    '<div style="padding-top:5px;"><label for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp; </label><input type="date" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></div>'.'</span>',
+			    '<div style="padding-top:5px;"><label><span style="display:inline-block; width:40px;">From:&nbsp;</span><input type="date" name="from_date" style="width:100px;" value="'.$from_date.'"/>&nbsp;<input type="time" style="width:100px;" id="start_time" name="start_time" value="'.getparam("start_time").'"/></label></div>'.
+			    '<div style="padding-top:5px;"><label><span style="display:inline-block; width:40px;">To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="date" style="width:100px;" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" style="width:100px;" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></label></div>'.'</span>',
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer"))." name=\"performer\" id=\"performer\" size=\"10\"/>",
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer_id"))." name=\"performer_id\" id=\"performer_id\" size=\"10\"/>",
-			    build_datalist($log_tag,'log_tag'),
-			    build_datalist($log_type,'log_type'),
-			    build_datalist($log_from,'log_from'),
+			    html_checkboxes_filter(array("checkboxes"=>$log_tag, "checkbox_input_name"=>"log_tag")),
+			    html_checkboxes_filter(array("checkboxes"=>$log_type, "checkbox_input_name"=>"log_type")),
+			    html_checkboxes_filter(array("checkboxes"=>$log_from, "checkbox_input_name"=>"log_from")),
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_contains"))." name=\"log_contains\" id=\"log_contains\" size=\"20\"/>",
 			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
 			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
@@ -1436,6 +1436,9 @@ function system_db_search_box($conditions = "")
 		"page"		    => 0,
 		"performer_id"	    => getparam("performer_id"),
 		"performer"	    => getparam("performer"),
+		"log_tag"	    => getparam("log_tag"),
+		"log_type"	    => getparam("log_type"),
+		"log_from"	    => getparam("log_from"),
 		"log_contains"	    => getparam("log_contains"),
 		"from_date"	    => getparam("from_date"),
 		"to_date"	    => getparam("to_date"),
@@ -1447,6 +1450,7 @@ function system_db_search_box($conditions = "")
 	formTable($fields,$title);
 	end_form();
 
+	print "<script>document.addEventListener('click', function (e) {hide_select_checkboxes(e,['log_tag','log_type','log_from']);});</script>";
 	if (!$conditions)
 		print "<script>document.getElementById('display_db_api_logs').submit();</script>";
 }
