@@ -30,6 +30,14 @@ if (!isset($debug_all))
 if (!isset($debug_tags))
 	$debug_tags = array("paranoid","in_framework","in_ansql","ansql","framework");
 
+// list of tags that should be excluded when xdebug() is used and $debug_all = true
+if (!isset($exclude_xdebug_tags))
+	$exclude_xdebug_tags = array("paranoid","in_framework","in_ansql","ansql","framework");
+
+// list of tags that should be logged when $debug_all = false
+if (!isset($allowed_xdebug_tags))
+	$allowed_xdebug_tags = array();
+
 // default tag if tag is not specified
 if (!isset($default_tag))
 	$default_tag = "logic";
@@ -462,10 +470,11 @@ class Debug
 	public static function debug_message($tag, $var, $obj_level = "basic", $sep = "\n", $identation = "", $increase_ident = "    ")
 	{
 		global $debug_all;
-		global $debug_tags;
+		global $exclude_xdebug_tags;
+		global $allowed_xdebug_tags;
 		global $logs_in;
 	
-		if ( ($debug_all==true && !in_array($tag,$debug_tags))    ||    ($debug_all==false && in_array($tag,$debug_tags)) ) {
+		if ( ($debug_all==true && !in_array($tag,$exclude_xdebug_tags))    ||    ($debug_all==false && in_array($tag,$allowed_xdebug_tags)) ) {
 			$date = gmdate("[D M d H:i:s Y]");
 
 			$msg =  Debug::format_value($var,$obj_level, $sep, $identation, $increase_ident) ;
@@ -473,8 +482,8 @@ class Debug
 			if (in_array("web", $logs_in)) {
 				$msg = $date . strtoupper($tag) . ": " . $msg;
 				
-				//if message is already displayed by dumping xdebug there is no need to double display it
-				if (!isset($_SESSION["dump_xdebug"])) {
+				//verify message  is not already displayed by dumping xdebug so it's not displayed twice
+				if (!isset($_SESSION["dump_xdebug"]) || !bool_value($_SESSION["dump_xdebug"])) {
 					print "\n<p class='debugmess'>". htmlentities($msg) . "</p>" . "\n";
 				}
 			}
@@ -547,7 +556,8 @@ class Debug
 	{
 		global $default_tag;
 		global $debug_all;
-		global $debug_tags;
+		global $exclude_xdebug_tags;
+		global $allowed_xdebug_tags;
 		global $max_xdebug_mess;
 		global $critical_tags;
 		global $debug_filters;
@@ -564,10 +574,10 @@ class Debug
 		if (!in_array($tag, $critical_tags) &&  $max_xdebug_mess && strlen($message)>$max_xdebug_mess)
 			$message = substr($message,0,$max_xdebug_mess)." - (truncated)";
 		$outputted = false;
-		if ( ($debug_all==true && !in_array($tag,$debug_tags)) || 
-		     ($debug_all==false && in_array($tag,$debug_tags)) ) { 
+		if ( ($debug_all==true && !in_array($tag,$exclude_xdebug_tags)) || 
+		     ($debug_all==false && in_array($tag,$allowed_xdebug_tags)) ) { 
 			$date = gmdate("[D M d H:i:s Y]");
-			if (!isset($_SESSION["dump_xdebug"]))
+			if (!isset($_SESSION["dump_xdebug"]) || !bool_value($_SESSION["dump_xdebug"]))
 				self::concat_xdebug("\n$date".strtoupper($tag).": ".$message);
 			else {
 				$outputted = true;
@@ -616,7 +626,7 @@ class Debug
 		// but it will help debugging to have it inserted in appropriate place in xdebug log
 
 		// still, skip writting to xdebug if xdebug is currently dumped constantly
-		if ($write_to_xdebug && !isset($_SESSION["dump_xdebug"]))
+		if ($write_to_xdebug && (!isset($_SESSION["dump_xdebug"]) || !bool_value($_SESSION["dump_xdebug"])))
 			self::xdebug($tag,$msg);
 
 
@@ -1024,6 +1034,9 @@ function auto_clean_xdebug_session()
 	}
 }
 
+
+// this is/was used when using debug_all.php from web project and activating various debug options
+// TBI! Update function after debug_all.php changes
 function config_globals_from_session()
 {
 	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags, $debug_filters, $debug_tags_js;
@@ -1401,8 +1414,8 @@ function system_db_search_box($conditions = "")
 	$fields = array(
 			array(
 			    '<span id="filter_by_date">'.
-			    '<div style="padding-top:5px;"><label style="display:inline-block; width:40px;" for="from_date">From:&nbsp;</label>'.'<input type="date" name="from_date" style="width:100px;" value="'.$from_date.'"/>&nbsp;<input type="time" style="width:100px;" id="start_time" name="start_time" value="'.getparam("start_time").'"/></div>'.
-			    '<div style="padding-top:5px;"><label style="display:inline-block; width:40px;" for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label><input type="date" style="width:100px;" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" style="width:100px;" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></div>'.'</span>',
+			    '<div style="padding-top:5px;><label for="from_date">From: </label>'.'<input type="date" name="from_date" value="'.$from_date.'"/>&nbsp;<input type="time" id="start_time" name="start_time" value="'.getparam("start_time").'"/></div>'.
+			    '<div style="padding-top:5px;"><label for="to_date">To:&nbsp;&nbsp;&nbsp;&nbsp; </label><input type="date" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></div>'.'</span>',
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer"))." name=\"performer\" id=\"performer\" size=\"10\"/>",
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer_id"))." name=\"performer_id\" id=\"performer_id\" size=\"10\"/>",
 			    build_datalist($log_tag,'log_tag'),
