@@ -374,8 +374,8 @@ class Database
 			return false;
 
 		Debug::xdebug("query", $query);
-		if(isset($_SESSION["debug_all"]))
-			Debug::Output("query", $query);
+		//if(isset($_SESSION["debug_all"]))
+		//	Debug::Output("query", $query);
 
 //		if (!self::is_single_query($query))
 //			return false;
@@ -573,8 +573,8 @@ class Database
 		if (!self::connect())
 			return false;
 		Debug::xdebug("queryRaw", $query);
-		if(isset($_SESSION["debug_all"]))
-			Debug::Output("queryRaw", $query);
+		//if(isset($_SESSION["debug_all"]))
+		//	Debug::Output("queryRaw", $query);
 
 		//if (!self::is_single_query($query))
 		//	return false;
