@@ -380,7 +380,7 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"ansql");
 
-	global $parse_errors, $display_parse_error, $error_type_func;
+	global $parse_errors, $display_parse_error, $error_type_func, $db_log, $log_db_conn;
 
 	$user_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "-";
 	$text = "------".date("Y-m-d H:i:s").",request=$request,url=$url,user_id=$user_id\n"
@@ -407,14 +407,18 @@ function write_error($request, $out, $ret, $http_code, $url, $displayed_response
 		}
 	}
 
-	if (isset($parse_errors) && strlen($parse_errors)) {
+	if (isset($db_log) && $db_log == true) {
+		$log_type = array("parse_errors");
+		add_db_log($text,$log_type);
+	} elseif (isset($parse_errors) && strlen($parse_errors)) {
 		$fh = fopen($parse_errors, "a");
 		if ($fh) {
 			fwrite($fh,$text);
 			fclose($fh);
 		}
 	}
-	if ((isset($display_parse_error) && $display_parse_error) || (isset($_SESSION["debug_all"]) && $_SESSION["debug_all"]=="on")) {
+	//if ((isset($display_parse_error) && $display_parse_error) || (isset($_SESSION["debug_all"]) && $_SESSION["debug_all"]=="on")) {
+	if (isset($display_parse_error) && $display_parse_error) {
 		$text = str_replace("\n", "<br/>", $text);
 		print $text;
 	}

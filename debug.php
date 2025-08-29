@@ -30,6 +30,14 @@ if (!isset($debug_all))
 if (!isset($debug_tags))
 	$debug_tags = array("paranoid","in_framework","in_ansql","ansql","framework");
 
+// list of tags that should be excluded when xdebug() is used and $debug_all = true
+if (!isset($exclude_xdebug_tags))
+	$exclude_xdebug_tags = array("paranoid","in_framework","in_ansql","ansql","framework");
+
+// list of tags that should be logged when $debug_all = false
+if (!isset($allowed_xdebug_tags))
+	$allowed_xdebug_tags = array();
+
 // default tag if tag is not specified
 if (!isset($default_tag))
 	$default_tag = "logic";
@@ -87,6 +95,12 @@ if (is_file("ansql/default_classes/bug_report.php")) {
 	include_once("ansql/default_classes/bug_report.php");
 	include_once("ansql/use_json_requests.php");
 }
+
+if (!isset($log_db_conn))
+	$log_db_conn = connect_database_log();
+
+if (!isset($run_id))
+	$run_id = generate_run_id();
 
 function return_var_dump()
 {
@@ -312,8 +326,10 @@ class Debug
 				
 				if (class_exists("Bug_report") && Bug_report::aggregate_report($out))
 					$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,false,false);
-				else
-					self::output("Critical", "Class 'Bug_report' not found.");
+				else {
+					$declared_classes = get_declared_classes();
+					self::output("Critical", "Class 'Bug_report' not found. Declared classes are :".implode(", ",$declared_classes));
+				}
 				// integromat hook response 200 ok with json content ["code":0]
 				// do nothing with result from curl 
 				break;
@@ -454,10 +470,11 @@ class Debug
 	public static function debug_message($tag, $var, $obj_level = "basic", $sep = "\n", $identation = "", $increase_ident = "    ")
 	{
 		global $debug_all;
-		global $debug_tags;
+		global $exclude_xdebug_tags;
+		global $allowed_xdebug_tags;
 		global $logs_in;
 	
-		if ( ($debug_all==true && !in_array($tag,$debug_tags))    ||    ($debug_all==false && in_array($tag,$debug_tags)) ) {
+		if ( ($debug_all==true && !in_array($tag,$exclude_xdebug_tags))    ||    ($debug_all==false && in_array($tag,$allowed_xdebug_tags)) ) {
 			$date = gmdate("[D M d H:i:s Y]");
 
 			$msg =  Debug::format_value($var,$obj_level, $sep, $identation, $increase_ident) ;
@@ -465,8 +482,8 @@ class Debug
 			if (in_array("web", $logs_in)) {
 				$msg = $date . strtoupper($tag) . ": " . $msg;
 				
-				//if message is already displayed by dumping xdebug there is no need to double display it
-				if (!isset($_SESSION["dump_xdebug"])) {
+				//verify message  is not already displayed by dumping xdebug so it's not displayed twice
+				if (!isset($_SESSION["dump_xdebug"]) || !bool_value($_SESSION["dump_xdebug"])) {
 					print "\n<p class='debugmess'>". htmlentities($msg) . "</p>" . "\n";
 				}
 			}
@@ -539,7 +556,8 @@ class Debug
 	{
 		global $default_tag;
 		global $debug_all;
-		global $debug_tags;
+		global $exclude_xdebug_tags;
+		global $allowed_xdebug_tags;
 		global $max_xdebug_mess;
 		global $critical_tags;
 		global $debug_filters;
@@ -556,10 +574,10 @@ class Debug
 		if (!in_array($tag, $critical_tags) &&  $max_xdebug_mess && strlen($message)>$max_xdebug_mess)
 			$message = substr($message,0,$max_xdebug_mess)." - (truncated)";
 		$outputted = false;
-		if ( ($debug_all==true && !in_array($tag,$debug_tags)) || 
-		     ($debug_all==false && in_array($tag,$debug_tags)) ) { 
+		if ( ($debug_all==true && !in_array($tag,$exclude_xdebug_tags)) || 
+		     ($debug_all==false && in_array($tag,$allowed_xdebug_tags)) ) { 
 			$date = gmdate("[D M d H:i:s Y]");
-			if (!isset($_SESSION["dump_xdebug"]))
+			if (!isset($_SESSION["dump_xdebug"]) || !bool_value($_SESSION["dump_xdebug"]))
 				self::concat_xdebug("\n$date".strtoupper($tag).": ".$message);
 			else {
 				$outputted = true;
@@ -590,7 +608,7 @@ class Debug
 
 	/**
 	 * Logs/Prints a message
-	 * output is controled by $logs_in setting
+	 * output is controlled by $logs_in setting
 	 * Ex: $logs_in = array("web", "/var/log/applog.txt", "php://stdout");
 	 * 'web' prints messages on web page
 	 * If $logs_in is not configured default is $logs_in = array("web")
@@ -601,14 +619,14 @@ class Debug
 	 */
 	public static function output($tag,$msg=NULL,$write_to_xdebug=true)
 	{
-		global $logs_in;
+		global $logs_in, $db_log, $log_db_conn;
 
 		// log output in xdebug as well
 		// if xdebug is written then this log will be duplicated
 		// but it will help debugging to have it inserted in appropriate place in xdebug log
 
 		// still, skip writting to xdebug if xdebug is currently dumped constantly
-		if ($write_to_xdebug && !isset($_SESSION["dump_xdebug"]))
+		if ($write_to_xdebug && (!isset($_SESSION["dump_xdebug"]) || !bool_value($_SESSION["dump_xdebug"])))
 			self::xdebug($tag,$msg);
 
 
@@ -635,6 +653,8 @@ class Debug
 		for ($i=0; $i<count($arr); $i++) {
 			if ($arr[$i] == "web") {
 				print "\n<p class='debugmess'>$msg</p>\n";
+			} elseif (isset($db_log) && $db_log == true) {
+				add_db_log($msg,array(),$tag);
 			} else {
 				$date = gmdate("[D M d H:i:s Y]");
 				// check that file is writtable or if output would be stdout (force_update in cli mode)
@@ -1014,6 +1034,9 @@ function auto_clean_xdebug_session()
 	}
 }
 
+
+// this is/was used when using debug_all.php from web project and activating various debug options
+// TBI! Update function after debug_all.php changes
 function config_globals_from_session()
 {
 	global $logs_in, $enable_debug_buttons, $debug_buttons, $debug_all, $debug_tags, $critical_tags, $debug_filters, $debug_tags_js;
@@ -1050,4 +1073,385 @@ function config_globals_from_session()
 	$critical_tags = $debug_modules;	
 }
 
+function connect_database_log()
+{
+	global $db_log,$log_db_host,$log_db_user,$log_db_database,$log_db_passwd,$log_db_port;
+
+	if (!isset($db_log) || $db_log == false) {
+		return;
+	}
+
+	if (!function_exists("mysqli_connect")) {
+		error_log("Missing mysqli package for php installed on ". $log_db_host);
+		Debug::trigger_report('critical', "You don't have mysqli package for php installed on ". $log_db_host);
+                return false;
+	}
+
+	$conn = mysqli_connect($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, $log_db_port);
+	if (!$conn) {
+		error_log("Connection failed to the log database: ". mysqli_connect_error());
+		Debug::trigger_report('critical', "Connection failed to the log database: ". mysqli_connect_error());
+                return false;
+	}
+
+	return $conn;
+}
+
+function create_database_log()
+{
+	global $log_db_conn, $db_log_specifics,$log_db_database;
+
+	if (!$log_db_conn) {
+		error_log("Connection failed to the log database: ".$log_db_database);
+		Debug::trigger_report('critical', "Couldn't connect to the log database.");
+		return;
+	}
+
+	$query = "SHOW TABLES FROM ".$log_db_database." LIKE 'logs'";
+	$result = mysqli_query($log_db_conn, $query);
+
+	if (!$result || $result->num_rows == 0) {
+		$query = "CREATE TABLE logs (log_id bigint unsigned not null auto_increment, primary key (log_id), date timestamp, log_tag varchar(100), log_type varchar(100), log_from varchar(100), log longtext, performer_id varchar(100), performer varchar(100))";
+		$result = mysqli_query($log_db_conn, $query);
+		if (!$result) {
+			error_log("Could not create logs table: ". mysqli_error());
+			Debug::trigger_report('critical', "Could not create logs table: ". mysqli_error());
+		}
+	}
+
+	$table_columns = array(
+		"date" => "timestamp",
+		"log_tag" => "varchar(100)",
+		"log_type" => "varchar(100)",
+		"log_from" => "varchar(100)",
+		"log" => "longtext",
+		"performer_id" => "varchar(100)",
+		"performer" => "varchar(100)",
+		"run_id" => "varchar(100)",
+		"session_id" => "varchar(100)"
+	);
+
+	$query = 'SHOW COLUMNS FROM logs';
+	$result = mysqli_query($log_db_conn, $query);
+	$column_names = array();
+	while($row = mysqli_fetch_array($result)){
+		$column_names[] = $row['Field'];
+	}
+
+	foreach($table_columns as $column_name=>$type) {
+		if (!in_array($column_name,$column_names)) {
+			$res = mysqli_query($log_db_conn, "ALTER TABLE logs ADD ".$column_name." ".$type.";");
+			if (!$res) {
+				error_log("Could not add column '".$column_name."' to the logs table: ". mysqli_error());
+				Debug::trigger_report('critical', "Could not add column '".$column_name."' to the logs table: ". mysqli_error());
+			}
+		}
+	}
+}
+
+function generate_run_id()
+{
+	$run_id = time()."_".rand();
+
+	return $run_id;
+}
+
+function get_log_from()
+{
+	global $argv;
+
+	if (php_sapi_name() == "cli") {
+		$log_from = (isset($argv[0])) ? $argv[0] : null;
+	} else {
+		$log_from = $_SERVER["SCRIPT_NAME"];
+	}
+
+	return $log_from;
+}
+
+function get_log_type($log_from=null)
+{
+	if (strpos($log_from, "index.php") || strpos($log_from, "main.php"))
+		$log_type = "interface_ansql";
+	elseif (strpos($log_from, "api.php"))
+		$log_type = "api_ansql";
+	else {
+		$log_from = explode("/",$log_from);
+		$log_type = end($log_from);
+		$log_type = str_replace(".php", "", $log_type);
+	}
+
+	return $log_type;
+}
+
+/**
+ * Function used to add logs to the database.
+ * @global type $log_db_conn
+ * @global type $log_performer_info
+ * @param string $msg The log to be added to the database.
+ * @param mixed(array|string) $additional_log_type The log type.
+ *		Empty array - default type will be associated, it will be calculated using log from: if origin is index or main, log type is 'interface_ansql'; if log from is api.php, log type is 'api_ansql'; otrherwisw log type will be equal to log from.
+ *		Array with elements - additionally to the default types, the one from the array will be added separated by comma
+ *		String - only the type specified will be associated, default type will be overwritten
+ * @param string $tag The log type if exists: query, output, cron...etc. This usually is taken from the debug message tag.
+ */
+function add_db_log($msg, $additional_log_type = array(), $tag = '')
+{
+	global $log_db_conn,$run_id,$log_performer_info;
+
+	if (!isset($log_db_conn))
+              $log_db_conn = connect_database_log();
+
+	if ($log_db_conn == false) {
+		return;
+	}
+
+	if (!isset($run_id)) {
+		error_log("Missing run_id value.");
+		Debug::trigger_report('critical', "Missing run_id value.");
+	}
+
+	$msg = str_replace("\n", "<br>", $msg);
+	$string = mysqli_real_escape_string($log_db_conn, $msg);
+	$log_from = get_log_from();
+	if (!is_array($additional_log_type))
+		$log_type = $additional_log_type;
+	else {
+		$orig_log_type = get_log_type($log_from);
+		$additional_log_type[] = $orig_log_type;
+		$log_type = implode(",", $additional_log_type);
+	}
+	$performer_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "";
+	$performer_param = (isset($log_performer_info["performer"])) ? $log_performer_info["performer"] : "username";
+	$performer = (isset($_SESSION[$performer_param])) ? $_SESSION[$performer_param] : "";
+	$session_id = session_id();
+	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES (now(), '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
+	$result = mysqli_query($log_db_conn, $query);
+	if (!$result) {
+		error_log("Couldn't insert log to the database: " . mysqli_error($log_db_conn));
+		Debug::trigger_report('critical', "Couldn't insert log to the database: " . mysqli_error($log_db_conn));
+	}
+}
+
+/**
+ * Function used to display database API logs with pagination and search bar. This function can be used as additional module to the application.
+ */
+function display_db_api_logs()
+{
+	global $log_db_conn, $method, $limit, $page;
+
+	if (!isset($log_db_conn)) {
+		errormess("Connection to log database failed.");
+		return;
+	}
+
+	/* Need to be set in order to create and display the "Cancel" button created using editObject() function. */
+	$_SESSION["previous_page"] = array("module" => "display_db_api_logs");
+	$method = "display_db_api_logs";
+
+	$total = getparam("total");
+	$conditions = build_db_log_conditions();
+
+	$query = "SELECT count(*) FROM logs ".$conditions.";";
+	$res = mysqli_query($log_db_conn, $query);
+	$result = mysqli_fetch_assoc($res);
+	if (isset($result["count(*)"]))
+		$total = $result["count(*)"];
+
+	items_on_page($total, null,  array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"));
+	pages($total, array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true);
+
+	system_db_search_box($conditions);
+	br();
+
+	$formats = array(
+		"Date"		=> "date",
+		"Log tag"	=> "log_tag",
+		"Log type"	=> "log_type",
+		"Log from"	=> "log_from",
+		"Performer"	=> "performer",
+		"Performer ID"	=> "performer_id",
+		"function_run_id_filter:Run ID"		=> "run_id",
+		"function_log_display:Log"		=> "log",
+	);
+
+	$query = "SELECT * FROM logs ".$conditions." limit ".$limit." offset ".$page.";";
+	$result = mysqli_query($log_db_conn, $query);
+	$logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
+	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
+}
+
+/*
+ * Function used to display run_id as a link that opens in new web page and displays all related logs;
+ */
+function run_id_filter($run_id)
+{
+	$actual_link = (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+	// remove limit and page parameters before opening new tab
+	$arr_link = explode("&",$actual_link);
+	foreach($arr_link as $key=>$value) {
+		if ((strpos($value, "page") !== false) || (strpos($value, "limit") !== false))
+			unset($arr_link[$key]);
+	}
+
+	$link = implode("&", $arr_link);
+	$new_link = $link."&run_id=".$run_id;
+
+	print "<a class='llink' href='$new_link' target='_blank'>".$run_id."</a>";
+}
+
+function log_display($log)
+{
+	print "<div style='overflow-wrap:anywhere;text-align:left;'>".$log."</div>";
+}
+/**
+ * Function used to build database API logs display conditions.
+ * @return string
+ */
+function build_db_log_conditions()
+{
+	global $log_db_conn;
+
+	$conditions = array();
+
+	$fields = array("performer","performer_id","log_contains","run_id");
+	foreach ($fields as $param) {
+		$val = getparam($param);
+		if ($val) {
+			if ($param == "log_contains")
+				$conditions["log"] = " LIKE '%".$val."%' OR log_tag LIKE '%".$val."%'";
+			else
+				$conditions[$param] = "='".$val."'";
+		}
+	}
+
+	$multival_fields = array("log_tag","log_type","log_from");
+	foreach ($multival_fields as $param) {
+		$val = getparam($param);
+		if (!strlen($val))
+			continue;
+		$val = str_replace(" ", "", $val);
+		$val = explode(",",$val);
+		if (count($val)) {
+			if ($param == "log_type")
+				$conditions[$param] = " LIKE '%".implode("%' OR ".$param." LIKE '%",$val)."%'";
+			else
+				$conditions[$param] = "='".implode("' OR ".$param."='",$val)."'";
+		}
+	}
+
+	$from_date = getparam("from_date");
+	$to_date = getparam("to_date");
+	if ($from_date || $to_date) {
+		$start = $end = null;
+		if ($from_date) {
+			$start_time = (getparam("start_time")) ? getparam("start_time") : "00:00:00";
+			$start = $from_date." ".$start_time;
+		}
+		if ($to_date) {
+			$end_time = (getparam("end_time")) ? getparam("end_time") : "23:59:59.99";
+			$end = $to_date." ".$end_time;
+		}
+		if ($start && $end)
+			$conditions["date"] = ">'".$start."' AND date<'".$end."'";
+		elseif(!isset($start))
+			$conditions["date"] = "<'".$end."'";
+		elseif (!isset($end))
+			$conditions["date"] = ">'".$start."'";
+	}
+
+	$where = "";
+	$count = 1;
+	foreach($conditions as $parameter=>$value) {
+		$where .= ($count == 1) ? " WHERE " : " AND ";
+		$where .= "(".$parameter.$value.")";
+		$count++;
+	}
+
+	return $where;
+}
+
+/**
+ * Function builds database API logs search bar.
+ */
+function system_db_search_box($conditions = "")
+{
+	global $log_db_conn;
+
+	$filters = array("log_tag","log_from","log_type");
+	foreach ($filters as $filter) {
+		${$filter} = array();
+		$query = "SELECT DISTINCT ".$filter." FROM logs;";
+		$res = mysqli_query($log_db_conn, $query);
+		if (mysqli_num_rows($res) > 0) {
+			// output data of each row
+			while($row = mysqli_fetch_assoc($res)) {
+				if ($row[$filter]) {
+					if ($filter == "log_type") {
+						$values = explode(",", $row[$filter]);
+						foreach($values as $value) {
+							$value = trim($value);
+							if(!in_array($value, ${$filter}))
+								${$filter}[] = $value;
+						}
+					} else
+						${$filter}[] = $row[$filter];
+				}
+			}
+		}
+	}
+
+	$from_date = getparam("from_date");
+	if (!$conditions) {
+		$query = "SELECT date FROM logs ORDER BY log_id DESC LIMIT 1;";
+		$res = mysqli_query($log_db_conn, $query);
+		$result = mysqli_fetch_assoc($res);
+		if (isset($result["date"]))
+			$from_date = strtok($result["date"]," ");
+	}
+	$title = array("Date", "Performer", "Performer ID","Log tag", "Log type", "Log from", "Log contains", "&nbsp;", "&nbsp;");
+	$fields = array(
+			array(
+			    '<span id="filter_by_date">'.
+			    '<div style="padding-top:5px;"><label><span style="display:inline-block; width:40px;">From:&nbsp;</span><input type="date" name="from_date" style="width:100px;" value="'.$from_date.'"/>&nbsp;<input type="time" style="width:100px;" id="start_time" name="start_time" value="'.getparam("start_time").'"/></label></div>'.
+			    '<div style="padding-top:5px;"><label><span style="display:inline-block; width:40px;">To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><input type="date" style="width:100px;" name="to_date" value="'.getparam("to_date").'"/>&nbsp;<input type="time" style="width:100px;" id="end_time" name="end_time"  value="'.getparam("end_time").'"/></label></div>'.'</span>',
+			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer"))." name=\"performer\" id=\"performer\" size=\"10\"/>",
+			    "<input type=\"text\" value=". html_quotes_escape(getparam("performer_id"))." name=\"performer_id\" id=\"performer_id\" size=\"10\"/>",
+			    html_checkboxes_filter(array("checkboxes"=>$log_tag, "checkbox_input_name"=>"log_tag")),
+			    html_checkboxes_filter(array("checkboxes"=>$log_type, "checkbox_input_name"=>"log_type")),
+			    html_checkboxes_filter(array("checkboxes"=>$log_from, "checkbox_input_name"=>"log_from")),
+			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_contains"))." name=\"log_contains\" id=\"log_contains\" size=\"20\"/>",
+			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
+			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
+			)
+		    );
+
+	if (getparam("run_id")) {
+		$title = array_merge(array("Filter by Run ID"), $title);
+		$fields[0] = array_merge(array("<span style='color:#000;'>".getparam("run_id")."</span> <input type='checkbox' id='filter_run_id' name='filter_run_id' onchange='remove_run_id();' checked/>"), $fields[0]);
+	}
+
+	$hidden_params = array(
+		"page"		    => 0,
+		"performer_id"	    => getparam("performer_id"),
+		"performer"	    => getparam("performer"),
+		"log_tag"	    => getparam("log_tag"),
+		"log_type"	    => getparam("log_type"),
+		"log_from"	    => getparam("log_from"),
+		"log_contains"	    => getparam("log_contains"),
+		"from_date"	    => getparam("from_date"),
+		"to_date"	    => getparam("to_date"),
+		"run_id"	    => getparam("run_id")
+	    );
+
+	start_form(null,"get");
+	addHidden(null, $hidden_params);
+	formTable($fields,$title);
+	end_form();
+
+	print "<script>document.addEventListener('click', function (e) {hide_select_checkboxes(e,['log_tag','log_type','log_from']);});</script>";
+	if (!$conditions)
+		print "<script>document.getElementById('display_db_api_logs').submit();</script>";
+}
 ?>

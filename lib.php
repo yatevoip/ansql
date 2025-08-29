@@ -8394,4 +8394,71 @@ function display_alert_message($fieldname)
 	return array(false, "No need to set a specific alert message for the current field.");
 }
 
+/**
+ * Function used to build datalist fields
+ * @param array $values The values to be set as options in the datalist
+ * @param string $name The name of the field
+ * @return string
+ */
+function build_datalist($values,$name)
+{
+	$js_values = json_encode($values);
+	$value = getparam($name);
+
+	$datalist = "<input type='text' list='".$name."_list' multiple name='$name' id='$name' onkeyup='suggestions_list(event,$js_values);' value='$value'/>";
+	$datalist .= "<datalist id='".$name."_list'>";
+
+	foreach($values as $value) {
+		$datalist .= "<option>$value</option>";
+	}
+
+	$datalist .= "</datalist>";
+
+	return $datalist;
+}
+
+function html_checkboxes_filter ($params = array())
+{
+	$checkboxes = (isset($params["checkboxes"])) ? $params["checkboxes"] : array();
+
+	$select_text = (isset($params["select_text"])) ? $params["select_text"] : "Choose options";
+	$checkbox_input_name = (isset($params["checkbox_input_name"])) ? $params["checkbox_input_name"] : "tags";
+
+	$sel_class = (isset($params["sel_class"])) ? $params["sel_class"] : "multiselect";
+	$sel_box_class = (isset($params["sel_box_class "])) ? $params["sel_box_class "] : "select_box";
+	$sel_box_id = (isset($params["selectBox"])) ? $params["selectBox"] : $checkbox_input_name."_select_box";
+	$overselect_class = (isset($params["overselect_class"])) ? $params["overselect_class"] : "over_select";
+	$overselect_id = (isset($params["overselect_id"])) ? $params["overselect_id"] : $checkbox_input_name."_select_filterbox";
+	$checkboxes_div_id = (isset($params["checkboxes_div_id"])) ? $params["checkboxes_div_id"] : $checkbox_input_name."_checkboxes";
+
+	$select_style = (isset($params["style"]["select_style"])) ?  $params["style"]["select_style"] : "width: 200px;";
+	$select_box_style = (isset($params["style"]["select_style"])) ?  $params["style"]["select_style"] : "position: relative; background-color: white;";
+	$select_tag_style =  (isset($params["style"]["select_tag_style"])) ?  $params["style"]["select_tag_style"] : "width:100%; font: 13px Arial, Verdana, Helvetica, sans-serif; background-color: rgb(244, 246, 253); padding-left: 10px;";
+	$overselect_style = (isset($params["style"]["overselect_style"])) ?  $params["style"]["overselect_style"] : "position:absolute; left: 0; right:0; top:0; bottom:0;";
+	$checkboxes_style = (isset($params["style"]["checkboxes_style"])) ?  $params["style"]["checkboxes_style"] : "display: none; border: 1px solid rgb(1, 137, 215);  background-color: white; position: absolute; width: inherit; z-index: 9999;";
+	$checkboxes_label_style = (isset($params["style"]["checkboxes_label_style"])) ?  $params["style"]["checkboxes_label_style"] : " display: block;";
+
+	$element .= "<div class='{$sel_class}' style='{$select_style}'>";
+	$element .= "<div class='{$sel_box_class}'  id='{$sel_box_id}' style='{$select_box_style}'>";
+	$element .= "<select style='{$select_tag_style}'>";
+	$element .= "<option >{$select_text}</option>";
+	$element .= "</select>";
+	$element .= "<div id='{$overselect_id}' class='{$overselect_class}' onclick='show_select_checkboxes(\"{$checkboxes_div_id}\");' style='{$overselect_style}'></div>";
+	$element .= "</div>";
+
+	$element .= "<div id='{$checkboxes_div_id}' style='{$checkboxes_style}'>";
+
+	$value = getparam($checkbox_input_name);
+	$values = explode(",",$value);
+	foreach($checkboxes as $product_tag){
+		if(strlen($product_tag)>1) {
+			$checked = (in_array($product_tag, $values)) ? "checked" : "";
+			$element .= "<label for='{$product_tag}' id='{$product_tag}1' style='{$checkboxes_label_style}'><input type='checkbox' name='{$checkbox_input_name}_ch' id='{$product_tag}' onchange='save_selected_checkboxes(\"{$checkbox_input_name}\");' {$checked} value='{$product_tag}'/>{$product_tag}</label>";
+		}
+	}
+	$element .= "</div>";
+	$element .= "</div>";
+
+	return $element;
+}
 ?>
