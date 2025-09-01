@@ -1225,7 +1225,8 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 	$performer_param = (isset($log_performer_info["performer"])) ? $log_performer_info["performer"] : "username";
 	$performer = (isset($_SESSION[$performer_param])) ? $_SESSION[$performer_param] : "";
 	$session_id = session_id();
-	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES (now(), '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
+	$date = date("Y-m-d H:i:s");
+	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES ('$date', '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
 	$result = mysqli_query($log_db_conn, $query);
 	if (!$result) {
 		error_log("Couldn't insert log to the database: " . mysqli_error($log_db_conn));
