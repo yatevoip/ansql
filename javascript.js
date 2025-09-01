@@ -2062,16 +2062,27 @@ function get_selected_options(fieldname)
  * Function saves selected checkboxes value in specific hidden field
  * @param {string} fieldname The field name.
  */
-function save_selected_checkboxes(fieldname)
+function save_selected_checkboxes(fieldname,display = false)
 {
 	var selected_options = get_selected_options(fieldname);
-	var output_box = document.getElementById(fieldname);
 	var sel_value = "";
 
 	if (selected_options) {
 		sel_value = selected_options.join(",");
 	}
 
+	var select_option = document.getElementById(fieldname+"_option");
+	var text = sel_value;
+	if (text.length > 26)
+		text = sel_value.substring(0,25)+"..."
+	if (text.length == 0)
+		text = "Choose options";
+	select_option.innerHTML = text;
+
+	if (display !== false)
+		return;
+
 	//write selected options to the hidden field
+	var output_box = document.getElementById(fieldname);
 	output_box.value = sel_value;
 }

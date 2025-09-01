@@ -8433,7 +8433,7 @@ function html_checkboxes_filter ($params = array())
 
 	$select_style = (isset($params["style"]["select_style"])) ?  $params["style"]["select_style"] : "width: 200px;";
 	$select_box_style = (isset($params["style"]["select_style"])) ?  $params["style"]["select_style"] : "position: relative; background-color: white;";
-	$select_tag_style =  (isset($params["style"]["select_tag_style"])) ?  $params["style"]["select_tag_style"] : "width:100%; font: 13px Arial, Verdana, Helvetica, sans-serif; background-color: rgb(244, 246, 253); padding-left: 10px;";
+	$select_tag_style =  (isset($params["style"]["select_tag_style"])) ?  $params["style"]["select_tag_style"] : "width:100%; font: 13px Arial, Verdana, Helvetica, sans-serif; background-color: rgb(244, 246, 253); padding-left: 2px;";
 	$overselect_style = (isset($params["style"]["overselect_style"])) ?  $params["style"]["overselect_style"] : "position:absolute; left: 0; right:0; top:0; bottom:0;";
 	$checkboxes_style = (isset($params["style"]["checkboxes_style"])) ?  $params["style"]["checkboxes_style"] : "display: none; border: 1px solid rgb(1, 137, 215);  background-color: white; position: absolute; width: inherit; z-index: 9999;";
 	$checkboxes_label_style = (isset($params["style"]["checkboxes_label_style"])) ?  $params["style"]["checkboxes_label_style"] : " display: block;";
@@ -8441,7 +8441,7 @@ function html_checkboxes_filter ($params = array())
 	$element .= "<div class='{$sel_class}' style='{$select_style}'>";
 	$element .= "<div class='{$sel_box_class}'  id='{$sel_box_id}' style='{$select_box_style}'>";
 	$element .= "<select style='{$select_tag_style}'>";
-	$element .= "<option >{$select_text}</option>";
+	$element .= "<option id='{$checkbox_input_name}_option'>{$select_text}</option>";
 	$element .= "</select>";
 	$element .= "<div id='{$overselect_id}' class='{$overselect_class}' onclick='show_select_checkboxes(\"{$checkboxes_div_id}\");' style='{$overselect_style}'></div>";
 	$element .= "</div>";

@@ -106,16 +106,9 @@ function display_db_api_logs()
  */
 function run_id_filter($run_id)
 {
-	$actual_link = (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-
-	// remove limit and page parameters before opening new tab
-	$arr_link = explode("&",$actual_link);
-	foreach($arr_link as $key=>$value) {
-		if ((strpos($value, "page") !== false) || (strpos($value, "limit") !== false))
-			unset($arr_link[$key]);
-	}
-
-	$link = implode("&", $arr_link);
+	$module = (getparam("module")) ? getparam("module") : "display_db_api_logs";
+	$protocol = (empty($_SERVER['HTTPS'])) ? 'http' : 'https';
+	$link = $protocol . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?module={$module}&method=display_db_api_logs";
 	$new_link = $link."&run_id=".$run_id;
 
 	print "<a class='llink' href='$new_link' target='_blank'>".$run_id."</a>";
@@ -271,5 +264,10 @@ function system_db_search_box($conditions = "")
 	print "<script>document.addEventListener('click', function (e) {hide_select_checkboxes(e,['log_tag','log_type','log_from']);});</script>";
 	if (!$conditions)
 		print "<script>document.getElementById('display_db_api_logs').submit();</script>";
+	else {
+		print "<script>save_selected_checkboxes('log_tag', true);</script>";
+		print "<script>save_selected_checkboxes('log_type', true);</script>";
+		print "<script>save_selected_checkboxes('log_from', true);</script>";
+	}
 }
 ?>
