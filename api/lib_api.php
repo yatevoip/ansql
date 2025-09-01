@@ -118,7 +118,7 @@ function log_request($inp, $out = null, $write_api_logs = false, $start_time = 0
 		// if true or 'both'
 		if ($save_api_log_to_db) {
 			$log_type = "api_logs";
-			add_db_log($content,$log_type);
+			add_db_log($content,$log_type,"api_logs");
 		}
 
 		if ($save_api_log_to_db === true)
