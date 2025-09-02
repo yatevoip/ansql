@@ -144,7 +144,6 @@ function build_db_log_conditions()
 		$val = getparam($param);
 		if (!strlen($val))
 			continue;
-		$val = str_replace(" ", "", $val);
 		$val = explode(",",$val);
 		if (count($val)) {
 			if ($param == "log_type")
@@ -234,7 +233,8 @@ function system_db_search_box($conditions = "")
 			    html_checkboxes_filter(array("checkboxes"=>$log_from, "checkbox_input_name"=>"log_from")),
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_contains"))." name=\"log_contains\" id=\"log_contains\" size=\"20\"/>",
 			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
-			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
+			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>',
+			    '<input type="button" value="API logs" onClick="filter_api_logs();"/>'
 			)
 		    );
 
@@ -250,7 +250,6 @@ function system_db_search_box($conditions = "")
 		"log_tag"	    => getparam("log_tag"),
 		"log_type"	    => getparam("log_type"),
 		"log_from"	    => getparam("log_from"),
-		"log_contains"	    => getparam("log_contains"),
 		"from_date"	    => getparam("from_date"),
 		"to_date"	    => getparam("to_date"),
 		"run_id"	    => getparam("run_id")

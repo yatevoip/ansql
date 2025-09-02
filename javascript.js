@@ -2086,3 +2086,23 @@ function save_selected_checkboxes(fieldname,display = false)
 	var output_box = document.getElementById(fieldname);
 	output_box.value = sel_value;
 }
+
+/**
+ * Function used by system_db_search_box to display only the API logs keeping the date, performer and performer ID filter data if set
+ */
+function filter_api_logs()
+{
+	var log_type = document.getElementById("log_type");
+	log_type.value = "api_logs";
+
+	var log_tag = document.getElementById("log_tag");
+	log_tag.value = "";
+
+	var log_from = document.getElementById("log_from");
+	log_from.value = "";
+
+	var log_contains = document.getElementById("log_contains");
+	log_contains.value = "";
+
+	document.getElementById('display_db_api_logs').submit();
+}
