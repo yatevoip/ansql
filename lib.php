@@ -8440,7 +8440,7 @@ function html_checkboxes_filter ($params = array())
 
 	$element .= "<div class='{$sel_class}' style='{$select_style}'>";
 	$element .= "<div class='{$sel_box_class}'  id='{$sel_box_id}' style='{$select_box_style}'>";
-	$element .= "<select style='{$select_tag_style}'>";
+	$element .= "<select id='{$checkbox_input_name}_select'style='{$select_tag_style}'>";
 	$element .= "<option id='{$checkbox_input_name}_option'>{$select_text}</option>";
 	$element .= "</select>";
 	$element .= "<div id='{$overselect_id}' class='{$overselect_class}' onclick='show_select_checkboxes(\"{$checkboxes_div_id}\");' style='{$overselect_style}'></div>";
@@ -8452,8 +8452,9 @@ function html_checkboxes_filter ($params = array())
 	$values = explode(",",$value);
 	foreach($checkboxes as $product_tag){
 		if(strlen($product_tag)>1) {
+			$id = $checkbox_input_name."_".$product_tag;
 			$checked = (in_array($product_tag, $values)) ? "checked" : "";
-			$element .= "<label for='{$product_tag}' id='{$product_tag}1' style='{$checkboxes_label_style}'><input type='checkbox' name='{$checkbox_input_name}_ch' id='{$product_tag}' onchange='save_selected_checkboxes(\"{$checkbox_input_name}\");' {$checked} value='{$product_tag}'/>{$product_tag}</label>";
+			$element .= "<label for='{$id}' id='{$id}1' style='{$checkboxes_label_style}'><input type='checkbox' name='{$checkbox_input_name}_ch' id='{$id}' onchange='save_selected_checkboxes(\"{$checkbox_input_name}\");' {$checked} value='{$product_tag}'/>{$product_tag}</label>";
 		}
 	}
 	$element .= "</div>";
