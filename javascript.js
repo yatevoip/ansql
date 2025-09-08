@@ -2090,10 +2090,10 @@ function save_selected_checkboxes(fieldname,display = false)
 /**
  * Function used by system_db_search_box to display only the API logs keeping the date, performer and performer ID filter data if set
  */
-function filter_api_logs()
+function filter_db_logs(type = "api_logs")
 {
 	var log_type = document.getElementById("log_type");
-	log_type.value = "api_logs";
+	log_type.value = type;
 
 	var log_tag = document.getElementById("log_tag");
 	log_tag.value = "";

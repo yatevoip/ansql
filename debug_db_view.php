@@ -233,10 +233,17 @@ function system_db_search_box($conditions = "")
 			    html_checkboxes_filter(array("checkboxes"=>$log_from, "checkbox_input_name"=>"log_from")),
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_contains"))." name=\"log_contains\" id=\"log_contains\" size=\"20\"/>",
 			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
-			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>',
-			    '<input type="button" value="API logs" onClick="filter_api_logs();"/>'
+			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
 			)
 		    );
+
+	if (in_array("api_logs",$log_type)) {
+		$fields[0][] = '<input type="button" value="API logs" onClick="filter_db_logs();"/>';
+	}
+
+	if (in_array("notification_logs",$log_type)) {
+		$fields[0][] = '<input type="button" value="Notification logs" onClick="filter_db_logs(\'notification_logs\');"/>';
+	}
 
 	if (getparam("run_id")) {
 		$title = array_merge(array("Filter by Run ID"), $title);
