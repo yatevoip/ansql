@@ -1623,11 +1623,12 @@ function display_pair($field_name, $field_format, $object, $form_identifier, $cs
 				print '<input class="'.$css.'" type="text" name="'.$form_identifier.$field_name.'_value" id="'.$form_identifier.$field_name.'_value"';
 				if (isset($field_format["size"]))
 					print " size='".$field_format["size"]."'";
-				print " value=".$value["field_value"];
+				if (isset($value["field_value"]))
+					print " value=".$value["field_value"];
 				print '>';
 				nbsp(3);
 				$display = "select_without_non_selected";
-				$value = $value["dropdown_value"];
+				$value = (isset($value["dropdown_value"])) ? $value["dropdown_value"] : null;
 			}
 			print '<select class="'.$css.'" id="'.$form_identifier.$field_name.'" ';
 			if (isset($field_format["javascript"]))
