@@ -8439,7 +8439,7 @@ function html_checkboxes_filter ($params = array())
 	$checkboxes_style = (isset($params["style"]["checkboxes_style"])) ?  $params["style"]["checkboxes_style"] : "display: none; border: 1px solid rgb(1, 137, 215);  background-color: white; position: absolute; width: inherit; z-index: 9999;";
 	$checkboxes_label_style = (isset($params["style"]["checkboxes_label_style"])) ?  $params["style"]["checkboxes_label_style"] : " display: block;";
 
-	$element .= "<div class='{$sel_class}' style='{$select_style}'>";
+	$element = "<div class='{$sel_class}' style='{$select_style}'>";
 	$element .= "<div class='{$sel_box_class}'  id='{$sel_box_id}' style='{$select_box_style}'>";
 	$element .= "<select id='{$checkbox_input_name}_select'style='{$select_tag_style}'>";
 	$element .= "<option id='{$checkbox_input_name}_option'>{$select_text}</option>";
