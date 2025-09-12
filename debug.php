@@ -1194,8 +1194,10 @@ function get_log_type($log_from=null)
  *		Array with elements - additionally to the default types, the one from the array will be added separated by comma
  *		String - only the type specified will be associated, default type will be overwritten
  * @param string $tag The log type if exists: query, output, cron...etc. This usually is taken from the debug message tag.
+ * @param string $custom_performer Custom value for performer. Usually the value is taken from $_SESSION based on configuration of $log_performer_info["performer"].
+ * @param string $custom_performer_id Custom value for performer_id. Usually the value is taken from the user_id stored in $_SESSION.
  */
-function add_db_log($msg, $additional_log_type = array(), $tag = '')
+function add_db_log($msg, $additional_log_type = array(), $tag = "", $custom_performer = "", $custom_performer_id = "")
 {
 	global $log_db_conn,$run_id,$log_performer_info;
 
@@ -1211,9 +1213,14 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 		Debug::trigger_report('critical', "Missing run_id value.");
 	}
 
+	// replace new line used in files with appropriate HTML symbol; escape message for use in SQL
 	$msg = str_replace("\n", "<br>", $msg);
 	$string = mysqli_real_escape_string($log_db_conn, $msg);
+
+	// retrieve log from
 	$log_from = get_log_from();
+
+	// build log type (additional log type can be added if specified, but usually this is a predefined value based on log from)
 	if (!is_array($additional_log_type))
 		$log_type = $additional_log_type;
 	else {
@@ -1221,11 +1228,24 @@ function add_db_log($msg, $additional_log_type = array(), $tag = '')
 		$additional_log_type[] = $orig_log_type;
 		$log_type = implode(",", $additional_log_type);
 	}
-	$performer_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "";
-	$performer_param = (isset($log_performer_info["performer"])) ? $log_performer_info["performer"] : "username";
-	$performer = (isset($_SESSION[$performer_param])) ? $_SESSION[$performer_param] : "";
+
+	// performer ID is taken from $_SESSION user_id, but can also be overwritten if $custom_performer_id is specified
+	if ($custom_performer_id)
+		$performer_id = $custom_performer_id;
+	else
+		$performer_id = (isset($_SESSION["user_id"])) ? $_SESSION["user_id"] : "";
+
+	// performer's value is taken from $_SESSION based on defined $log_performer_info (the default is 'username'), but can also be overwrittem if $custom_performer is specified
+	if ($custom_performer)
+		$performer = $custom_performer;
+	else {
+		$performer_param = (isset($log_performer_info["performer"])) ? $log_performer_info["performer"] : "username";
+		$performer = (isset($_SESSION[$performer_param])) ? $_SESSION[$performer_param] : "";
+	}
+
 	$session_id = session_id();
 	$date = date("Y-m-d H:i:s");
+
 	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES ('$date', '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
 	$result = mysqli_query($log_db_conn, $query);
 	if (!$result) {
