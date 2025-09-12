@@ -134,6 +134,8 @@ function build_db_log_conditions()
 		if ($val) {
 			if ($param == "log_contains")
 				$conditions["log"] = " LIKE '%".$val."%' OR log_tag LIKE '%".$val."%'";
+			elseif ($param == "performer")
+				$conditions["performer"] = " LIKE '%".$val."%'";
 			else
 				$conditions[$param] = "='".$val."'";
 		}
