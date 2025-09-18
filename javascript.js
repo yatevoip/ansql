@@ -2104,5 +2104,5 @@ function filter_db_logs(type = "api_logs")
 	var log_contains = document.getElementById("log_contains");
 	log_contains.value = "";
 
-	document.getElementById('display_db_api_logs').submit();
+	document.getElementById('system_db_search_box').submit();
 }

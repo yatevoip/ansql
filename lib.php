@@ -8463,4 +8463,57 @@ function html_checkboxes_filter ($params = array())
 
 	return $element;
 }
+
+function manual_db_connection($db_host, $db_user, $db_passwd, $db_database, $db_port = "")
+{
+	if (!function_exists("mysqli_connect")) {
+		error_log("Missing mysqli package for php installed on ". $db_host);
+		Debug::trigger_report('critical', "You don't have mysqli package for php installed on ". $db_host);
+                return false;
+	}
+
+	$conn = mysqli_connect($db_host, $db_user, $db_passwd, $db_database, $db_port);
+	if (!$conn) {
+		error_log("Connection failed to the log database: ". mysqli_connect_error());
+		Debug::trigger_report('critical', "Connection failed to the log database: ". mysqli_connect_error());
+                return false;
+	}
+
+	return $conn;
+}
+
+function create_log_table($db_conn, $db_database, $additional_table_columns = array())
+{
+	$query = "SHOW TABLES FROM ".$db_database." LIKE 'logs'";
+	$result = mysqli_query($db_conn, $query);
+
+	if (!$result || $result->num_rows == 0) {
+		$query = "CREATE TABLE logs (log_id bigint unsigned not null auto_increment, primary key (log_id), date timestamp, log_tag varchar(100), log_type varchar(100), log_from varchar(100), log longtext, performer_id varchar(100), performer varchar(100))";
+		$result = mysqli_query($db_conn, $query);
+		if (!$result) {
+			error_log("Could not create logs table: ". mysqli_error());
+			Debug::trigger_report('critical', "Could not create logs table: ". mysqli_error());
+		}
+	}
+
+	if (!count($additional_table_columns))
+		return;
+
+	$query = 'SHOW COLUMNS FROM logs';
+	$result = mysqli_query($db_conn, $query);
+	$column_names = array();
+	while($row = mysqli_fetch_array($result)){
+		$column_names[] = $row['Field'];
+	}
+
+	foreach($additional_table_columns as $column_name=>$type) {
+		if (!in_array($column_name,$column_names)) {
+			$res = mysqli_query($db_conn, "ALTER TABLE logs ADD ".$column_name." ".$type.";");
+			if (!$res) {
+				error_log("Could not add column '".$column_name."' to the logs table: ". mysqli_error());
+				Debug::trigger_report('critical', "Could not add column '".$column_name."' to the logs table: ". mysqli_error());
+			}
+		}
+	}
+}
 ?>

@@ -1081,72 +1081,26 @@ function connect_database_log()
 		return;
 	}
 
-	if (!function_exists("mysqli_connect")) {
-		error_log("Missing mysqli package for php installed on ". $log_db_host);
-		Debug::trigger_report('critical', "You don't have mysqli package for php installed on ". $log_db_host);
-                return false;
-	}
-
-	$conn = mysqli_connect($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, $log_db_port);
-	if (!$conn) {
-		error_log("Connection failed to the log database: ". mysqli_connect_error());
-		Debug::trigger_report('critical', "Connection failed to the log database: ". mysqli_connect_error());
-                return false;
-	}
+	$conn = manual_db_connection($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, $log_db_port);
 
 	return $conn;
 }
 
 function create_database_log()
 {
-	global $log_db_conn, $db_log_specifics,$log_db_database;
+	global $log_db_conn, $log_db_database;
 
 	if (!$log_db_conn) {
 		error_log("Connection failed to the log database: ".$log_db_database);
 		Debug::trigger_report('critical', "Couldn't connect to the log database.");
 		return;
 	}
-
-	$query = "SHOW TABLES FROM ".$log_db_database." LIKE 'logs'";
-	$result = mysqli_query($log_db_conn, $query);
-
-	if (!$result || $result->num_rows == 0) {
-		$query = "CREATE TABLE logs (log_id bigint unsigned not null auto_increment, primary key (log_id), date timestamp, log_tag varchar(100), log_type varchar(100), log_from varchar(100), log longtext, performer_id varchar(100), performer varchar(100))";
-		$result = mysqli_query($log_db_conn, $query);
-		if (!$result) {
-			error_log("Could not create logs table: ". mysqli_error());
-			Debug::trigger_report('critical', "Could not create logs table: ". mysqli_error());
-		}
-	}
-
 	$table_columns = array(
-		"date" => "timestamp",
-		"log_tag" => "varchar(100)",
-		"log_type" => "varchar(100)",
-		"log_from" => "varchar(100)",
-		"log" => "longtext",
-		"performer_id" => "varchar(100)",
-		"performer" => "varchar(100)",
-		"run_id" => "varchar(100)",
-		"session_id" => "varchar(100)"
+			"run_id" => "varchar(100)",
+			"session_id" => "varchar(100)"
 	);
 
-	$query = 'SHOW COLUMNS FROM logs';
-	$result = mysqli_query($log_db_conn, $query);
-	$column_names = array();
-	while($row = mysqli_fetch_array($result)){
-		$column_names[] = $row['Field'];
-	}
-
-	foreach($table_columns as $column_name=>$type) {
-		if (!in_array($column_name,$column_names)) {
-			$res = mysqli_query($log_db_conn, "ALTER TABLE logs ADD ".$column_name." ".$type.";");
-			if (!$res) {
-				error_log("Could not add column '".$column_name."' to the logs table: ". mysqli_error());
-				Debug::trigger_report('critical', "Could not add column '".$column_name."' to the logs table: ". mysqli_error());
-			}
-		}
-	}
+	create_log_table($log_db_conn, $log_db_database, $table_columns);
 }
 
 function generate_run_id()

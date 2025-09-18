@@ -32,25 +32,19 @@ function connect_view_db_log()
 {
 	global $view_log_db_host,$view_log_db_user,$view_log_db_database,$view_log_db_passwd,$view_log_db_port;
 
-	if (!function_exists("mysqli_connect")) {
-		error_log("Missing mysqli package for php installed on ". $view_log_db_host);
-		Debug::trigger_report('critical', "You don't have mysqli package for php installed on ". $view_log_db_host);
-                return false;
-	}
-
-	$conn = mysqli_connect($view_log_db_host, $view_log_db_user, $view_log_db_passwd, $view_log_db_database, $view_log_db_port);
-	if (!$conn) {
-		error_log("Connection failed to the log database: ". mysqli_connect_error());
-		Debug::trigger_report('critical', "Connection failed to the log database: ". mysqli_connect_error());
-                return false;
-	}
+	$conn = manual_db_connection($view_log_db_host, $view_log_db_user, $view_log_db_passwd, $view_log_db_database, $view_log_db_port);
 
 	return $conn;
 }
 
-function view_query($query)
+function view_query($query, $conn = null)
 {
 	global $view_log_db_conn;
+
+	if ($conn) {
+		$res = mysqli_query($conn, $query);
+		return $res;
+	}
 
 	if (!isset($view_log_db_conn))
               $view_log_db_conn = connect_view_db_log();
@@ -61,19 +55,15 @@ function view_query($query)
 /**
  * Function used to display database API logs with pagination and search bar. This function can be used as additional module to the application.
  */
-function display_db_api_logs()
+function display_db_api_logs($conn = null)
 {
 	global $method, $limit, $page;
-
-	/* Need to be set in order to create and display the "Cancel" button created using editObject() function. */
-	$_SESSION["previous_page"] = array("module" => "display_db_api_logs");
-	$method = "display_db_api_logs";
 
 	$total = getparam("total");
 	$conditions = build_db_log_conditions();
 
 	$query = "SELECT count(*) FROM logs ".$conditions.";";
-	$res = view_query($query);
+	$res = view_query($query,$conn);
 	$result = mysqli_fetch_assoc($res);
 	if (isset($result["count(*)"]))
 		$total = $result["count(*)"];
@@ -81,7 +71,7 @@ function display_db_api_logs()
 	items_on_page($total, null,  array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"));
 	pages($total, array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true);
 
-	system_db_search_box($conditions);
+	system_db_search_box($conditions, $conn);
 	br();
 
 	$formats = array(
@@ -96,7 +86,7 @@ function display_db_api_logs()
 	);
 
 	$query = "SELECT * FROM logs ".$conditions." limit ".$limit." offset ".$page.";";
-	$result = view_query($query);
+	$result = view_query($query, $conn);
 	$logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
 	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
 }
@@ -107,8 +97,9 @@ function display_db_api_logs()
 function run_id_filter($run_id)
 {
 	$module = (getparam("module")) ? getparam("module") : "display_db_api_logs";
+	$method = (getparam("method")) ? getparam("method") : "display_db_api_logs";
 	$protocol = (empty($_SERVER['HTTPS'])) ? 'http' : 'https';
-	$link = $protocol . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?module={$module}&method=display_db_api_logs";
+	$link = $protocol . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?module={$module}&method={$method}";
 	$new_link = $link."&run_id=".$run_id;
 
 	print "<a class='llink' href='$new_link' target='_blank'>".$run_id."</a>";
@@ -124,8 +115,6 @@ function log_display($log)
  */
 function build_db_log_conditions()
 {
-	global $log_db_conn;
-
 	$conditions = array();
 
 	$fields = array("performer","performer_id","log_contains","run_id");
@@ -189,13 +178,16 @@ function build_db_log_conditions()
 /**
  * Function builds database API logs search bar.
  */
-function system_db_search_box($conditions = "")
+function system_db_search_box($conditions = "", $conn = "")
 {
+	$module = getparam("module");
+	$method = getparam("method");
+
 	$filters = array("log_tag","log_from","log_type");
 	foreach ($filters as $filter) {
 		${$filter} = array();
 		$query = "SELECT DISTINCT ".$filter." FROM logs;";
-		$res = view_query($query);
+		$res = view_query($query,$conn);
 		if (mysqli_num_rows($res) > 0) {
 			// output data of each row
 			while($row = mysqli_fetch_assoc($res)) {
@@ -217,7 +209,7 @@ function system_db_search_box($conditions = "")
 	$from_date = getparam("from_date");
 	if (!$conditions) {
 		$query = "SELECT date FROM logs ORDER BY log_id DESC LIMIT 1;";
-		$res = view_query($query);
+		$res = view_query($query,$conn);
 		$result = mysqli_fetch_assoc($res);
 		if (isset($result["date"]))
 			$from_date = strtok($result["date"]," ");
@@ -235,7 +227,7 @@ function system_db_search_box($conditions = "")
 			    html_checkboxes_filter(array("checkboxes"=>$log_from, "checkbox_input_name"=>"log_from")),
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_contains"))." name=\"log_contains\" id=\"log_contains\" size=\"20\"/>",
 			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
-			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module=display_db_api_logs\'"/>'
+			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module='.$module.'&method='.$method.'\'"/>'
 			)
 		    );
 
@@ -264,14 +256,14 @@ function system_db_search_box($conditions = "")
 		"run_id"	    => getparam("run_id")
 	    );
 
-	start_form(null,"get");
+	start_form(null,"get",false,"system_db_search_box");
 	addHidden(null, $hidden_params);
 	formTable($fields,$title);
 	end_form();
 
 	print "<script>document.addEventListener('click', function (e) {hide_select_checkboxes(e,['log_tag','log_type','log_from']);});</script>";
 	if (!$conditions)
-		print "<script>document.getElementById('display_db_api_logs').submit();</script>";
+		print "<script>document.getElementById('system_db_search_box').submit();</script>";
 	else {
 		print "<script>save_selected_checkboxes('log_tag', true);</script>";
 		print "<script>save_selected_checkboxes('log_type', true);</script>";
