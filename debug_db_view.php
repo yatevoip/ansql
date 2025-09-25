@@ -201,6 +201,7 @@ function system_db_search_box($conditions = "", $conn = "")
 						}
 					} else
 						${$filter}[] = $row[$filter];
+						sort(${$filter});
 				}
 			}
 		}

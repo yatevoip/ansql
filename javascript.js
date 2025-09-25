@@ -1995,6 +1995,8 @@ function show_select_checkboxes(checkboxes_id)
 {
 	var checkboxes = document.getElementById(checkboxes_id);
 	if (checkboxes.style.display == "none") {
+		var styleElem = document.head.appendChild(document.createElement("style"));
+		styleElem.innerHTML = "#"+checkboxes_id+":after { position: absolute; content: ''; bottom: -40px; height: 40px; width: 1px; ";
 		checkboxes.style.display = "block";
 	} else {
 		checkboxes.style.display = "none";
