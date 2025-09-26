@@ -76,9 +76,9 @@ function display_db_api_logs($conn = null)
 
 	$formats = array(
 		"Date"		=> "date",
-		"Log tag"	=> "log_tag",
 		"Log type"	=> "log_type",
 		"Log from"	=> "log_from",
+		"Log tag"	=> "log_tag",
 		"Performer"	=> "performer",
 		"Performer ID"	=> "performer_id",
 		"function_run_id_filter:Run ID"		=> "run_id",
