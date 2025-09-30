@@ -113,7 +113,7 @@ function log_display($log)
  * Function used to build database API logs display conditions.
  * @return string
  */
-function build_db_log_conditions()
+function build_db_log_conditions($pivot_options = array())
 {
 	$conditions = array();
 
@@ -167,6 +167,8 @@ function build_db_log_conditions()
 	$where = "";
 	$count = 1;
 	foreach($conditions as $parameter=>$value) {
+		if (count($pivot_options) && !in_array($parameter,$pivot_options))
+			continue;
 		$where .= ($count == 1) ? " WHERE " : " AND ";
 		$where .= "(".$parameter.$value.")";
 		$count++;
@@ -185,8 +187,9 @@ function system_db_search_box($conditions = "", $conn = "")
 
 	$filters = array("log_tag","log_from","log_type");
 	foreach ($filters as $filter) {
+		$where = build_db_log_conditions(array("date","run_id"));
 		${$filter} = array();
-		$query = "SELECT DISTINCT ".$filter." FROM logs;";
+		$query = "SELECT DISTINCT ".$filter." FROM logs ".$where.";";
 		$res = view_query($query,$conn);
 		if (mysqli_num_rows($res) > 0) {
 			// output data of each row
