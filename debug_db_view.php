@@ -60,7 +60,7 @@ function display_db_api_logs($conn = null)
 	global $method, $limit, $page;
 
 	$total = getparam("total");
-	$conditions = build_db_log_conditions();
+	$conditions = build_db_log_conditions($conn);
 
 	$query = "SELECT count(*) FROM logs ".$conditions.";";
 	$res = view_query($query,$conn);
@@ -113,14 +113,21 @@ function log_display($log)
  * Function used to build database API logs display conditions.
  * @return string
  */
-function build_db_log_conditions($pivot_options = array())
+function build_db_log_conditions($conn, $pivot_options = array())
 {
+	global $view_log_db_conn;
+
+	if (empty($conn))
+		$conn = $view_log_db_conn;
+
 	$conditions = array();
 
 	$fields = array("performer","performer_id","log_contains","run_id");
 	foreach ($fields as $param) {
 		$val = getparam($param);
 		if ($val) {
+			if ($conn)
+				$val = mysqli_real_escape_string($conn,$val);
 			if ($param == "log_contains")
 				$conditions["log"] = " LIKE '%".$val."%' OR log_tag LIKE '%".$val."%'";
 			elseif ($param == "performer")
@@ -136,6 +143,13 @@ function build_db_log_conditions($pivot_options = array())
 		if (!strlen($val))
 			continue;
 		$val = explode(",",$val);
+		if ($conn) {
+			$values = array();
+			foreach($val as $elem) {
+				$values[] = mysqli_real_escape_string($conn,$elem);
+			}
+			$val = $values;
+		}
 		if (count($val)) {
 			if ($param == "log_type")
 				$conditions[$param] = " LIKE '%".implode("%' OR ".$param." LIKE '%",$val)."%'";
@@ -151,10 +165,14 @@ function build_db_log_conditions($pivot_options = array())
 		if ($from_date) {
 			$start_time = (getparam("start_time")) ? getparam("start_time") : "00:00:00";
 			$start = $from_date." ".$start_time;
+			if ($conn)
+				$start = mysqli_real_escape_string($conn,$start);
 		}
 		if ($to_date) {
 			$end_time = (getparam("end_time")) ? getparam("end_time") : "23:59:59.99";
 			$end = $to_date." ".$end_time;
+			if ($conn)
+				$end = mysqli_real_escape_string($conn,$end);
 		}
 		if ($start && $end)
 			$conditions["date"] = ">'".$start."' AND date<'".$end."'";
@@ -187,7 +205,7 @@ function system_db_search_box($conditions = "", $conn = "")
 
 	$filters = array("log_tag","log_from","log_type");
 	foreach ($filters as $filter) {
-		$where = build_db_log_conditions(array("date","run_id"));
+		$where = build_db_log_conditions($conn, array("date","run_id"));
 		${$filter} = array();
 		$query = "SELECT DISTINCT ".$filter." FROM logs ".$where.";";
 		$res = view_query($query,$conn);

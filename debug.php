@@ -1200,6 +1200,12 @@ function add_db_log($msg, $additional_log_type = array(), $tag = "", $custom_per
 	$session_id = session_id();
 	$date = date("Y-m-d H:i:s");
 
+	$tag = mysqli_real_escape_string($log_db_conn,$tag);
+	$log_type = mysqli_real_escape_string($log_db_conn,$log_type);
+	$log_from = mysqli_real_escape_string($log_db_conn,$log_from);
+	$performer_id = mysqli_real_escape_string($log_db_conn,$performer_id);
+	$performer = mysqli_real_escape_string($log_db_conn,$performer);
+
 	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES ('$date', '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
 	$result = mysqli_query($log_db_conn, $query);
 	if (!$result) {
