@@ -86,6 +86,8 @@ if(is_file("defaults.php"))
 if(is_file("config.php"))
 	include_once("config.php");
 
+require_once "lib.php";
+
 /*Include bug_report.php file.*/
 if (is_file("ansql/default_classes/bug_report.php")) {
 	include_once("ansql/default_classes/bug_report.php");
