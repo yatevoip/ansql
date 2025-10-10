@@ -572,7 +572,6 @@ class Debug
 			self::output("critical","Error in Debug::debug() tag=$tag, empty message in .",false);
 			return;
 		}
-		$orig = $message;
 		if (!in_array($tag, $critical_tags) &&  $max_xdebug_mess && strlen($message)>$max_xdebug_mess)
 			$message = substr($message,0,$max_xdebug_mess)." - (truncated)";
 		$outputted = false;
@@ -583,14 +582,12 @@ class Debug
 				self::concat_xdebug("\n$date".strtoupper($tag).": ".$message);
 			else {
 				$outputted = true;
-				$message = $orig;
 				self::output($tag, $message, false);
 			}
 		} 
 		if (!$outputted) {
 			foreach ($debug_filters as $filter) {
 				if (false!==stripos($message,$filter)) {
-					$message = $orig;
 					self::output($tag, $message, false);
 					break;
 				}
