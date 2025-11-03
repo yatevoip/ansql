@@ -1212,4 +1212,38 @@ function add_db_log($msg, $additional_log_type = array(), $tag = "", $custom_per
 		Debug::trigger_report('critical', "Couldn't insert log to the database: " . mysqli_error($log_db_conn));
 	}
 }
+
+/**
+ * Function used to clean Database/API logs. The default is to clean logs older than 3 months.
+ * @global string $clean_time_db_logs The period of time for logs to be kept. If not set, logs older than '3 MONTH' will be deleted. This parameter can be set in project config.php/default.php.
+ * @global string $log_db_host
+ * @global string $log_db_user
+ * @global string $log_db_database
+ * @global string $log_db_passwd
+ * @global string $log_db_port
+ */
+function clean_old_db_logs()
+{
+	global $clean_time_db_logs;
+	global $log_db_host,$log_db_user,$log_db_database,$log_db_passwd,$log_db_port;
+
+	$conn = manual_db_connection($log_db_host, $log_db_user, $log_db_passwd, $log_db_database, $log_db_port);
+	if ($conn === false) {
+		Debug::xdebug('clean_old_db_logs', "Could not connect to API database logs;");
+		return array(false, "Could not connect to API database logs;");
+	}
+
+	$clean_time = (isset($clean_time_db_logs)) ? $clean_time_db_logs : "3 MONTH";
+	$time = mysqli_real_escape_string($conn,$clean_time);
+	$query = "DELETE from logs WHERE date<=(NOW()-INTERVAL ".$time.");";
+
+	$res = mysqli_query($conn, $query);
+	if (!$res) {
+		//error_log("Could not delete API logs from database: ". mysqli_error());
+		Debug::xdebug('clean_old_db_logs', "Could not delete API logs from database: ". mysqli_error());
+		return array(false, "Could not delete API logs from database: ". mysqli_error());
+	}
+	Debug::xdebug('clean_old_db_logs', "Successfully deleted the expired API logs from database.");
+	return array(true, "Successfully deleted the expired API logs from database.");
+}
 ?>
