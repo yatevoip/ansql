@@ -87,13 +87,14 @@ function process_request($req, $params)
 	// GET and DELETE are clear enough
 	$renamed_req = str_replace(array("post_", "put_", "delete_"), array("add_", "edit_", "del_"), $req);
 	$filename = "api/requests/" . $renamed_req . ".php";
+	$log_params = array("request" => $req, "params" => $params);
 	if (stream_resolve_include_path($filename)) {
 		$req = $renamed_req;
 	} else {
 		$filename = "api/requests/" . $req . ".php";
 		if (!stream_resolve_include_path($filename)) {
 			Debug::xdebug("api", "Filename $filename doesn't exist.");
-			return build_error(405, "Method not allowed");
+			return build_error(405, "Method not allowed", $log_params);
 		}
 	}
 	
@@ -110,7 +111,7 @@ function process_request($req, $params)
 		$res = call_user_func($func_name, $params);
 	}
 	
-	$log_params = array("request" => $req, "params" => $params);
+	// $log_params = array("request" => $req, "params" => $params);
 	if ($res[0]) {
 		/*Check if the global variable is set and its name is a valid function.*/
 		if (isset($func_build_success_api_response) && is_callable($func_build_success_api_response)) {
