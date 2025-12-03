@@ -1149,6 +1149,7 @@ function get_log_type($log_from=null)
  * @param string $tag The log type if exists: query, output, cron...etc. This usually is taken from the debug message tag.
  * @param string $custom_performer Custom value for performer. Usually the value is taken from $_SESSION based on configuration of $log_performer_info["performer"].
  * @param string $custom_performer_id Custom value for performer_id. Usually the value is taken from the user_id stored in $_SESSION.
+ * Note: DO NOT EVER USE DEBUG MESSAGES HERE AS IT WILL CREATE A LOOP, TRYING TO LOG THE DEBUG MESSAGES. ONLY APACHE ERRORS 'error_log' FUNCTION SHOULD BE USED.
  */
 function add_db_log($msg, $additional_log_type = array(), $tag = "", $custom_performer = "", $custom_performer_id = "")
 {
@@ -1161,10 +1162,8 @@ function add_db_log($msg, $additional_log_type = array(), $tag = "", $custom_per
 		return;
 	}
 
-	if (!isset($run_id)) {
+	if (!isset($run_id))
 		error_log("Missing run_id value.");
-		Debug::trigger_report('critical', "Missing run_id value.");
-	}
 
 	// replace new line used in files with appropriate HTML symbol; escape message for use in SQL
 	$msg = str_replace("\n", "<br>", $msg);
@@ -1207,10 +1206,8 @@ function add_db_log($msg, $additional_log_type = array(), $tag = "", $custom_per
 
 	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES ('$date', '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
 	$result = mysqli_query($log_db_conn, $query);
-	if (!$result) {
+	if (!$result)
 		error_log("Couldn't insert log to the database: " . mysqli_error($log_db_conn));
-		Debug::trigger_report('critical', "Couldn't insert log to the database: " . mysqli_error($log_db_conn));
-	}
 }
 
 /**
