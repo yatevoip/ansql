@@ -232,7 +232,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 			}
 			$inp = json_decode($ret,true);
 			if (!$inp || $inp==$ret) {
-				$resp = array("code"=>"-101", "message"=>_("Could not parse JSON response."));
+				$resp = array("code"=>"-101", "message"=>_("Could not parse JSON response."), "http_code"=>$http_code);
 				write_error($request, $out, $ret, $http_code, $url, $resp, $trigger_report);
 				curl_close($curl);
 				return $resp;
@@ -246,10 +246,10 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 				// else
 				//       bad luck, maybe submit bug report
 			}*/
-			return $inp;
+			return array_merge($inp, array("http_code"=>$http_code));
 		} elseif ($type == "image/jpeg") {
 			if ($response_is_array) {
-				$resp = array("code"=>"-102", "message"=>_("Invalid content type image/jpeg for response."));
+				$resp = array("code"=>"-102", "message"=>_("Invalid content type image/jpeg for response."), "http_code"=>$http_code);
 				write_error($request, $out, $ret, $http_code, $url, $resp, $trigger_report);
 				return $resp;
 			
@@ -262,7 +262,7 @@ function make_curl_request($out, $request=null, $response_is_array=true, $recurs
 			return $ret;
 		} else {
 			//print $ret;
-			$resp = array("code"=>"-101", "message"=>_("Could not parse response from API. Got unknown type $type."));
+			$resp = array("code"=>"-101", "message"=>_("Could not parse response from API. Got unknown type $type."), "http_code"=>$http_code);
 			write_error($request, $out, $ret, $http_code, $url, $resp, $trigger_report);
 			curl_close($curl);
 			return $resp;
