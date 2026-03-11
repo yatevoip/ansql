@@ -6507,16 +6507,16 @@ function fill_td($total)
 
 function bool_value($value) 
 {
-	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true || $value=== "true" )
+	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true || $value==="true" || $value==="active")
 		return true;
 	return false;
 }
 
 function tri_bool_value($value)
 {
-	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true || $value=== "true" )
+	if ($value==="t" || $value==="1" || $value===1 || $value=="on" || $value===true || $value==="true" || $value==="active")
 		$res = "on";
-	elseif ($value==="f" || $value==="0" || $value===0 || $value=="off" || $value===false)
+	elseif ($value==="f" || $value==="0" || $value===0 || $value=="off" || $value===false || $value==="disabled")
 		$res = "off";
 	else
 		$res = "";
