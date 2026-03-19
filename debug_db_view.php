@@ -249,7 +249,7 @@ function system_db_search_box($conditions = "", $conn = "")
 			    html_checkboxes_filter(array("checkboxes"=>$log_from, "checkbox_input_name"=>"log_from")),
 			    "<input type=\"text\" value=". html_quotes_escape(getparam("log_contains"))." name=\"log_contains\" id=\"log_contains\" size=\"20\"/>",
 			    "&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\" />",
-			    '<input type="reset" value="Reset" onClick="window.location=\'main.php?module='.$module.'&method='.$method.'\'"/>'
+			    '<input type="reset" value="Reset" onClick="window.location=\''.$_SERVER['PHP_SELF'].'?module='.$module.'&method='.$method.'\'"/>'
 			)
 		    );
 
@@ -278,7 +278,7 @@ function system_db_search_box($conditions = "", $conn = "")
 		"run_id"	    => getparam("run_id")
 	    );
 
-	start_form(null,"get",false,"system_db_search_box");
+	start_form($_SERVER['PHP_SELF'],"get",false,"system_db_search_box");
 	addHidden(null, $hidden_params);
 	formTable($fields,$title);
 	end_form();
