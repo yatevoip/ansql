@@ -1715,7 +1715,10 @@ class Model
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
 
-		$var_length = strlen($value);
+		if (function_exists("mb_strlen"))
+			$var_length = mb_strlen($value);
+		else
+			$var_length = strlen($value);
 		$allowed_length = explode("(", $type);
 		$allowed_length = substr($allowed_length[1],0,-1);
 		$allowed_length = (int)$allowed_length;
