@@ -650,6 +650,9 @@ class Debug
 			$arr = array($arr);
 
 		for ($i=0; $i<count($arr); $i++) {
+			// skip 'console' option in order to not duplicate logs when this is set. Only debug_messages will be displayed in cli, xdebug and output logs won't be displayed.
+			if ($arr[$i] == "console")
+				continue;
 			if ($arr[$i] == "web") {
 				print "\n<p class='debugmess'>$msg</p>\n";
 			} elseif (isset($db_log) && $db_log == true) {
