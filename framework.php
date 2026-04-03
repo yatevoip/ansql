@@ -1046,7 +1046,9 @@ function esc($col)
 	return Database::escape_string().$col.Database::escape_string();
 }
 
-// general model for defining an object that will be mapped to an sql table 
+// general model for defining an object that will be mapped to an sql table
+// Add attribute #[AllowDynamicProperties] so that Model does not emit any deprecation notices even though it sets properties dynamically.
+#[AllowDynamicProperties]
 class Model
 {
 	protected $_model;

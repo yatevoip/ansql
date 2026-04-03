@@ -7251,8 +7251,8 @@ function check_file_upload($ext, $name = "insert_file_location")
 	
 	if ($last_error!==NULL) {
 		$err_type = translate_error_type($last_error["type"]);
-		
-		return array(false, "Encountered PHP error: Type: '".$err_type . "' , Message: '" . $last_error["message"] ."'", array());
+		if (strpos($err_type, "ERROR") !== false)
+			return array(false, "Encountered PHP error: Type: '".$err_type . "' , Message: '" . $last_error["message"] ."'", array());
 	}
 	if (!is_array($_FILES) || !count($_FILES))
 		return array(false, "No file uploaded!", array());
