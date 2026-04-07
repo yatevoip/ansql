@@ -693,7 +693,7 @@ class Database
 	 * @param $vars Array of variables for this object
 	 * @return Bool value showing if the update succeeded or not
 	 */
-	public static function updateTable($table,$vars)
+	public static function updateTable($table,$vars,$db_identifier=null)
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"dbstruct");
 
@@ -702,9 +702,12 @@ class Database
 		if (!self::connect())
 			return false;
 
+		if (!$db_identifier)
+			$db_identifier = $db_database;
+
 		switch ($db_type) {
 			case "mysql":
-				$query = "SHOW TABLES FROM ".$db_database." LIKE '".$table."'";
+				$query = "SHOW TABLES FROM ".$db_identifier." LIKE '%".$table."%'";
 				$res = self::queryRaw($query);
 				if (!$res)
 				{
@@ -2886,7 +2889,7 @@ class Model
 					continue;
 
 				$table = $object->getTableName();
-				if (!Database::updateTable($table,$vars))
+				if (!Database::updateTable($table,$vars,$db_identifier))
 				{
 					Debug::xdebug('critical',_("Could not update table of class")." $class");
 					//return false;
