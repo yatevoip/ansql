@@ -89,6 +89,8 @@ function display_db_api_logs($conn = null)
 	$result = view_query($query, $conn);
 	$logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
 	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
+
+	pages($total, array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true,"pages_bottom");
 }
 
 /*
