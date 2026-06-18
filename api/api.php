@@ -77,7 +77,7 @@ function default_api_function()
 }
 
 
-function process_request($req, $params)
+function process_request($req, $params, $full_request = null)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"api");
 	
@@ -106,7 +106,7 @@ function process_request($req, $params)
 	
 	// If $func_specific_process_request is set the auth token is checked and validate and then the API is called.
 	if (isset($func_specific_process_request) && is_callable($func_specific_process_request)) {
-		$res = call_user_func_array($func_specific_process_request, array($func_name, $params));
+		$res = call_user_func_array($func_specific_process_request, array($func_name, $params, $full_request));
 	} else {
 		$res = call_user_func($func_name, $params);
 	}
@@ -327,7 +327,7 @@ function valid_ctype($ctype)
 function do_post_put($ctype, $method, $uri)
 {
 	Debug::func_start(__FUNCTION__,func_get_args(),"api");
-	list($method, $input, $node_type) = decode_post_put($ctype, $method, $uri);
+	list($method, $input, $node_type, $full_request) = decode_post_put($ctype, $method, $uri);
 
 	if ($input === null)
 		return array("code"=>415, "message"=>"Unparsable JSON content");
@@ -335,7 +335,7 @@ function do_post_put($ctype, $method, $uri)
 	if (@$uri["id"])
 		$input[$uri["object"] . "_id"] = $uri["id"];
 
-	return process_request($method, $input);
+	return process_request($method, $input, $full_request);
 }
 
 function do_get($ctype, $uri)
