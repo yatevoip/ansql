@@ -62,17 +62,25 @@ function display_db_api_logs($conn = null)
 	$total = getparam("total");
 	$conditions = build_db_log_conditions($conn);
 
-	$query = "SELECT count(*) FROM logs ".$conditions.";";
-	$res = view_query($query,$conn);
-	$result = mysqli_fetch_assoc($res);
-	if (isset($result["count(*)"]))
-		$total = $result["count(*)"];
+	//display entries only if there is a condition set
+	if (!$conditions) {
+		$total = 0;
+	} else {
+		$query = "SELECT count(*) FROM logs ".$conditions.";";
+		$res = view_query($query,$conn);
+		$result = mysqli_fetch_assoc($res);
+		if (isset($result["count(*)"]))
+			$total = $result["count(*)"];
+	}
 
 	items_on_page($total, null,  array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"));
 	pages($total, array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true);
 
 	system_db_search_box($conditions, $conn);
 	br();
+
+	if (!$conditions)
+		return;
 
 	$formats = array(
 		"Date"		=> "date",
@@ -286,12 +294,15 @@ function system_db_search_box($conditions = "", $conn = "")
 	end_form();
 
 	print "<script>document.addEventListener('click', function (e) {hide_select_checkboxes(e,['log_tag','log_type','log_from']);});</script>";
-	if (!$conditions)
-		print "<script>document.getElementById('system_db_search_box').submit();</script>";
-	else {
-		print "<script>save_selected_checkboxes('log_tag', true);</script>";
-		print "<script>save_selected_checkboxes('log_type', true);</script>";
-		print "<script>save_selected_checkboxes('log_from', true);</script>";
-	}
+
+	// we no longer want the page to preload current day logs
+	//if (!$conditions) {
+	//	print "<script>document.getElementById('system_db_search_box').submit();</script>";
+	//      return;
+	//}
+
+	print "<script>save_selected_checkboxes('log_tag', true);</script>";
+	print "<script>save_selected_checkboxes('log_type', true);</script>";
+	print "<script>save_selected_checkboxes('log_from', true);</script>";
 }
 ?>
