@@ -707,7 +707,7 @@ class Database
 
 		switch ($db_type) {
 			case "mysql":
-				$query = "SHOW TABLES FROM ".$db_identifier." LIKE '%".$table."%'";
+				$query = "SHOW TABLES FROM ".$db_identifier." LIKE '".$table."'";
 				$res = self::queryRaw($query);
 				if (!$res)
 				{
