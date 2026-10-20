@@ -331,6 +331,8 @@ class Debug
 					chdir($path);
 					if (file_exists('run_in_background.php')) {
 						$arguments = array("params" => $out, "url" => $debug_notify["api"][0]);
+						self::output(__METHOD__, "Run the trigger report in background on another process.");
+						self::output(__METHOD__, "Make_trigger_report Input: " . json_encode($arguments));
 						// exec_async("make_trigger_report", $arguments, 10, true, true); // This one is used for testing.
 						exec_async("make_trigger_report", $arguments, 0, false, true);
 					} else
