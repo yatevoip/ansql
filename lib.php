@@ -8516,4 +8516,48 @@ function create_log_table($db_conn, $db_database, $additional_table_columns = ar
 		}
 	}
 }
+
+/**
+ * Function used to execute the run_in_background.php script on another process.
+ * @param $method String. The method name to be called by the script execution.
+ * @param $arguments Array. List of arguments to be sent to the script.
+ * @param $waiting_time Int. Waiting time before script execution in seconds. Default 0 seconds.
+ * @param $waiting_response Bool. Default False, if true the function waits response of the exec() command.
+ * Execution details:
+ * ->php run_in_background.php {method} {arguments} {waiting_time_before_execution} {return_execution_response}
+ *	- method - function name to be called.
+ *	- arguments - function arguments encoded (json format encoded)
+ *	- waiting_time - if set, the script wait defined time before execution. Otherwise run immediately.
+ *	- waiting_response - if set, the script will return results towards exec_async_script() function. Otherwise, the script execution will be in the background. The main running process not waiting response of this script execution.
+ *	The last two arguments are not mandatory.
+ */
+function exec_async($method, $arguments, $waiting_time = 0, $waiting_response = false, $keep_run_id = false)
+{
+	global $run_id;
+	
+	Debug::func_start(__FUNCTION__,func_get_args());
+	
+	// Encode arguments.
+	$argvs = urlencode(json_encode($arguments));
+	
+	// Build exec command to be run.
+	$command = 'php run_in_background.php ' . $method . " " . $argvs;
+	
+	if ($keep_run_id) {
+		$command .= " {$waiting_time}";
+		$command .= " {$run_id}";
+	} elseif ($waiting_time)
+		$command .= " {$waiting_time}"; // Set a time interval before the script execution.
+	
+	// This config not wait response of the exec command.
+	if (!$waiting_response)
+		$command .= " > /dev/null 2>/dev/null &";
+	
+	Debug::output(__FUNCTION__, "Preparing to execute: " . $command);
+	
+	// To display the result of the exec() command you have to declare the second argument of exec() command.
+	// The result of command will be redirected to the second argument. Example:  exec($command, $output);
+	exec($command);
+}
+
 ?>

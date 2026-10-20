@@ -326,9 +326,16 @@ class Debug
 				if ($dev_debug_mail)
 					$out["email"] = $dev_debug_mail;
 				
-				if (class_exists("Bug_report") && Bug_report::aggregate_report($out))
-					$res = make_curl_request($out, $debug_notify["api"][0], true,true,true,false,false);
-				else {
+				if (class_exists("Bug_report") && Bug_report::aggregate_report($out)) {
+					$path = dirname(__DIR__, 1);
+					chdir($path);
+					if (file_exists('run_in_background.php')) {
+						$arguments = array("params" => $out, "url" => $debug_notify["api"][0]);
+						// exec_async("make_trigger_report", $arguments, 10, true, true); // This one is used for testing.
+						exec_async("make_trigger_report", $arguments, 0, false, true);
+					} else
+						$res = make_curl_request($out, $debug_notify["api"][0], true, true, true, false, false);
+				} else {
 					$declared_classes = get_declared_classes();
 					self::output("Critical", "Class 'Bug_report' not found. Declared classes are :".implode(", ",$declared_classes));
 				}
@@ -965,7 +972,7 @@ function dump_session()
 	global $cb_dump_session;
 
 	if (isset($cb_dump_session) && is_callable($cb_dump_session))
-		call_user_func($db_dump_session);
+		call_user_func($cb_dump_session);
 	else {
 		//detect if is $_SESSION[xdebug] too large and drop it if so
 		if (function_exists("memory_get_usage")) {
