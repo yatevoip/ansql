@@ -1059,6 +1059,10 @@ class Model
 	protected $_invalid;
 	//whether the params for a certain object were set or not. It is set to true in setParams dar is called from setObj
 	protected $_set;
+	
+	// Default false. If it's true, strings will be truncated if their length is bigger than max length accepted. Called from setObj.
+	protected $_strip;
+	
 	//whether a select or extendedSelect was performed on the object 
 	protected $_retrieved;
 
@@ -1083,6 +1087,7 @@ class Model
 		$this->_invalid = false;
 		$this->_model = self::getVariables(get_class($this));
 		$this->_set = false;
+		$this->_strip = false;
 		$this->_retrieved = false;
 		if (!is_array($this->_model))
 			return;
@@ -1572,25 +1577,37 @@ class Model
 	public function setParams($params)
 	{
 		Debug::func_start(__METHOD__,func_get_args(),"framework");
-
+		
 		$this->_set = true;
 		$this->_modified_col = array();
-
-		foreach($params as $param_name=>$param_value) {
+		
+		foreach($params as $param_name => $param_value) {
 			$var = $this->variable($param_name);
 			if ($var) {
-				if($var->_type=="bool") {
+				if($var->_type == "bool") {
 					$param_value = Model::sqlBool($param_value);
-
 					if (Database::boolValue($param_value) !== Database::boolValue($this->{$param_name}))
 						$this->_modified_col[$param_name] = true;
-				
-				} elseif ($var->_type=="text" || substr($var->_type,0,7)=="varchar") {
+				} elseif ($var->_type == "text" || substr($var->_type, 0, 7) == "varchar") {
+					// Truncate string if its length exceeds the maximum allowed length.
+					if ($this->_strip && substr($var->_type, 0, 7) == "varchar") {
+						$mb_func = false;
+						// Use the 'mb' functions if the server suports them.
+						if (function_exists('mb_substr'))
+							$mb_func = true;
+						
+						$max_length = intval(substr($var->_type, 8, -1));
+						if ($mb_func){
+							if ($max_length && (mb_strlen($param_value) > $max_length))
+								$param_value = mb_substr($param_value, 0, $max_length);
+						} else {
+							if ($max_length && (strlen($param_value) > $max_length))
+								$param_value = substr($param_value, 0, $max_length);
+						}
+					}
 					$param_value = Model::sqlString($param_value);
-
 					if ($this->{$param_name} !== $param_value)
 						$this->_modified_col[$param_name] = true;
-					
 				} else {
 					if($this->{$param_name} != $param_value)
 						$this->_modified_col[$param_name] = true;
