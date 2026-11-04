@@ -1087,7 +1087,6 @@ class Model
 		$this->_invalid = false;
 		$this->_model = self::getVariables(get_class($this));
 		$this->_set = false;
-		$this->_strip = false;
 		$this->_retrieved = false;
 		if (!is_array($this->_model))
 			return;
