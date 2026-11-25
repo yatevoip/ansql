@@ -1107,8 +1107,9 @@ function create_database_log()
 		return;
 	}
 	$table_columns = array(
-			"run_id" => "varchar(100)",
-			"session_id" => "varchar(100)"
+		"run_id"	=> "varchar(100)",
+		"session_id"	=> "varchar(100)",
+		"session_identifier"	=> "varchar(20)"
 	);
 
 	create_log_table($log_db_conn, $log_db_database, $table_columns);
@@ -1216,7 +1217,11 @@ function add_db_log($msg, $additional_log_type = array(), $tag = "", $custom_per
 	$performer_id = mysqli_real_escape_string($log_db_conn,$performer_id);
 	$performer = mysqli_real_escape_string($log_db_conn,$performer);
 
-	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id) VALUES ('$date', '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id')";
+	// Added the session_identifier. The 'session_identifier' is retrieved from $_SESSION.
+	$session_identifier = (isset($_SESSION["session_identifier"])) ? $_SESSION["session_identifier"] : "";
+	$session_identifier = mysqli_real_escape_string($log_db_conn, $session_identifier);
+
+	$query = "INSERT INTO logs (date, log_tag, log_type, log_from, log, performer_id, performer, run_id, session_id, session_identifier) VALUES ('$date', '$tag', '$log_type', '$log_from', '$string', '$performer_id', '$performer', '$run_id', '$session_id', '$session_identifier')";
 	$result = mysqli_query($log_db_conn, $query);
 	if (!$result)
 		error_log("Couldn't insert log to the database: " . mysqli_error($log_db_conn));
