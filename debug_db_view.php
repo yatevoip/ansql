@@ -57,7 +57,7 @@ function view_query($query, $conn = null)
  */
 function display_db_api_logs($conn = null)
 {
-	global $method, $limit, $page;
+	global $method, $limit, $page, $extra_log_params_view;
 
 	$total = getparam("total");
 	$conditions = build_db_log_conditions($conn);
@@ -73,8 +73,13 @@ function display_db_api_logs($conn = null)
 			$total = $result["count(*)"];
 	}
 
-	items_on_page($total, null,  array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"));
-	pages($total, array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true);
+	$link_params =  array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id");
+	if (isset($extra_log_params_view) && is_array($extra_log_params_view)) {
+		$link_params = array_merge($link_params,$extra_log_params_view);
+	}
+
+	items_on_page($total, null,  $link_params);
+	pages($total, $link_params,true);
 
 	system_db_search_box($conditions, $conn);
 	br();
@@ -89,16 +94,31 @@ function display_db_api_logs($conn = null)
 		"Log tag"	=> "log_tag",
 		"Performer"	=> "performer",
 		"Performer ID"	=> "performer_id",
-		"function_run_id_filter:Run ID"		=> "run_id",
-		"function_log_display:Log"		=> "log",
+		"function_run_id_filter:Run ID"		=> "run_id"
 	);
+
+	if (isset($extra_log_params_view) && is_array($extra_log_params_view)) {
+		$extra_view = array("session_identifier"=>"function_session_identifier_filter:Session Identifier");
+		foreach ($extra_log_params_view as $extra_param) {
+			if (isset($extra_view[$extra_param])) {
+				$format = $extra_view[$extra_param];
+				$formats[$format] = $extra_param;
+			} else {
+				$format = ucfirst($extra_param);
+				$format = str_replace("_", " ", $format);
+				$formats[$format] = $extra_param;
+			}
+		}
+	}
+
+	$formats["function_log_display:Log"] = "log";
 
 	$query = "SELECT * FROM logs ".$conditions." limit ".$limit." offset ".$page.";";
 	$result = view_query($query, $conn);
 	$logs = mysqli_fetch_all($result, MYSQLI_ASSOC);
 	table($logs, $formats, "Logs", "", array(), array(), NULL, false, "content");
 
-	pages($total, array("log_tag","log_type","log_from","log_contains","performer","performer_id","from_date","to_date","start_time","end_time","run_id"),true,"pages_bottom");
+	pages($total,$link_params,true,"pages_bottom");
 }
 
 /*
@@ -113,6 +133,17 @@ function run_id_filter($run_id)
 	$new_link = $link."&run_id=".$run_id;
 
 	print "<a class='llink' href='$new_link' target='_blank'>".$run_id."</a>";
+}
+
+function session_identifier_filter($session_identifier)
+{
+	$module = (getparam("module")) ? getparam("module") : "display_db_api_logs";
+	$method = (getparam("method")) ? getparam("method") : "display_db_api_logs";
+	$protocol = (empty($_SERVER['HTTPS'])) ? 'http' : 'https';
+	$link = $protocol . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?module={$module}&method={$method}";
+	$new_link = $link."&session_identifier=".$session_identifier;
+
+	print "<a class='llink' href='$new_link' target='_blank'>".$session_identifier."</a>";
 }
 
 function log_display($log)
@@ -132,7 +163,7 @@ function build_db_log_conditions($conn, $pivot_options = array())
 
 	$conditions = array();
 
-	$fields = array("performer","performer_id","log_contains","run_id");
+	$fields = array("performer","performer_id","log_contains","run_id","session_identifier");
 	foreach ($fields as $param) {
 		$val = getparam($param);
 		if ($val) {
@@ -215,7 +246,7 @@ function system_db_search_box($conditions = "", $conn = "")
 
 	$filters = array("log_tag","log_from","log_type");
 	foreach ($filters as $filter) {
-		$where = build_db_log_conditions($conn, array("date","run_id"));
+		$where = build_db_log_conditions($conn, array("date","run_id","session_identifier"));
 		${$filter} = array();
 		$query = "SELECT DISTINCT ".$filter." FROM logs ".$where.";";
 		$res = view_query($query,$conn);
@@ -271,6 +302,11 @@ function system_db_search_box($conditions = "", $conn = "")
 		$fields[0][] = '<input type="button" value="Notification logs" onClick="filter_db_logs(\'notification_logs\');"/>';
 	}
 
+	if (getparam("session_identifier")) {
+		$title = array_merge(array("Filter by Session Identifier"), $title);
+		$fields[0] = array_merge(array("<span style='color:#000;'>".getparam("session_identifier")."</span> <input type='checkbox' id='filter_session_identifier' name='filter_session_identifier' onchange='remove_session_identifier();' checked/>"), $fields[0]);
+	}
+
 	if (getparam("run_id")) {
 		$title = array_merge(array("Filter by Run ID"), $title);
 		$fields[0] = array_merge(array("<span style='color:#000;'>".getparam("run_id")."</span> <input type='checkbox' id='filter_run_id' name='filter_run_id' onchange='remove_run_id();' checked/>"), $fields[0]);
@@ -285,7 +321,8 @@ function system_db_search_box($conditions = "", $conn = "")
 		"log_from"	    => getparam("log_from"),
 		"from_date"	    => getparam("from_date"),
 		"to_date"	    => getparam("to_date"),
-		"run_id"	    => getparam("run_id")
+		"run_id"	    => getparam("run_id"),
+		"session_identifier"=> getparam("session_identifier")
 	    );
 
 	start_form($_SERVER['PHP_SELF'],"get",false,"system_db_search_box");

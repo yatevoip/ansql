@@ -1986,6 +1986,19 @@ function remove_run_id()
 	window.location.replace(link);
 }
 
+/**
+ * Function used to load database log page after removing filter by run_id while keeping all the other filters if present
+ */
+function remove_session_identifier()
+{
+	var current_url = window.location.href;
+
+	var arr = current_url.split("&");
+	var filteredarray = arr.filter(elem => elem.includes("session_identifier") !== true);
+	var link = filteredarray.join("&");
+
+	window.location.replace(link);
+}
 
 /**
  * Function used to hide or show checkboxes of a specific dropdown (default is hidden)
